@@ -20,7 +20,7 @@ class SystemUser extends Model
      * 通过分销员ID来获取分销员数据
      * */
     public function getUserBySessionId($id, $field = '*'){
-        return Db::name($this->table)->field($field)->where(['sessionId' => $id, 'isEnable' => 1])->find();
+        return Db::name($this->table)->field($field)->where(['sessionId' => $id])->find();
     }
 
 

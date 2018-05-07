@@ -60,7 +60,23 @@ class UserCenter extends Home
         ];
 
         $this->apiReturn(200, $data);
-        
+    }
+
+    public function customers(){
+        (!isset($this->data['orgId']) || empty($this->data['orgId'])) && $this->apiReturn(201, '', '组织ID不能为空');
+
+        $where = ['system_user_id' => $this->userId, 'intensity' => 1];
+        if(isset($this->data['keyword']) || empty($this->data['keyword'])){
+            $keyword = htmlspecialchars(trim($this->data['keyword']));
+            $fields  = !checkPhone($keyword) ? 'customer_users_name' : 'phone_number';
+            $where[$fields] = ['like', '%' . $keyword . '%'];
+        }
+
+        $field = 'customer_users_org_id as id,customer_users_name as username,phone_number as phone,create_date as createTime,system_user_name as systemUsername,carName,expect_way_name as expectWay';
+
+        $data = Db::name('customer_customerorg')->where($where)->join('car_cars', 'intention_car_id=carId')->field($field)->select();
+        !$data && $this->apiReturn(201, '', '暂无记录');
+        $this->apiReturn(200, $data);
     }
 
 }

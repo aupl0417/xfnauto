@@ -63,6 +63,9 @@ class Order extends Home
 
         $data = model('CustomerOrder')->getOrderList($where);
         $this->apiReturn(200, $data);
+    }
+
+    public function statistics(){
 
     }
 

@@ -20,7 +20,8 @@ use think\Route;
 
 //V1版本接口路由
 //屏幕活动
-Route::get('activity_v1/index','api/v1.Screen.Activity/read');
 Route::post('ucenter_v1/index','api/v1.UserCenter/index');
 Route::get('ucenter_v1/consumerlist','api/v1.Order/consumerList');
 Route::get('ucenter_v1/customerlist','api/v1.Order/customerList');
+Route::get('ucenter_v1/customers','api/v1.UserCenter/customers');
+Route::get('order_v1/statistics','api/v1.Order/statistics');
