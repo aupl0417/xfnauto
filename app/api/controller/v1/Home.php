@@ -18,15 +18,15 @@ class Home extends Controller {
     );
 
     public function __construct(){
-        $params = input('');
+        $params = input('', '', 'htmlspecialchars,trim');
         //验证签名串是否存在或是否为空
 //        (!isset($params['token']) || empty($params['token'])) && $this->apiReturn(201, '签名不能为空');
-        (!isset($params['appId']) || empty($params['appId'])) && $this->apiReturn(201, 'appId不能为空');
-        (!isset($params['deviceId']) || empty($params['deviceId'])) && $this->apiReturn(201, '设备ID不能为空');
+//        (!isset($params['appId']) || empty($params['appId'])) && $this->apiReturn(201, 'appId不能为空');
+//        (!isset($params['deviceId']) || empty($params['deviceId'])) && $this->apiReturn(201, '设备ID不能为空');
         (!isset($params['sessionId']) || empty($params['sessionId'])) && $this->apiReturn(201, 'SESSIONID不能为空');
 
-        $token = $params['token'];
-        unset($params['token']);
+//        $token = $params['token'];
+//        unset($params['token']);
 
         //验证签名
 //        if(!$this->tokenValidate($params, $token)){
@@ -37,10 +37,13 @@ class Home extends Controller {
         $user       = model('SystemUser')->getUserBySessionId($sessionId);
         !$user && $this->apiReturn(201, '', '用户不存在');
 
-        $controller = request()->controller();
-        $controller = explode('.', $controller);
+//        $controller = request()->controller();
+//        $controller = explode('.', $controller);
+
         $this->userId = $user['usersId'];
-        $this->data = $params;
+        $this->orgId  = $user['orgId'];
+        $this->user   = $user;
+        $this->data   = $params;
     }
 
     public function tokenValidate($data, $token){

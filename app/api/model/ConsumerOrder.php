@@ -30,7 +30,23 @@ class ConsumerOrder extends Model
         $data  = Db::name('consumer_order co')->where($where)
                ->field($field)->join('consumer_order_info oi', 'co.id=oi.order_id', 'left')
                ->select();
-        
+        if($data){
+            $stateArr = [
+                '1' => '初始',
+                '5' => '待收定金',
+                '10' => '待配车',
+                '15' => '待验车',
+                '20' => '待协商',
+                '25' => '待收尾款',
+                '30' => '待出库',
+                '35' => '待上传票证',
+                '40' => '完成',
+            ];
+            foreach($data as $key => &$value){
+                $value['orderStateName'] = $stateArr[$value['orderState']];
+            }
+        }
+
         return $data;
     }
 
@@ -78,5 +94,27 @@ class ConsumerOrder extends Model
         }
 
         return $total;
+    }
+
+    /*
+     * 订单各费用统计
+     * */
+    public function orderFeeList($type, $userId, $orgId){
+        $startTime = date('Y-m-01', strtotime('-1 month'));
+        $endTime   = date('Y-m-t 23:59:59');
+        $where['co.create_time']    = ['between', [$startTime, $endTime]];
+        $where['co.creator_id']     = $userId;
+        $where['co.org_id']         = $orgId;
+        $field = 'co.id as id,co.order_code as orderId,co.state as orderState,oi.cars_name as carName,oi.color_name as colorName,oi.interior_name as interiorName,oi.state as orderInfoState,oi.car_num as carNum';
+        switch ($type){
+            case 'traffic':
+                $where['oi.traffic_compulsory_insurance_price'] = ['>', 0];
+                break;
+            case 'commercial':
+                $where['oi.commercial_insurance_price'] = ['>', 0];
+                break;
+        }
+
+        return Db::name('consumer_order co')->where($where)->field($field)->join('consumer_order_info oi', 'co.id=oi.order_id', 'left')->order('co.id desc')->select();
     }
 }
