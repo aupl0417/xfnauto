@@ -40,6 +40,7 @@ class Home extends Controller {
 //        $controller = request()->controller();
 //        $controller = explode('.', $controller);
 
+        $this->isRole = $this->checkRole($user['usersId']);
         $this->userId = $user['usersId'];
         $this->orgId  = $user['orgId'];
         $this->user   = $user;
@@ -130,6 +131,26 @@ class Home extends Controller {
         $user = model('SystemUser')->getUserById($userId, 'usersId,orgId');
         !$user && $this->apiReturn(201, '', '系统用户不存在');
         $user['orgId'] != $orgId && $this->apiReturn(201, '', '组织ID不正确');
+        return true;
+    }
+
+    /**
+     * 检查用户是否具有如下身份
+     * 总经理 IT部 仓管 仓管主管 B端客户总监 销售经理 资源部经理 物流主管
+     * @param $userId 用户ID
+     * @return bool
+     * */
+    public function checkRole($userId){
+        $role = [14,15,42,43,49,48,33,45];
+        $userRole = Db::name('system_user_role')->where(['userId' => $userId])->field('roleId')->find();
+        if(!$userRole){
+            return false;
+        }
+
+        if(!in_array($userRole['roleId'], $role)){
+            return false;
+        }
+
         return true;
     }
 
