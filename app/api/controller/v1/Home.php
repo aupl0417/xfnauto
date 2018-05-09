@@ -18,15 +18,15 @@ class Home extends Controller {
     );
 
     public function __construct(){
-        $params = input('');
+        $params = input('', '', 'htmlspecialchars,trim');
         //验证签名串是否存在或是否为空
 //        (!isset($params['token']) || empty($params['token'])) && $this->apiReturn(201, '签名不能为空');
-        (!isset($params['appId']) || empty($params['appId'])) && $this->apiReturn(201, 'appId不能为空');
-        (!isset($params['deviceId']) || empty($params['deviceId'])) && $this->apiReturn(201, '设备ID不能为空');
+//        (!isset($params['appId']) || empty($params['appId'])) && $this->apiReturn(201, 'appId不能为空');
+//        (!isset($params['deviceId']) || empty($params['deviceId'])) && $this->apiReturn(201, '设备ID不能为空');
         (!isset($params['sessionId']) || empty($params['sessionId'])) && $this->apiReturn(201, 'SESSIONID不能为空');
 
-        $token = $params['token'];
-        unset($params['token']);
+//        $token = $params['token'];
+//        unset($params['token']);
 
         //验证签名
 //        if(!$this->tokenValidate($params, $token)){
@@ -37,10 +37,14 @@ class Home extends Controller {
         $user       = model('SystemUser')->getUserBySessionId($sessionId);
         !$user && $this->apiReturn(201, '', '用户不存在');
 
-        $controller = request()->controller();
-        $controller = explode('.', $controller);
+//        $controller = request()->controller();
+//        $controller = explode('.', $controller);
+
+        $this->isRole = $this->checkRole($user['usersId']);
         $this->userId = $user['usersId'];
-        $this->data = $params;
+        $this->orgId  = $user['orgId'];
+        $this->user   = $user;
+        $this->data   = $params;
     }
 
     public function tokenValidate($data, $token){
@@ -127,6 +131,26 @@ class Home extends Controller {
         $user = model('SystemUser')->getUserById($userId, 'usersId,orgId');
         !$user && $this->apiReturn(201, '', '系统用户不存在');
         $user['orgId'] != $orgId && $this->apiReturn(201, '', '组织ID不正确');
+        return true;
+    }
+
+    /**
+     * 检查用户是否具有如下身份
+     * 总经理 IT部 仓管 仓管主管 B端客户总监 销售经理 资源部经理 物流主管
+     * @param $userId 用户ID
+     * @return bool
+     * */
+    public function checkRole($userId){
+        $role = [14,15,42,43,49,48,33,45];
+        $userRole = Db::name('system_user_role')->where(['userId' => $userId])->field('roleId')->find();
+        if(!$userRole){
+            return false;
+        }
+
+        if(!in_array($userRole['roleId'], $role)){
+            return false;
+        }
+
         return true;
     }
 

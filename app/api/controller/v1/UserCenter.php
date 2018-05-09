@@ -14,69 +14,151 @@ use think\Db;
 class UserCenter extends Home
 {
 
+    /**
+     * 首页统计
+     * @return json
+     * */
     public function index(){
-        (!isset($this->data['orgId']) || empty($this->data['orgId'])) && $this->apiReturn(201, '', '组织ID不能为空');
-
-        $orgId  = $this->data['orgId'] + 0;
-
-//        $user = Db::name('system_user')->where(['usersId' => $userId, 'isEnable' => 1, 'orgId' => $orgId])->count();
-//        !$user && $this->apiReturn(201, '', '系统用户不存在');
-
         $data = array();
-        $data['intensityCount'] = Db::name('customer_customerorg')->where(['system_user_id' => $this->userId, 'intensity' => 1])->count();
-        $customermodel = model('CustomerOrder');
+        $customerModel    = model('CustomerOrder');
+        $customerOrgModel = model('CustomerOrg');
+        $data['intensityCount'] = $customerOrgModel->customerCount($this->userId, $this->orgId, true, $this->isRole);
         $data['customer'] = [
-            'userCount'    => Db::name('customer_customerorg')->where('time_of_appointment_date', ['>=', date('Y-m-01')], ['<=', date('Y-m-t 23:59:59')], 'and')->where(['system_user_id' => $this->userId])->count(),
-            'total'        => $customermodel->orderCount('', $this->userId, $orgId),
-            'unpayDeposit' => $customermodel->orderCount(1, $this->userId, $orgId),
-            'bankAudit'    => $customermodel->orderCount(3, $this->userId, $orgId),
-            'undelivery'   => $customermodel->orderCount(5, $this->userId, $orgId),
-            'others'       => $customermodel->orderCount(['customer_order_state', ['>',5], ['<',15], 'and'], $this->userId, $orgId),
-            'unfinished'   => $customermodel->orderCount(15, $this->userId, $orgId),
-            'finished'     => $customermodel->orderCount(17, $this->userId, $orgId),
-            'insurance'    => $customermodel->orderFeeCount('insurance', $this->userId, $orgId),
-            'mortgage'     => $customermodel->orderFeeCount('mortgage', $this->userId, $orgId),
-            'boutique'     => $customermodel->orderFeeCount('boutique', $this->userId, $orgId),
-            'license'      => $customermodel->orderFeeCount('license', $this->userId, $orgId),
+            'userCount'    => $customerOrgModel->customerCount($this->userId, $this->orgId, false, $this->isRole),
+            'total'        => $customerModel->orderCount('', $this->userId, $this->orgId, $this->isRole),
+            'unpayDeposit' => $customerModel->orderCount(1, $this->userId, $this->orgId, $this->isRole),
+            'bankAudit'    => $customerModel->orderCount(3, $this->userId, $this->orgId, $this->isRole),
+            'undelivery'   => $customerModel->orderCount(5, $this->userId, $this->orgId, $this->isRole),
+            'others'       => $customerModel->orderCount(['customer_order_state', ['>',5], ['<',15], 'and'], $this->userId, $this->orgId, $this->isRole),
+            'unfinished'   => $customerModel->orderCount(15, $this->userId, $this->orgId, $this->isRole),
+            'finished'     => $customerModel->orderCount(17, $this->userId, $this->orgId, $this->isRole),
+            'insurance'    => $customerModel->orderFeeCount('insurance', $this->userId, $this->orgId, $this->isRole),
+            'mortgage'     => $customerModel->orderFeeCount('mortgage', $this->userId, $this->orgId, $this->isRole),
+            'boutique'     => $customerModel->orderFeeCount('boutique', $this->userId, $this->orgId, $this->isRole),
+            'license'      => $customerModel->orderFeeCount('license', $this->userId, $this->orgId, $this->isRole),
         ];
 
-        $consumermodel = model('ConsumerOrder');
+        $consumerModel = model('ConsumerOrder');
         $data['consumer'] = [
-            'placeOrder'        => $consumermodel->orderCount(1, $this->userId, $orgId),
-            'total'             => $consumermodel->orderCount('', $this->userId, $orgId),
-            'unpayDeposit'      => $consumermodel->orderCount(3, $this->userId, $orgId),
-            'unpayfinalpayment' => $consumermodel->orderCount(25, $this->userId, $orgId),
-            'carMatch'          => $consumermodel->orderCount(10, $this->userId, $orgId),
-            'carCheck'          => $consumermodel->orderCount(15, $this->userId, $orgId),
-            'outStock'          => $consumermodel->orderCount(30, $this->userId, $orgId),
-            'uploadTicket'      => $consumermodel->orderCount(35, $this->userId, $orgId),
-            'commercial'        => $consumermodel->orderCount('commercial', $this->userId, $orgId),
-            'traffic'           => $consumermodel->orderCount('traffic', $this->userId, $orgId),
+            'placeOrder'        => $consumerModel->orderCount(1, $this->userId, $this->orgId, $this->isRole),
+            'total'             => $consumerModel->orderCount('', $this->userId, $this->orgId, $this->isRole),
+            'unpayDeposit'      => $consumerModel->orderCount(3, $this->userId, $this->orgId, $this->isRole),
+            'unpayfinalpayment' => $consumerModel->orderCount(25, $this->userId, $this->orgId, $this->isRole),
+            'carMatch'          => $consumerModel->orderCount(10, $this->userId, $this->orgId, $this->isRole),
+            'carCheck'          => $consumerModel->orderCount(15, $this->userId, $this->orgId, $this->isRole),
+            'outStock'          => $consumerModel->orderCount(30, $this->userId, $this->orgId, $this->isRole),
+            'uploadTicket'      => $consumerModel->orderCount(35, $this->userId, $this->orgId, $this->isRole),
+            'commercial'        => $consumerModel->orderFeeCount('commercial', $this->userId, $this->orgId, $this->isRole),
+            'traffic'           => $consumerModel->orderFeeCount('traffic', $this->userId, $this->orgId, $this->isRole),
         ];
 
         $data['commission'] = [
-            'returnVisit' => Db::name('customer_order')->where(['create_date' => ['between', [date('Y-m-d', strtotime('-6 day')), date('Y-m-d H:i:s')]], 'customer_order_state' => 17, 'org_id' => $orgId, 'system_user_id' => $this->userId])->count(),
-            'appointment' => Db::name('customer_customerorg')->where(['time_of_appointment' => ['between', [date('Y-m-d'), date('Y-m-d 23:59:59')]], 'org_id' => $orgId, 'system_user_id' => $this->userId])->count(),
+            'returnVisit' => $customerModel->getReturnVisitCount($this->userId, $this->orgId, $this->isRole),
+            'appointment' => $customerOrgModel->customerAppointmentCount($this->userId, $this->orgId, $this->isRole)
         ];
 
         $this->apiReturn(200, $data);
     }
 
     public function customers(){
-        (!isset($this->data['orgId']) || empty($this->data['orgId'])) && $this->apiReturn(201, '', '组织ID不能为空');
+        $type  = isset($this->data['type']) && !empty($this->data['type']) ? trim($this->data['type']) : 'all';
+        !in_array($type, ['all', 'intensity', 'visit']) && $this->apiReturn(201, '', '参数非法');
 
-        $where = ['system_user_id' => $this->userId, 'intensity' => 1];
-        if(isset($this->data['keyword']) || empty($this->data['keyword'])){
+        $where = ['org_id' => $this->orgId];
+        if(!$this->isRole){
+            $where['system_user_id'] = $this->userId;
+        }
+
+        if($type == 'intensity'){
+            $where['intensity'] = '高';
+        }
+
+        if(isset($this->data['keyword']) && !empty($this->data['keyword'])){
             $keyword = htmlspecialchars(trim($this->data['keyword']));
             $fields  = !checkPhone($keyword) ? 'customer_users_name' : 'phone_number';
             $where[$fields] = ['like', '%' . $keyword . '%'];
         }
 
-        $field = 'customer_users_org_id as id,customer_users_name as username,phone_number as phone,create_date as createTime,system_user_name as systemUsername,carName,expect_way_name as expectWay';
+        if($type == 'visit'){
+            $where['appointment_date'] = ['between', [date('Y-m-d'), date('Y-m-d 23:59:59')]];
+        }else{
+            $where['appointment_date'] = ['between', [date('Y-m-01'), date('Y-m-d 23:59:59')]];
+        }
 
-        $data = Db::name('customer_customerorg')->where($where)->join('car_cars', 'intention_car_id=carId')->field($field)->select();
+        $field = 'customer_users_org_id as id,customer_users_name as username,phone_number as phone,create_date as createTime,system_user_name as systemUsername,carName,expect_way_name as expectWay';
+//        $data = Db::name('customer_customerorg')->where('time_of_appointment_date', ['>=', date('Y-m-01')], ['<=', date('Y-m-t 23:59:59')], 'and')->where($where)->join('car_cars', 'intention_car_id=carId', 'left')->field($field)->select();
+        $data = Db::name('customer_customerorg')->where($where)->join('car_cars', 'intention_car_id=carId', 'left')->field($field)->select();
         !$data && $this->apiReturn(201, '', '暂无记录');
         $this->apiReturn(200, $data);
+    }
+
+    /**
+     * 今日回访列表
+     * @return json
+     * */
+    public function visit(){
+        $where = [
+            'create_date'          => ['between', [date('Y-m-d', strtotime('-6 day')), date('Y-m-d H:i:s')]],
+            'customer_order_state' => 17,
+            'org_id'               => $this->orgId,
+            'is_delete'            => 0,
+        ];
+
+        if(!$this->isRole){
+            $where['system_user_id'] = $this->userId;
+        }
+
+        $data = model('CustomerOrder')->getOrderList($where);
+        !$data && $this->apiReturn(201, '', '暂无数据');
+        $this->apiReturn(200, $data);
+    }
+
+    /**
+     * 报价单提交
+     * @return json
+     * */
+    public function quotation(){
+        $result = $this->validate($this->data, 'AddQuotation');
+        if($result !== true){
+            $this->apiReturn(201, '', $result);
+        }
+        
+        $priceListKey = ['bareCarPrice', 'purchase_tax', 'license_plate_priace', 'vehicle_vessel_tax', 'insurance_price', 'traffic_insurance_price', 'boutique_priace', 'quality_assurance', 'other'];
+        $total = 0;
+        foreach($this->data as $key => $value){
+            if(in_array($key, $priceListKey)){
+                $total += $value;
+            }
+        }
+        $total = $this->data['type'] == 1 ? $total : $total * (100 - $this->data['down_payment_rate']) / 100;
+        if($this->data['total_fee'] != $total){
+            $this->apiReturn(201, '', '预计付费总金额不一致');
+        }
+
+        if($this->data['type'] == 1){
+            $this->data['down_payment_rate'] = 0;
+            $this->data['periods'] = 0;
+            $this->data['annual_rate'] = 0;
+            $this->data['monthly_supply'] = 0;
+        }
+
+        $monthlySupply = $this->data['type'] == 2 ? $total * $this->data['annual_rate'] / $this->data['periods'] / 100 : 0;
+        $this->data['monthly_supply'] = intval($monthlySupply * 100) / 100;
+        $this->data['create_user_id'] = $this->userId;
+        $this->data['create_time']    = date('Y-m-d H:i:s');
+        unset($this->data['sessionId']);
+
+        $result = Db::name('consumer_car_quotation')->insert($this->data);
+        $this->data['user'] = ['username' => $this->user['userName'], 'phone' => $this->user['phoneNumber']];
+        $this->data['carName'] = Db::name('car_cars')->where(['carId' => $this->data['carId']])->field('carName')->find()['carName'];
+        $this->data['buycarStyle'] = $this->data['type'] == 1 ? '全款' : '按揭';
+        !$result && $this->apiReturn(201, '', '提交数据失败');
+        $this->apiReturn(200, $this->data);
+    }
+
+    public function test(){
+        $result = $this->checkRole($this->userId);
+        $this->apiReturn(201, $result);
     }
 
 }
