@@ -10,6 +10,7 @@ namespace app\api\controller\v1;
 
 use think\Controller;
 use think\Db;
+use think\Request;
 class Home extends Controller {
     protected $data = array();
     protected $app  = array(
@@ -17,7 +18,7 @@ class Home extends Controller {
         '2' => 'DFHGKZLSE2NFDEHGFHHR4XTGBKHY67EJZ8IK9', //安卓
     );
 
-    public function __construct(){
+    public function _initialize(Request $request = null){
         $params = input('', '', 'htmlspecialchars,trim');
         //验证签名串是否存在或是否为空
 //        (!isset($params['token']) || empty($params['token'])) && $this->apiReturn(201, '签名不能为空');
@@ -93,9 +94,9 @@ class Home extends Controller {
         header('Content-Type:application/json; charset=utf-8');//返回JSON数据格式到客户端 包含状态信息
 
         $jsonData = array(
-            'code' => $code,
-            'msg'  => $msg ?: ($code == 200 ? '操作成功' : '操作失败'),
-            'data' => $data ? $data : null
+            'resultCode' => $code,
+            'message'    => $msg ?: ($code == 200 ? '请求成功' : '请求失败'),
+            'data'       => $data ? $data : null
         );
 
         exit(json_encode($jsonData));

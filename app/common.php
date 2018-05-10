@@ -151,3 +151,35 @@
         //去掉最后一个连接符
         return substr( $string, 0, strlen( $string ) - strlen( $separator ) );
     }
+
+    /**
+     * PDF2PNG
+     * @param $pdf  待处理的PDF文件
+     * @param $path 待保存的图片路径
+     * @param $page 待导出的页面 -1为全部 0为第一页 1为第二页
+     * @return      保存好的图片路径和文件名
+     */
+    function pdf2png($pdf, $path, $page=-1){
+        if(!extension_loaded('imagick')){
+            return false;
+        }
+        if(!file_exists($pdf)){
+            return false;
+        }
+        $im = new Imagick();
+        $im->setResolution(480,480);
+        $im->setCompressionQuality(100);
+        if($page == -1){
+            $im->readImage($pdf);
+        }else{
+            $im->readImage($pdf."[".$page."]");
+        }
+        foreach ($im as $Key => $Var) {
+            $Var->setImageFormat('png');
+            $filename = $path."/". md5($Key.time()).'.png';
+            if($Var->writeImage($filename) == true){
+                $Return[] = $filename;
+            }
+        }
+        return $Return;
+    }

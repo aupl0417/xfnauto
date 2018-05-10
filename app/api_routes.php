@@ -29,3 +29,5 @@ Route::get('publics_v1/brand','api/v1.Common/brand');
 Route::get('publics_v1/series','api/v1.Common/series');
 Route::get('publics_v1/carlist','api/v1.Common/carList');
 Route::post('ucenter_v1/quotation','api/v1.UserCenter/quotation');
+Route::get('publics_v1/share','api/v1.Common/share');
+Route::get('activity_v1.1/index','api/v1._1.Test/index');
