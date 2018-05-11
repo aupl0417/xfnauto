@@ -23,6 +23,10 @@ class SystemUser extends Model
         return Db::name($this->table)->field($field)->where(['sessionId' => $id])->find();
     }
 
+    public function getUserByOrgId($orgId, $field = '*'){
+        return Db::name($this->table)->where(['orgId' => $orgId])->field($field)->order('usersId desc')->select();
+    }
+
 
     
 }

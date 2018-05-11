@@ -35,9 +35,14 @@ class Order extends Home
 
         if(!$this->isRole){
             $where['co.creator_id'] = $this->userId;
+            $userIds = model('SystemUser')->getUserByOrgId($this->orgId, 'usersId');
+            if($userIds){
+                $userIds = array_column($userIds, 'usersId');
+                $where['co.creator_id'] = ['in', $userIds];
+            }
         }
         $where['co.create_time']    = ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]];
-        $where['co.org_id']         = $this->orgId;
+//        $where['co.org_id']         = $this->orgId;
 
         $data = model('ConsumerOrder')->getOrderList($where);
         $this->apiReturn(200, $data);

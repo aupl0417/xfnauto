@@ -13,12 +13,16 @@ use think\Db;
 use think\Request;
 class Home extends Controller {
     protected $data = array();
+    protected $userId;
+    protected $user;
+    protected $isRole;
+    protected $orgId;
     protected $app  = array(
         '1' => 'D8OZLSE2NEDC0FR4XTGBKHY67UJZ8IK9', //ios
         '2' => 'DFHGKZLSE2NFDEHGFHHR4XTGBKHY67EJZ8IK9', //安卓
     );
 
-    public function _initialize(Request $request = null){
+    public function __construct(Request $request = null){
         $params = input('', '', 'htmlspecialchars,trim');
         //验证签名串是否存在或是否为空
 //        (!isset($params['token']) || empty($params['token'])) && $this->apiReturn(201, '签名不能为空');
@@ -34,9 +38,12 @@ class Home extends Controller {
 //            $this->apiReturn(201, $this->newSign);//暂时显示这个签名，用于测试时
 //            $this->apiReturn(201, '签名错误');
 //        }
-        $sessionId  = trim($params['sessionId']);
-        $user       = model('SystemUser')->getUserBySessionId($sessionId);
-        !$user && $this->apiReturn(201, '', '用户不存在');
+        if(request()->action() != 'quotationDetail'){
+            $sessionId  = trim($params['sessionId']);
+            $user       = model('SystemUser')->getUserBySessionId($sessionId);
+            !$user && $this->apiReturn(4002, '', '请重新登录');
+        }
+
 
 //        $controller = request()->controller();
 //        $controller = explode('.', $controller);

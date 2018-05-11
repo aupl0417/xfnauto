@@ -160,6 +160,7 @@
      * @return      保存好的图片路径和文件名
      */
     function pdf2png($pdf, $path, $page=-1){
+        error_reporting(7);
         if(!extension_loaded('imagick')){
             return false;
         }
@@ -167,19 +168,117 @@
             return false;
         }
         $im = new Imagick();
-        $im->setResolution(480,480);
+        $im->setResolution(240,240);
         $im->setCompressionQuality(100);
         if($page == -1){
             $im->readImage($pdf);
         }else{
             $im->readImage($pdf."[".$page."]");
         }
+//        $auth   = new \Qiniu\Auth(config('qiniu.accesskey'), config('qiniu.secretkey'));
+//        $token  = $auth->uploadToken(config('qiniu.bucket'));
+//        $upload = new \Qiniu\Storage\UploadManager();
         foreach ($im as $Key => $Var) {
             $Var->setImageFormat('png');
             $filename = $path."/". md5($Key.time()).'.png';
             if($Var->writeImage($filename) == true){
+//                if(file_exists($filename)){
+//                    list($ret, $err) = $upload->putFile($token, $filename, $filename);
+//                    if($err === null){
+//                        $Return[] = 'http://' . config('qiniu.domain') . '/' . $ret['key'];
+//                    }
+//                }else{
+//                    $Return[] = $filename;
+//                }
                 $Return[] = $filename;
             }
         }
+//        dump($Return);die;
         return $Return;
+    }
+
+    /**
+     * 运行日志
+     * @param $data       数据 type : mixed
+     * @param $controller 所在控制器
+     * @param $action     方法
+     * @param $params     参数 type : mixed
+     * */
+    function logs_write($data, $controller, $action, $params){
+        $fp = @fopen(ROOT_PATH . 'debug_' . date('Y-m-d') . ".txt", "a+");
+        fwrite($fp, "运行：" . "----" . date('Y-m-d H:i:s') . "\n");
+        fwrite($fp, "Data:" . (is_array($data) ? json_encode($data) : $data) . "\n");
+        fwrite($fp, "Controller:" . $controller . " Action:" . $action . "\n");
+        fwrite($fp, "Params:" . (is_array($params) ? json_encode($params) : $params) . "\n");
+        fwrite($fp, "------------------------------------------------------------------------\n\n");
+        fclose($fp);
+    }
+
+    function generateImg($source, $text1, $text2, $text3, $font = './msyhbd.ttf') {
+        $date = '' . date ( 'Ymd' ) . '/';
+        $img  = $date . md5($source . $text1 . $text2 . $text3) . '.jpg';
+        if (file_exists ('./' . $img )){
+            return $img;
+        }
+
+        $main   = imagecreatefromjpeg($source);
+        $width  = imagesx($main);
+        $height = imagesy($main);
+
+        $target = imagecreatetruecolor($width, $height);
+        $white  = imagecolorallocate($target, 255, 255, 255);
+        imagefill ($target, 0, 0, $white );
+
+        imagecopyresampled ($target, $main, 0, 0, 0, 0, $width, $height, $width, $height );
+
+        $fontSize  = 18;//磅值字体
+        $fontColor = imagecolorallocate ( $target, 255, 0, 0 );//字的RGB颜色
+        $fontBox   = imagettfbbox($fontSize, 0, $font, $text1);//文字水平居中实质
+        imagettftext ($target, $fontSize, 0, ceil(($width - $fontBox[2]) / 2), 190, $fontColor, $font, $text1);
+
+        $fontBox   = imagettfbbox($fontSize, 0, $font, $text2);
+        imagettftext ($target, $fontSize, 0, ceil(($width - $fontBox[2]) / 2), 370, $fontColor, $font, $text2);
+
+        $fontBox   = imagettfbbox($fontSize, 0, $font, $text3);
+        imagettftext ($target, $fontSize, 0, ceil(($width - $fontBox[2]) / 2), 560, $fontColor, $font, $text3);
+
+        //imageantialias($target, true);//抗锯齿，有些PHP版本有问题，谨慎使用
+
+        imagefilledpolygon ( $target, array (10 + 0, 0 + 142, 0, 12 + 142, 20 + 0, 12 + 142), 3, $fontColor );//画三角形
+        imageline($target, 100, 200, 20, 142, $fontColor);//画线
+        imagefilledrectangle ( $target, 50, 100, 250, 150, $fontColor );//画矩形
+
+        //bof of 合成图片
+        $child1 = imagecreatefromjpeg ( 'http://gtms01.alicdn.com/tps/i1/T1N0pxFEhaXXXxK1nM-357-88.jpg' );
+        imagecopymerge ($target, $child1, 0, 400, 0, 0, imagesx ( $child1 ), imagesy ( $child1 ), 100 );
+        //eof of 合成图片
+
+        @mkdir ( './' . $date );
+        imagejpeg ( $target, './' . $img, 95 );
+
+        imagedestroy ( $main );
+        imagedestroy ( $target );
+        imagedestroy ( $child1 );
+        return $img;
+    }
+
+    function autowrap($fontsize, $angle, $fontface, $string, $width) {
+        // 这几个变量分别是 字体大小, 角度, 字体名称, 字符串, 预设宽度
+        $content = "";
+
+        // 将字符串拆分成一个个单字 保存到数组 letter 中
+        for ($i=0; $i < mb_strlen($string); $i++) {
+            $letter[] = mb_substr($string, $i, 1);
+        }
+
+        foreach ($letter as $l) {
+            $teststr = $content." ".$l;
+            $testbox = imagettfbbox($fontsize, $angle, $fontface, $teststr);
+            // 判断拼接后的字符串是否超过预设的宽度
+            if (($testbox[2] > $width) && ($content !== "")) {
+                $content .= "\n";
+            }
+            $content .= $l;
+        }
+        return $content;
     }

@@ -60,7 +60,7 @@ class ConsumerOrder extends Model
         }
 
         $where['create_time']    = ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]];
-        $where['org_id']         = $orgId;
+//        $where['org_id']         = $orgId;
         $obj  = Db::name($this->table)->where($where);
         $cond = array('state' => ['not in', [-1, 37]], 'is_del' => 0);
         if($condition){
@@ -86,10 +86,15 @@ class ConsumerOrder extends Model
         ];
         if(!$isRole){
             $where['co.creator_id'] = $userId;
+            $userIds = model('SystemUser')->getUserByOrgId($orgId, 'usersId');
+            if($userIds){
+                $userIds = array_column($userIds, 'usersId');
+                $where['co.creator_id'] = ['in', $userIds];
+            }
         }
 
         $where['co.create_time']    = ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]];
-        $where['co.org_id']         = $orgId;
+//        $where['co.org_id']         = $orgId;
 
         $obj = Db::name('consumer_order co')->where($where)->join('consumer_order_info oi', 'co.id=oi.order_id', 'left');
         switch ($type){
@@ -114,10 +119,15 @@ class ConsumerOrder extends Model
         ];
         if(!$isRole){
             $where['co.creator_id'] = $userId;
+            $userIds = model('SystemUser')->getUserByOrgId($orgId, 'usersId');
+            if($userIds){
+                $userIds = array_column($userIds, 'usersId');
+                $where['creator_id'] = ['in', $userIds];
+            }
         }
 
         $where['co.create_time']    = ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]];
-        $where['co.org_id']         = $orgId;
+//        $where['co.org_id']         = $orgId;
         
         $field = 'co.id as id,co.order_code as orderId,co.state as orderState,oi.cars_name as carName,oi.color_name as colorName,oi.interior_name as interiorName,oi.state as orderInfoState,oi.car_num as carNum';
         switch ($type){

@@ -40,16 +40,18 @@ class UserCenter extends Home
 
         $consumerModel = model('ConsumerOrder');
         $data['consumer'] = [
-            'placeOrder'        => $consumerModel->orderCount(1, $this->userId, $this->orgId, $this->isRole),
-            'total'             => $consumerModel->orderCount('', $this->userId, $this->orgId, $this->isRole),
-            'unpayDeposit'      => $consumerModel->orderCount(3, $this->userId, $this->orgId, $this->isRole),
-            'unpayfinalpayment' => $consumerModel->orderCount(25, $this->userId, $this->orgId, $this->isRole),
-            'carMatch'          => $consumerModel->orderCount(10, $this->userId, $this->orgId, $this->isRole),
-            'carCheck'          => $consumerModel->orderCount(15, $this->userId, $this->orgId, $this->isRole),
-            'outStock'          => $consumerModel->orderCount(30, $this->userId, $this->orgId, $this->isRole),
-            'uploadTicket'      => $consumerModel->orderCount(35, $this->userId, $this->orgId, $this->isRole),
-            'commercial'        => $consumerModel->orderFeeCount('commercial', $this->userId, $this->orgId, $this->isRole),
-            'traffic'           => $consumerModel->orderFeeCount('traffic', $this->userId, $this->orgId, $this->isRole),
+            'placeOrder'        => $consumerModel->orderCount(1, $this->userId, $this->orgId, $this->isRole),//开单
+            'total'             => $consumerModel->orderCount('', $this->userId, $this->orgId, $this->isRole),//本月总订单
+            'unpayDeposit'      => $consumerModel->orderCount(5, $this->userId, $this->orgId, $this->isRole),//待收定金
+//            'unpayfinalpayment' => $consumerModel->orderCount(25, $this->userId, $this->orgId, $this->isRole),//待换车
+            'carMatch'          => $consumerModel->orderCount(10, $this->userId, $this->orgId, $this->isRole),//待配车
+            'carCheck'          => $consumerModel->orderCount(15, $this->userId, $this->orgId, $this->isRole),//待验车
+//            'consulting'        => $consumerModel->orderCount(30, $this->userId, $this->orgId, $this->isRole),//待协商
+            'finnalprice'       => $consumerModel->orderCount(35, $this->userId, $this->orgId, $this->isRole),//待收尾款
+            'outStock'          => $consumerModel->orderCount(40, $this->userId, $this->orgId, $this->isRole),//待出库
+            'tickitUploading'   => $consumerModel->orderCount(45, $this->userId, $this->orgId, $this->isRole),//待上传票证
+            'commercial'        => $consumerModel->orderFeeCount('commercial', $this->userId, $this->orgId, $this->isRole),//商业险
+            'traffic'           => $consumerModel->orderFeeCount('traffic', $this->userId, $this->orgId, $this->isRole),//交强险
         ];
 
         $data['commission'] = [
@@ -120,45 +122,60 @@ class UserCenter extends Home
     public function quotation(){
         $result = $this->validate($this->data, 'AddQuotation');
         if($result !== true){
-            $this->apiReturn(201, '', $result);
+            $this->apiReturn(201, '', $result . '_1');
         }
         
         $priceListKey = ['bareCarPrice', 'purchase_tax', 'license_plate_priace', 'vehicle_vessel_tax', 'insurance_price', 'traffic_insurance_price', 'boutique_priace', 'quality_assurance', 'other'];
         $total = 0;
+        $type  = $this->data['type'] + 0;
+        if($type == 2){
+            $priceListKey[] = 'mortgage';
+        }
         foreach($this->data as $key => $value){
             if(in_array($key, $priceListKey)){
                 $total += $value;
             }
         }
-        $total = $this->data['type'] == 1 ? $total : $total * (100 - $this->data['down_payment_rate']) / 100;
+
+        $total = $type == 1 ? $total : $total * $this->data['down_payment_rate'] / 100;
         if($this->data['total_fee'] != $total){
-            $this->apiReturn(201, '', '预计付费总金额不一致');
+            $this->apiReturn(201, '', '预计付费总金额不一致' . $total);
         }
 
-        if($this->data['type'] == 1){
+        if($type == 1){
             $this->data['down_payment_rate'] = 0;
             $this->data['periods'] = 0;
             $this->data['annual_rate'] = 0;
             $this->data['monthly_supply'] = 0;
+            $this->data['mortgage'] = 0;
         }
 
-        $monthlySupply = $this->data['type'] == 2 ? $total * $this->data['annual_rate'] / $this->data['periods'] / 100 : 0;
+        $monthlySupply = $type == 2 ? $total * $this->data['annual_rate'] / $this->data['periods'] / 100 : 0;
         $this->data['monthly_supply'] = intval($monthlySupply * 100) / 100;
         $this->data['create_user_id'] = $this->userId;
         $this->data['create_time']    = date('Y-m-d H:i:s');
         unset($this->data['sessionId']);
-
         $result = Db::name('consumer_car_quotation')->insert($this->data);
-        $this->data['user'] = ['username' => $this->user['userName'], 'phone' => $this->user['phoneNumber']];
-        $this->data['carName'] = Db::name('car_cars')->where(['carId' => $this->data['carId']])->field('carName')->find()['carName'];
-        $this->data['buycarStyle'] = $this->data['type'] == 1 ? '全款' : '按揭';
+
         !$result && $this->apiReturn(201, '', '提交数据失败');
-        $this->apiReturn(200, $this->data);
+        $this->apiReturn(200, ['id' => Db::name('consumer_car_quotation')->getLastInsID()]);
     }
 
-    public function test(){
-        $result = $this->checkRole($this->userId);
-        $this->apiReturn(201, $result);
+    public function quotationDetail(){
+        (!isset($this->data['id']) || empty($this->data['id'])) && $this->apiReturn(201, '', '报价单ID非法');
+
+        $id   = $this->data['id'] + 0;
+
+        $data = Db::name('consumer_car_quotation')->where(['id' => $id])->find();
+        !$data && $this->apiReturn(201, '', '报价单数据不存在');
+        $data['user'] = ['username' => $this->user['realName'], 'phone' => $this->user['phoneNumber']];
+        $data['carName'] = Db::name('car_cars')->where(['carId' => $data['carId']])->field('carName')->find()['carName'];
+        $data['buycarStyle'] = $data['type'] == 1 ? '全款' : '按揭';
+        if($data['type'] == 1){
+
+        }
+        unset($data['carId'], $data['create_user_id']);
+        $this->apiReturn(200, $data);
     }
 
 }
