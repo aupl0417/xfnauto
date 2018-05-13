@@ -28,18 +28,24 @@ class CustomerOrder extends Model
      * 单月各状态的订单统计
      * */
     public function orderCount($condition = '', $userId, $orgId, $isRole = false){
-        if(!$isRole){
+        $group = model('SystemUser')->getUserGroupInfo($userId);
+        if($group['over_manage'] == 1){
+            $where['org_id']         = $group['orgId'];
+        }else{
             $where['system_user_id'] = $userId;
         }
+
         $startTime = date('Y-m-01');
         $endTime   = date('Y-m-t 23:59:59');
         $where['create_date']    = ['between', [$startTime, $endTime]];
-        $where['org_id']         = $orgId;
         $where['is_delete']      = 0;
 
         $obj = Db::name($this->table)->where($where);
         if($condition){
             $cond = array();
+            if($condition == 6){
+                $condition = ['in', [7, 9, 11]];
+            }
             if(!is_array($condition)){
                 $condition = explode(',', $condition);
                 $cond['customer_order_state'] = ['in', $condition];
@@ -59,14 +65,17 @@ class CustomerOrder extends Model
      * 订单各费用统计
      * */
     public function orderFeeCount($type, $userId, $orgId, $isRole = false){
-        if(!$isRole){
+        $group = model('SystemUser')->getUserGroupInfo($userId);
+        if($group['over_manage'] == 1){
+            $where['org_id']         = $group['orgId'];
+        }else{
             $where['system_user_id'] = $userId;
         }
 
         $startTime = date('Y-m-01');
         $endTime   = date('Y-m-t 23:59:59');
         $where['create_date']    = ['between', [$startTime, $endTime]];
-        $where['org_id']         = $orgId;
+//        $where['org_id']         = $orgId;
         $where['is_delete']      = 0;
 
         switch ($type){
@@ -88,8 +97,14 @@ class CustomerOrder extends Model
     /*
      * 订单各费用统计列表
      * */
-    public function orderFeeList($type, $userId, $orgId, $isRole = false){
-        if(!$isRole){
+    public function orderFeeList($type, $userId, $orgId, $isRole = false, $page = 1, $pageSize = 10){
+//        if(!$isRole){
+//            $where['system_user_id'] = $userId;
+//        }
+        $group = model('SystemUser')->getUserGroupInfo($userId);
+        if($group['over_manage'] == 1){
+            $where['org_id']         = $group['orgId'];
+        }else{
             $where['system_user_id'] = $userId;
         }
 
@@ -112,12 +127,12 @@ class CustomerOrder extends Model
 
         }
 
-        return Db::name($this->table)->where($where)->field($field)->order('customer_order_id desc')->select();
+        return Db::name($this->table)->where($where)->field($field)->page($page, $pageSize)->order('create_date desc')->select();
     }
 
-    public function getOrderList($where = ''){
+    public function getOrderList($where = '', $page = 1, $pageSize = 10){
         $field = 'customer_order_id as id,customer_order_code as orderId,customer_order_state as orderState,cars_name as carName,create_date as createTime';
-        $data  = Db::name('customer_order')->where($where)->field($field)->order('customer_order_id desc')->select();
+        $data  = Db::name('customer_order')->where($where)->field($field)->page($page, $pageSize)->order('create_date desc')->select();
         if($data){
             $stateArr = [
                 '0' => '初始',
@@ -143,16 +158,28 @@ class CustomerOrder extends Model
 
     public function getReturnVisitCount($userId, $orgId, $isRole = false){
         $where = [
-            'create_date' => ['between', [date('Y-m-d', strtotime('-6 day')), date('Y-m-d H:i:s')]],
+            'create_date' => ['between', [date('Y-m-d', strtotime('-7 day')), date('Y-m-d H:i:s')]],
             'customer_order_state' => 17,
             'org_id' => $orgId,
             'is_delete' => 0
         ];
 
-        if(!$isRole){
+//        if(!$isRole){
+//            $where['system_user_id'] = $userId;
+//        }
+        $group = model('SystemUser')->getUserGroupInfo($userId);
+        if($group['over_manage'] == 1){
+            $where['org_id']         = $group['orgId'];
+        }else{
             $where['system_user_id'] = $userId;
         }
 
         return Db::name($this->table)->where($where)->count();
+    }
+
+    public function getReturnVisitList($where = '', $page = 1, $pageSize = 10){
+        $field = 'customer_order_id as id,customer_name as customerName,customer_phone_number as customerPhone,system_user_name as sellerName,cars_name as carName,create_date as createTime';
+        $data  = Db::name('customer_order')->where($where)->field($field)->page($page, $pageSize)->order('create_date desc')->select();
+        return $data;
     }
 }

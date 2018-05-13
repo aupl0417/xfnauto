@@ -8,6 +8,7 @@
 
 namespace app\api\controller\v1;
 
+use app\api\service\Imagick;
 use Qiniu\Auth;
 use Qiniu\Storage\UploadManager;
 use think\Controller;
@@ -135,23 +136,24 @@ class Common extends Home
             ['system_user', 'info.system_user_id=usersId', 'left'],
         ];
         $info = Db::name('share_material_info info')->where(['material_info_id' => $id])->field('material_name as title,info.remarks,sm.image materialImage,info.image,realName,phoneNumber')->join($join)->find();
+        // $info = Db::name('share_material_info info')->where(['material_info_id' => $id])->field('material_name as title,info.remarks,realName,phoneNumber')->join($join)->find();
         if(!$info){
             $this->apiReturn(201, '', '数据不存在');
         }
 
-        if($info['materialImage']){
+        if(isset($info['materialImage']) && $info['materialImage']){
             $materialImage = explode(',', $info['materialImage']);
             $info = array_merge($info, $materialImage);
             unset($info['materialImage']);
         }
 
         foreach($info as $key => $value){
-            if(!in_array($key, ['image', 'realName', 'phoneNumber'])){
+            if(!in_array($key, ['image', 'realName', 'phoneNumber'], true)){
                 $data[] = $value;
             }
         }
 
-        if($info['image']){
+        if(isset($info['image']) && $info['image']){
             $image = explode(',', $info['image']);
             $data  = array_merge($data, $image);
         }
@@ -160,6 +162,7 @@ class Common extends Home
         if(!$url){
             $this->apiReturn(201, '', 'file not found');
         }
+
         $data[] = $url['url'];
         $data[] = '分享人：' . $info['realName'] . '　　电话：' . $info['phoneNumber'];
 
@@ -168,14 +171,25 @@ class Common extends Home
         $width  = [];
         $height = [];
         $font   = './msyhbd.ttf';
-        $fontSize   = 18;//磅值字体
-        $rowSpacing = 60;//行距
+        $fontSize   = 10;//磅值字体
+        $rowSpacing = 120;//行距
         $colSpacing = 30;//左右边距
-        $top        = 120;
+        $top        = 60;
+        $imageWidth = [];
+        $main       = [];
         foreach($data as $key => $value){
             if(filter_var($value, FILTER_VALIDATE_URL)){
+                if(strpos($value, 'cgi-bin/showqrcode?ticket')){
+                    $wUrl = $this->dealWchatQcode($value);
+                    if(!$wUrl){
+                        $this->apiReturn(201, '', 'file not found');
+                    }
+                    $value = $wUrl['url'];
+                }
+
                 $imageInfo = @get_headers($value, true);
-                $ext       = @explode('/', $imageInfo['Content-Type'])[1];
+                $ext       = @explode('/', is_array($imageInfo['Content-Type']) ? $imageInfo['Content-Type'][1] : $imageInfo['Content-Type'])[1];
+
                 if(in_array($ext, ['png', 'jpeg', 'gif'])){
                     $imagecreate = 'imagecreatefrom' . $ext;
                     if(function_exists($imagecreate)){
@@ -187,33 +201,41 @@ class Common extends Home
                 }
             }else{
                 if($value){
-//                    $text             = autowrap($fontSize, 0, $font, $value, 500);
+                    // $text             = autowrap($fontSize, 0, $font, $value, 500);
                     $fontBox          = imagettfbbox($fontSize, 0, $font, $value);//文字水平居中实质
                     $fontWidth[$key]  = $fontBox[2];
                     $height[$key]     = abs($fontBox[1]) + abs($fontBox[7]) + $rowSpacing;
+                    if($key == 1 && $height[$key] > 500){
+                        $height[$key] += 800;
+                    }
                 }
             }
         }
 
-        $targetWidth  = max($imageWidth) + $colSpacing * 2;
-        $targetWidth  = $targetWidth >= 500 ? $targetWidth : 500;
+        $targetWidth  = ($imageWidth ? max($imageWidth) : 640) + $colSpacing * 2;
+        $targetWidth  = $targetWidth >= 640 ? $targetWidth : 640;
         $targetHeight = array_sum($height) + (count($data) - 1) * $rowSpacing + $top;
 
+        // dump($height);die;
         $target = imagecreatetruecolor($targetWidth, $targetHeight);
         $white  = imagecolorallocate($target, 255, 255, 255);
         imagefill ($target, 0, 0, $white );
 
-        $fontSize  = 18;//磅值字体
         $fontColor = imagecolorallocate ($target, 0, 0, 0 );//字的RGB颜色
 
         $h = $top;
         foreach($data as $key => $value){
             if($key != 0){
-                $h += $height[$key - 1] + $rowSpacing;
+                if($key == 1){
+                    $h += $height[$key - 1];
+                }else{
+                    $h += $height[$key - 1] + $rowSpacing;
+                }
             }
+
             if(filter_var($value, FILTER_VALIDATE_URL)){
                 $imageInfo = @get_headers($value, true);
-                $ext       = @explode('/', $imageInfo['Content-Type'])[1];
+                $ext       = @explode('/', is_array($imageInfo['Content-Type']) ? $imageInfo['Content-Type'][1] : $imageInfo['Content-Type'])[1];
                 if(in_array($ext, ['png', 'jpeg', 'gif'])){
                     $imagecreate = 'imagecreatefrom' . $ext;
                     if(function_exists($imagecreate)){
@@ -223,28 +245,30 @@ class Common extends Home
                 }
             }else{
                 if($value){
-                    if($key == 0){
-                        $fontSize = 24;
-                    }
+                    $fontSize     = $key == 0 ? 24 : $fontSize;
                     $fontBox      = imagettfbbox($fontSize, 0, $font, $value);
-                    $text         = autowrap($fontSize, 0, $font, $value, max($imageWidth));
-                    $w = $fontBox[2] >= max($imageWidth) ? $colSpacing : ($targetWidth - $fontBox[2]) / 2;
-                    imagettftext($target, $fontSize, 0, ceil($w), $h, $fontColor, $font, $text);
+                    // $text         = autowrap($fontSize, 0, $font, $value, ($imageWidth ? max($imageWidth) : 500));
+                    $w = $fontBox[2] >= $targetWidth ? $colSpacing : ($targetWidth - $fontBox[2]) / 2;
+                    imagettftext($target, $fontSize, 0, ceil($w), $h, $fontColor, $font, $value);
                 }
-
             }
         }
 
-        imagejpeg ($target, './' . $img, 100);
-
-        foreach($main as $key => $value){
-            imagedestroy($value);
+        imagejpeg ($target, './' . $img, 40);
+        if($main){
+            foreach($main as $key => $value){
+                imagedestroy($value);
+            }
         }
+
         imagedestroy ($target);
-        $data = array();
-        $data['url'] = $this->upFile($img);
+//        $data = array();
+//        $data['url'] = $this->upFile($img);
         unlink($url['filename']);
-        $this->apiReturn(200, $data);
+        if(isset($wUrl)){
+            unlink($wUrl['filename']);
+        }
+        $this->apiReturn(200, $this->upFile($img));
     }
 
     /**
@@ -267,7 +291,7 @@ class Common extends Home
         file_put_contents($wImageName, $urlInfo);
 
         if(!file_exists($wImageName)){
-            $this->apiReturn(201, '', 'file not found 1');
+            $this->apiReturn(201, '', 'file not found');
         }
 
         return ['url' => 'http://api.' . config('url_domain_root') . '/' . $wImageName, 'filename' => $wImageName];
@@ -286,6 +310,102 @@ class Common extends Home
             return ['error' => $err, 'ret' => $ret];
         }
         return 'file not found';
+    }
+
+    /**
+     * 处理微信二维码或者图片到本地
+     * */
+    protected function dealWchatQcode($url){
+        $options = [
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+            ]
+        ];
+        $wImageName = md5(json_encode($url) . microtime(true) . '_' . $this->userId) . '.jpg';
+        $urlInfo = file_get_contents($url, false, stream_context_create($options));
+        file_put_contents($wImageName, $urlInfo);
+
+        if(!file_exists($wImageName)){
+            $this->apiReturn(201, '', 'file not found');
+        }
+
+        return ['url' => 'http://api.' . config('url_domain_root') . '/' . $wImageName, 'filename' => $wImageName];
+    }
+
+
+
+    public function test(){
+        (!isset($this->data['id']) || empty($this->data['id'])) && $this->apiReturn(201, '', 'ID非法');
+        $id = $this->data['id'] + 0;
+        $join = [
+            ['share_material sm', 'sm.material_id=info.material_id', 'left'],
+            ['system_user', 'info.system_user_id=usersId', 'left'],
+        ];
+        $info = Db::name('share_material_info info')->where(['material_info_id' => $id])->field('sm.image materialImage')->join($join)->find();
+        // $info = Db::name('share_material_info info')->where(['material_info_id' => $id])->field('material_name as title,info.remarks,realName,phoneNumber')->join($join)->find();
+        if(!$info){
+            $this->apiReturn(201, '', '数据不存在');
+        }
+
+        if(isset($info['materialImage']) && $info['materialImage']){
+            $materialImage = explode(',', $info['materialImage']);
+            $info = array_merge($info, $materialImage);
+            unset($info['materialImage']);
+        }
+
+        foreach($info as $key => $value){
+            if(!in_array($key, ['image', 'realName', 'phoneNumber'], true)){
+                $data[] = $value;
+            }
+        }
+
+//        $img  = 'upload/image/' . md5(serialize($data) . microtime(true)) . '.jpg';
+//        $img  = 'upload/image/1526019503781.jpg';
+        $img = 'http://opii7iyzy.bkt.clouddn.com/1526019499054';
+        $imageData = $this->dealWchatQcode($img);
+        if(!$imageData){
+            $this->apiReturn(201, '', 'file not found');
+        }
+        $img = $imageData['filename'];
+        if(file_exists($img)){
+            $service = model('ImagickService', 'service');
+            $image   = $service->open($img);
+            $result  = $service->resize(160, 90);
+            $path    = 'upload/image/' . md5(microtime(true)) . '.jpg';
+            $service->save_to($path);
+            $service->output();
+            dump($result);
+            dump($image);die;
+        }
+
+
+        $width  = [];
+        $height = [];
+        $font   = './msyhbd.ttf';
+        $fontSize   = 10;//磅值字体
+        $rowSpacing = 120;//行距
+        $colSpacing = 30;//左右边距
+        $top        = 60;
+        $imageWidth = [];
+        $main       = [];
+        foreach($data as $key => $value){
+            $service = model('ImagickService', 'service');
+            $image   = $service->open($value);
+            dump($image);die;
+            $imageInfo = @get_headers($value, true);
+            $ext       = @explode('/', is_array($imageInfo['Content-Type']) ? $imageInfo['Content-Type'][1] : $imageInfo['Content-Type'])[1];
+
+            if(in_array($ext, ['png', 'jpeg', 'gif'])){
+                $imagecreate = 'imagecreatefrom' . $ext;
+                if(function_exists($imagecreate)){
+                    $main[$key]   = @$imagecreate($value);
+                    $width[$key]  = imagesx($main[$key]);
+                    $height[$key] = imagesy($main[$key]);
+                    $imageWidth[] = $width[$key];
+                }
+            }
+        }
     }
 
 }

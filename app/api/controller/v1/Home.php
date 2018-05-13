@@ -28,7 +28,7 @@ class Home extends Controller {
 //        (!isset($params['token']) || empty($params['token'])) && $this->apiReturn(201, '签名不能为空');
 //        (!isset($params['appId']) || empty($params['appId'])) && $this->apiReturn(201, 'appId不能为空');
 //        (!isset($params['deviceId']) || empty($params['deviceId'])) && $this->apiReturn(201, '设备ID不能为空');
-        (!isset($params['sessionId']) || empty($params['sessionId'])) && $this->apiReturn(201, 'SESSIONID不能为空');
+
 
 //        $token = $params['token'];
 //        unset($params['token']);
@@ -38,20 +38,21 @@ class Home extends Controller {
 //            $this->apiReturn(201, $this->newSign);//暂时显示这个签名，用于测试时
 //            $this->apiReturn(201, '签名错误');
 //        }
-        if(request()->action() != 'quotationDetail'){
+        if(request()->action() != 'quotationdetail'){
+            (!isset($params['sessionId']) || empty($params['sessionId'])) && $this->apiReturn(201, 'SESSIONID不能为空');
             $sessionId  = trim($params['sessionId']);
             $user       = model('SystemUser')->getUserBySessionId($sessionId);
             !$user && $this->apiReturn(4002, '', '请重新登录');
+            $this->isRole = $this->checkRole($user['usersId']);
+            $this->userId = $user['usersId'];
+            $this->orgId  = $user['orgId'];
+            $this->user   = $user;
         }
-
 
 //        $controller = request()->controller();
 //        $controller = explode('.', $controller);
 
-        $this->isRole = $this->checkRole($user['usersId']);
-        $this->userId = $user['usersId'];
-        $this->orgId  = $user['orgId'];
-        $this->user   = $user;
+
         $this->data   = $params;
     }
 

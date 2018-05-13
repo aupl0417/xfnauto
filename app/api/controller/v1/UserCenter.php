@@ -29,7 +29,7 @@ class UserCenter extends Home
             'unpayDeposit' => $customerModel->orderCount(1, $this->userId, $this->orgId, $this->isRole),
             'bankAudit'    => $customerModel->orderCount(3, $this->userId, $this->orgId, $this->isRole),
             'undelivery'   => $customerModel->orderCount(5, $this->userId, $this->orgId, $this->isRole),
-            'others'       => $customerModel->orderCount(['customer_order_state', ['>',5], ['<',15], 'and'], $this->userId, $this->orgId, $this->isRole),
+            'others'       => $customerModel->orderCount(6, $this->userId, $this->orgId, $this->isRole),
             'unfinished'   => $customerModel->orderCount(15, $this->userId, $this->orgId, $this->isRole),
             'finished'     => $customerModel->orderCount(17, $this->userId, $this->orgId, $this->isRole),
             'insurance'    => $customerModel->orderFeeCount('insurance', $this->userId, $this->orgId, $this->isRole),
@@ -63,11 +63,15 @@ class UserCenter extends Home
     }
 
     public function customers(){
+        $page  = isset($this->data['page']) && !empty($this->data['page']) ? $this->data['page'] + 0 : 1;
+        $rows  = isset($this->data['rows']) && !empty($this->data['rows']) ? $this->data['rows'] + 0 : 10;
         $type  = isset($this->data['type']) && !empty($this->data['type']) ? trim($this->data['type']) : 'all';
         !in_array($type, ['all', 'intensity', 'visit']) && $this->apiReturn(201, '', '参数非法');
 
-        $where = ['org_id' => $this->orgId];
-        if(!$this->isRole){
+        $group = model('SystemUser')->getUserGroupInfo($this->userId);
+        if($group['over_manage'] == 1){
+            $where['org_id']         = $group['orgId'];
+        }else{
             $where['system_user_id'] = $this->userId;
         }
 
@@ -75,22 +79,23 @@ class UserCenter extends Home
             $where['intensity'] = '高';
         }
 
-        if(isset($this->data['keyword']) && !empty($this->data['keyword'])){
-            $keyword = htmlspecialchars(trim($this->data['keyword']));
-            $fields  = !checkPhone($keyword) ? 'customer_users_name' : 'phone_number';
-            $where[$fields] = ['like', '%' . $keyword . '%'];
+        if(isset($this->data['keywords']) && !empty($this->data['keywords'])){
+            $keywords = htmlspecialchars(trim($this->data['keywords']));
+            $fields  = !checkPhone($keywords) ? 'customer_users_name' : 'phone_number';
+            $where[$fields] = ['like', '%' . $keywords . '%'];
         }
 
         if($type == 'visit'){
             $where['appointment_date'] = ['between', [date('Y-m-d'), date('Y-m-d 23:59:59')]];
         }else{
-            $where['appointment_date'] = ['between', [date('Y-m-01'), date('Y-m-d 23:59:59')]];
+            $where['time_of_appointment_date'] = ['between', [date('Y-m-01'), date('Y-m-d 23:59:59')]];
         }
 
-        $field = 'customer_users_org_id as id,customer_users_name as username,phone_number as phone,create_date as createTime,system_user_name as systemUsername,carName,expect_way_name as expectWay';
+        $field = 'customer_users_org_id as id,customer_users_name as username,phone_number as phone,create_date as createTime,org_id as orgId,time_of_appointment_date as timeOfAppointmentDate,system_user_name as systemUsername,carName,expect_way_id as expectWay';
 //        $data = Db::name('customer_customerorg')->where('time_of_appointment_date', ['>=', date('Y-m-01')], ['<=', date('Y-m-t 23:59:59')], 'and')->where($where)->join('car_cars', 'intention_car_id=carId', 'left')->field($field)->select();
-        $data = Db::name('customer_customerorg')->where($where)->join('car_cars', 'intention_car_id=carId', 'left')->field($field)->select();
-        !$data && $this->apiReturn(201, '', '暂无记录');
+        $data = Db::name('customer_customerorg')->where($where)->page($page, $rows)->join('car_cars', 'intention_car_id=carId', 'left')->field($field)->select();
+        !$data && $this->apiReturn(200, '', '暂无记录');
+//        echo Db::name('customer_customerorg')->getLastSql();die;
         $this->apiReturn(200, $data);
     }
 
@@ -99,19 +104,30 @@ class UserCenter extends Home
      * @return json
      * */
     public function visit(){
+        $page  = isset($this->data['page']) && !empty($this->data['page']) ? $this->data['page'] + 0 : 1;
+        $rows  = isset($this->data['rows']) && !empty($this->data['rows']) ? $this->data['rows'] + 0 : 10;
         $where = [
-            'create_date'          => ['between', [date('Y-m-d', strtotime('-6 day')), date('Y-m-d H:i:s')]],
+            'create_date'          => ['between', [date('Y-m-d', strtotime('-7 day')), date('Y-m-d H:i:s')]],
             'customer_order_state' => 17,
             'org_id'               => $this->orgId,
             'is_delete'            => 0,
         ];
 
-        if(!$this->isRole){
+        $group = model('SystemUser')->getUserGroupInfo($this->userId);
+        if($group['over_manage'] == 1){
+            $where['org_id']         = $group['orgId'];
+        }else{
             $where['system_user_id'] = $this->userId;
         }
 
-        $data = model('CustomerOrder')->getOrderList($where);
-        !$data && $this->apiReturn(201, '', '暂无数据');
+        if(isset($this->data['keywords']) && !empty($this->data['keywords'])){
+            $keywords = htmlspecialchars(trim($this->data['keywords']));
+            $fields  = !checkPhone($keywords) ? 'customer_name' : 'customer_phone_number';
+            $where[$fields] = ['like', '%' . $keywords . '%'];
+        }
+
+        $data = model('CustomerOrder')->getReturnVisitList($where, $page, $rows);
+        !$data && $this->apiReturn(200, '', '暂无数据');
         $this->apiReturn(200, $data);
     }
 
@@ -126,18 +142,18 @@ class UserCenter extends Home
         }
         
         $priceListKey = ['bareCarPrice', 'purchase_tax', 'license_plate_priace', 'vehicle_vessel_tax', 'insurance_price', 'traffic_insurance_price', 'boutique_priace', 'quality_assurance', 'other'];
-        $total = 0;
+        $totalFee = 0;
         $type  = $this->data['type'] + 0;
         if($type == 2){
             $priceListKey[] = 'mortgage';
         }
         foreach($this->data as $key => $value){
             if(in_array($key, $priceListKey)){
-                $total += $value;
+                $totalFee += $value;
             }
         }
 
-        $total = $type == 1 ? $total : $total * $this->data['down_payment_rate'] / 100;
+        $total = $type == 1 ? $totalFee : $totalFee * $this->data['down_payment_rate'] / 100;
         if($this->data['total_fee'] != $total){
             $this->apiReturn(201, '', '预计付费总金额不一致' . $total);
         }
@@ -150,7 +166,7 @@ class UserCenter extends Home
             $this->data['mortgage'] = 0;
         }
 
-        $monthlySupply = $type == 2 ? $total * $this->data['annual_rate'] / $this->data['periods'] / 100 : 0;
+        $monthlySupply = $type == 2 ? $totalFee * (100 - $this->data['down_payment_rate']) * $this->data['annual_rate'] / $this->data['periods'] / 100 / 100 : 0;
         $this->data['monthly_supply'] = intval($monthlySupply * 100) / 100;
         $this->data['create_user_id'] = $this->userId;
         $this->data['create_time']    = date('Y-m-d H:i:s');
@@ -168,12 +184,10 @@ class UserCenter extends Home
 
         $data = Db::name('consumer_car_quotation')->where(['id' => $id])->find();
         !$data && $this->apiReturn(201, '', '报价单数据不存在');
-        $data['user'] = ['username' => $this->user['realName'], 'phone' => $this->user['phoneNumber']];
+        $user = model('SystemUser')->getUserById($data['create_user_id']);
+        $data['user'] = ['username' => $user['realName'], 'phone' => $user['phoneNumber']];
         $data['carName'] = Db::name('car_cars')->where(['carId' => $data['carId']])->field('carName')->find()['carName'];
         $data['buycarStyle'] = $data['type'] == 1 ? '全款' : '按揭';
-        if($data['type'] == 1){
-
-        }
         unset($data['carId'], $data['create_user_id']);
         $this->apiReturn(200, $data);
     }

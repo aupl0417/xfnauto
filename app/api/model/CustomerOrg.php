@@ -22,10 +22,12 @@ class CustomerOrg extends Model
     public function customerCount($userId, $orgId, $isIntensity = false, $isRole = false){
         $where = [
             'time_of_appointment_date' => ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]],
-            'org_id' => $orgId
         ];
 
-        if(!$isRole){
+        $group = model('SystemUser')->getUserGroupInfo($userId);
+        if($group['over_manage'] == 1){
+            $where['org_id']         = $group['orgId'];
+        }else{
             $where['system_user_id'] = $userId;
         }
 

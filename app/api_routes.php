@@ -32,4 +32,5 @@ Route::post('ucenter_v1/quotation','api/v1.UserCenter/quotation');
 Route::get('ucenter_v1/quotationDetail','api/v1.UserCenter/quotationDetail');
 Route::get('publics_v1/share','api/v1.Common/share');
 Route::get('publics_v1/createImage','api/v1.Common/createImage');
+Route::get('publics_v1/test','api/v1.Common/test');
 Route::get('activity_v1.1/index','api/v1._1.Test/index');
