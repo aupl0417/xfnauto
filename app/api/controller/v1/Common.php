@@ -160,7 +160,7 @@ class Common extends Home
 
         $url = $this->getWchatQcode($data);
         if(!$url){
-            $this->apiReturn(201, '', 'file not found');
+            $this->apiReturn(201, '', 'file not found_163');
         }
 
         $data[] = $url['url'];
@@ -177,43 +177,44 @@ class Common extends Home
         $top        = 60;
         $imageWidth = [];
         $main       = [];
-        foreach($data as $key => $value){
+        $targetWidth= 20;//画板宽度 *
+        foreach($data as $key => &$value){
             if(filter_var($value, FILTER_VALIDATE_URL)){
-                if(strpos($value, 'cgi-bin/showqrcode?ticket')){
-                    $wUrl = $this->dealWchatQcode($value);
-                    if(!$wUrl){
-                        $this->apiReturn(201, '', 'file not found');
-                    }
-                    $value = $wUrl['url'];
+                $wUrl = $this->dealWchatQcode($value);
+                if(!$wUrl){
+                    $this->apiReturn(201, '', 'file not found_186');
                 }
-
-                $imageInfo = @get_headers($value, true);
-                $ext       = @explode('/', is_array($imageInfo['Content-Type']) ? $imageInfo['Content-Type'][1] : $imageInfo['Content-Type'])[1];
-
-                if(in_array($ext, ['png', 'jpeg', 'gif'])){
-                    $imagecreate = 'imagecreatefrom' . $ext;
-                    if(function_exists($imagecreate)){
-                        $main[$key]   = @$imagecreate($value);
-                        $width[$key]  = imagesx($main[$key]);
-                        $height[$key] = imagesy($main[$key]);
-                        $imageWidth[] = $width[$key];
-                    }
+                $value = $wUrl['filename'];
+                $imageFile[] = $wUrl['filename'];
+                $imgInfo     = resizeImage($value, $targetWidth);//按画板宽度缩放该图片
+                if(!$imgInfo){
+                    $this->apiReturn(201, 'file not found_193');
                 }
+                $value = $imgInfo['path'];
+                $height[$key] = $imgInfo['height'];
+                $value = (is_https() ? 'https://api.' : 'http://api.') . config('url_domain_root') . '/' . $value;
             }else{
                 if($value){
-                    // $text             = autowrap($fontSize, 0, $font, $value, 500);
+                    if($key == 1){
+                        $textInfo         = autowrap($fontSize, 0, $font, $value, $targetWidth);
+                        $value            = $textInfo['content'];
+                        dump($textInfo);die;
+                        $height[$key]     = $textInfo['height'];
+                    }
+
+
+
                     $fontBox          = imagettfbbox($fontSize, 0, $font, $value);//文字水平居中实质
                     $fontWidth[$key]  = $fontBox[2];
-                    $height[$key]     = abs($fontBox[1]) + abs($fontBox[7]) + $rowSpacing;
-                    if($key == 1 && $height[$key] > 500){
-                        $height[$key] += 800;
-                    }
+
+//                    if($key == 1 && $height[$key] > 500){
+//                        $height[$key] += 800;
+//                    }
                 }
             }
         }
-
-        $targetWidth  = ($imageWidth ? max($imageWidth) : 640) + $colSpacing * 2;
-        $targetWidth  = $targetWidth >= 640 ? $targetWidth : 640;
+        dump($height);die;
+//        die;
         $targetHeight = array_sum($height) + (count($data) - 1) * $rowSpacing + $top;
 
         // dump($height);die;
@@ -240,7 +241,7 @@ class Common extends Home
                     $imagecreate = 'imagecreatefrom' . $ext;
                     if(function_exists($imagecreate)){
                         $temp = @$imagecreate($value);
-                        imagecopy($target, $temp, ceil(($targetWidth - $width[$key]) / 2), $h, 0, 0, $width[$key], $height[$key]);
+                        imagecopy($target, $temp, 0, $h, 0, 0, $targetWidth, $height[$key]);
                     }
                 }
             }else{
@@ -254,19 +255,23 @@ class Common extends Home
             }
         }
 
-        imagejpeg ($target, './' . $img, 40);
+        imagejpeg ($target, './' . $img, 75);
         if($main){
             foreach($main as $key => $value){
                 imagedestroy($value);
             }
         }
 
+
+
         imagedestroy ($target);
 //        $data = array();
 //        $data['url'] = $this->upFile($img);
         unlink($url['filename']);
-        if(isset($wUrl)){
-            unlink($wUrl['filename']);
+        if(isset($imageFile)){
+            foreach($imageFile as $key => $value){
+                unlink($imageFile[$key]);
+            }
         }
         $this->apiReturn(200, $this->upFile($img));
     }
@@ -291,7 +296,7 @@ class Common extends Home
         file_put_contents($wImageName, $urlInfo);
 
         if(!file_exists($wImageName)){
-            $this->apiReturn(201, '', 'file not found');
+            $this->apiReturn(201, '', 'file not found_298');
         }
 
         return ['url' => 'http://api.' . config('url_domain_root') . '/' . $wImageName, 'filename' => $wImageName];
@@ -309,7 +314,7 @@ class Common extends Home
             }
             return ['error' => $err, 'ret' => $ret];
         }
-        return 'file not found';
+        return 'file not found_316';
     }
 
     /**
@@ -327,7 +332,7 @@ class Common extends Home
         file_put_contents($wImageName, $urlInfo);
 
         if(!file_exists($wImageName)){
-            $this->apiReturn(201, '', 'file not found');
+            $this->apiReturn(201, '', 'file not found_334');
         }
 
         return ['url' => 'http://api.' . config('url_domain_root') . '/' . $wImageName, 'filename' => $wImageName];
@@ -365,19 +370,12 @@ class Common extends Home
         $img = 'http://opii7iyzy.bkt.clouddn.com/1526019499054';
         $imageData = $this->dealWchatQcode($img);
         if(!$imageData){
-            $this->apiReturn(201, '', 'file not found');
+            $this->apiReturn(201, '', 'file not found_372');
         }
+        $targetWidth = 640;
         $img = $imageData['filename'];
-        if(file_exists($img)){
-            $service = model('ImagickService', 'service');
-            $image   = $service->open($img);
-            $result  = $service->resize(160, 90);
-            $path    = 'upload/image/' . md5(microtime(true)) . '.jpg';
-            $service->save_to($path);
-            $service->output();
-            dump($result);
-            dump($image);die;
-        }
+        $path = resizeImage($img, $targetWidth);
+        dump($path);die;
 
 
         $width  = [];

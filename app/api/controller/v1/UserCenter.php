@@ -153,7 +153,7 @@ class UserCenter extends Home
             }
         }
 
-        $total = $type == 1 ? $totalFee : $totalFee * $this->data['down_payment_rate'] / 100;
+        $total = $type == 1 ? $totalFee : ceil($totalFee * $this->data['down_payment_rate'] / 100);
         if($this->data['total_fee'] != $total){
             $this->apiReturn(201, '', '预计付费总金额不一致' . $total);
         }
@@ -167,7 +167,12 @@ class UserCenter extends Home
         }
 
         $monthlySupply = $type == 2 ? $totalFee * (100 - $this->data['down_payment_rate']) * $this->data['annual_rate'] / $this->data['periods'] / 100 / 100 : 0;
-        $this->data['monthly_supply'] = intval($monthlySupply * 100) / 100;
+        $monthlySupply = ceil($monthlySupply);
+//        $this->apiReturn(201, '', '月供不一致'. $monthlySupply . '_' . $this->data['monthly_supply']);
+        if(intval($monthlySupply) != intval($this->data['monthly_supply'])){
+            $this->apiReturn(201, '', '月供不一致');
+        }
+        $this->data['monthly_supply'] = $monthlySupply;
         $this->data['create_user_id'] = $this->userId;
         $this->data['create_time']    = date('Y-m-d H:i:s');
         unset($this->data['sessionId']);
