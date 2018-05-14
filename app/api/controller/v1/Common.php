@@ -165,19 +165,19 @@ class Common extends Home
 
         $data[] = $url['url'];
         $data[] = '分享人：' . $info['realName'] . '　　电话：' . $info['phoneNumber'];
-
+//dump($data);
         $img  = 'upload/image/' . md5(serialize($data) . microtime(true)) . '.jpg';
 
         $width  = [];
         $height = [];
         $font   = './msyhbd.ttf';
         $fontSize   = 10;//磅值字体
-        $rowSpacing = 120;//行距
+        $rowSpacing = 60;//行距
         $colSpacing = 30;//左右边距
         $top        = 60;
         $imageWidth = [];
         $main       = [];
-        $targetWidth= 20;//画板宽度 *
+        $targetWidth= 640;//画板宽度 *
         foreach($data as $key => &$value){
             if(filter_var($value, FILTER_VALIDATE_URL)){
                 $wUrl = $this->dealWchatQcode($value);
@@ -192,65 +192,54 @@ class Common extends Home
                 }
                 $value = $imgInfo['path'];
                 $height[$key] = $imgInfo['height'];
+                $imageFile[]  = $imgInfo['path'];
                 $value = (is_https() ? 'https://api.' : 'http://api.') . config('url_domain_root') . '/' . $value;
             }else{
                 if($value){
                     if($key == 1){
                         $textInfo         = autowrap($fontSize, 0, $font, $value, $targetWidth);
                         $value            = $textInfo['content'];
-                        dump($textInfo);die;
-                        $height[$key]     = $textInfo['height'];
+                        $fontBox          = imagettfbbox($fontSize, 0, $font, $value);//文字水平居中实质
+                        $height[$key]     = (abs($fontBox[1]) + abs($fontBox[7]) ) * 2 + 200;
+                    }else{
+                        $fontBox          = imagettfbbox($fontSize, 0, $font, $value);//文字水平居中实质
+                        $fontWidth[$key]  = $fontBox[2];
+                        $height[$key]     = abs($fontBox[1]) + abs($fontBox[7]);
+                        $height[$key]     += $key == 0 ? $rowSpacing : 0;
                     }
-
-
-
-                    $fontBox          = imagettfbbox($fontSize, 0, $font, $value);//文字水平居中实质
-                    $fontWidth[$key]  = $fontBox[2];
-
-//                    if($key == 1 && $height[$key] > 500){
-//                        $height[$key] += 800;
-//                    }
                 }
             }
         }
-        dump($height);die;
-//        die;
-        $targetHeight = array_sum($height) + (count($data) - 1) * $rowSpacing + $top;
 
-        // dump($height);die;
-        $target = imagecreatetruecolor($targetWidth, $targetHeight);
-        $white  = imagecolorallocate($target, 255, 255, 255);
+        $targetHeight = array_sum($height) + $top;
+        $target       = imagecreatetruecolor($targetWidth, $targetHeight);
+        $white        = imagecolorallocate($target, 255, 255, 255);
         imagefill ($target, 0, 0, $white );
-
-        $fontColor = imagecolorallocate ($target, 0, 0, 0 );//字的RGB颜色
+        $fontColor    = imagecolorallocate ($target, 0, 0, 0 );//字的RGB颜色
 
         $h = $top;
-        foreach($data as $key => $value){
-            if($key != 0){
-                if($key == 1){
-                    $h += $height[$key - 1];
-                }else{
-                    $h += $height[$key - 1] + $rowSpacing;
-                }
+        foreach($data as $k => $val){
+            if($k != 0){
+                $h += intval($height[$k - 1]);
             }
 
-            if(filter_var($value, FILTER_VALIDATE_URL)){
-                $imageInfo = @get_headers($value, true);
+            if(filter_var($val, FILTER_VALIDATE_URL)){
+                $imageInfo = @get_headers($val, true);
                 $ext       = @explode('/', is_array($imageInfo['Content-Type']) ? $imageInfo['Content-Type'][1] : $imageInfo['Content-Type'])[1];
                 if(in_array($ext, ['png', 'jpeg', 'gif'])){
                     $imagecreate = 'imagecreatefrom' . $ext;
                     if(function_exists($imagecreate)){
-                        $temp = @$imagecreate($value);
-                        imagecopy($target, $temp, 0, $h, 0, 0, $targetWidth, $height[$key]);
+                        $temp = @$imagecreate($val);
+                        imagecopy($target, $temp, 0, $h, 0, 0, $targetWidth, $height[$k]);
                     }
                 }
             }else{
-                if($value){
-                    $fontSize     = $key == 0 ? 24 : $fontSize;
-                    $fontBox      = imagettfbbox($fontSize, 0, $font, $value);
+                if($val){
+                    $fontSize     = $k == 0 ? 24 : $fontSize;
+                    $fontBox      = imagettfbbox($fontSize, 0, $font, $val);
                     // $text         = autowrap($fontSize, 0, $font, $value, ($imageWidth ? max($imageWidth) : 500));
                     $w = $fontBox[2] >= $targetWidth ? $colSpacing : ($targetWidth - $fontBox[2]) / 2;
-                    imagettftext($target, $fontSize, 0, ceil($w), $h, $fontColor, $font, $value);
+                    imagettftext($target, $fontSize, 0, ceil($w), $h, $fontColor, $font, $val);
                 }
             }
         }
@@ -261,8 +250,6 @@ class Common extends Home
                 imagedestroy($value);
             }
         }
-
-
 
         imagedestroy ($target);
 //        $data = array();

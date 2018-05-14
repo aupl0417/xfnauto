@@ -272,42 +272,7 @@ function generateImg($source, $text1, $text2, $text3, $font = './msyhbd.ttf') {
  * @return string
  * */
 function autowrap($fontsize, $angle, $fontface, $string, $width) {
-    /*$content = array();
-
-    $array = explode("\n", $string);
-    foreach($array as $key => $value){
-        for ($i=0; $i < mb_strlen($value, 'UTF-8'); $i++) {// 将字符串拆分成一个个单字 保存到数组 letter 中
-            $letter[$key][] = mb_substr($value, $i, 1, 'UTF-8');
-        }
-    }
-
-    $height = 0;
-    $i      = 0;
-    $content = array();
-    foreach ($letter as $key => $value) {
-        $str = '';
-        foreach($value as $k => $val){
-            $textstr = $str . $val;
-            $fontBox = imagettfbbox($fontsize, $angle, $fontface, $textstr);
-            if($fontBox[2] > $width && $str !== ''){
-                $content[$key][$i] = $str;
-                $i ++;
-                $str = '';
-            }elseif($fontBox[2] <= $width){
-                $content[$key][$i] = $str;
-                $i = 0;
-            }
-
-            $str .= $val;
-        }
-    }
-
-    $length = count($content);
-
-    return ['content' => $content, 'height' => $height * $length];*/
-    // 这几个变量分别是 字体大小, 角度, 字体名称, 字符串, 预设宽度
     $content = "";
-
     // 将字符串拆分成一个个单字 保存到数组 letter 中
     for ($i=0; $i < mb_strlen($string); $i++) {
         $letter[] = mb_substr($string, $i, 1);
@@ -321,29 +286,14 @@ function autowrap($fontsize, $angle, $fontface, $string, $width) {
             $content .= "\n";
         }
         $height = abs($testbox[1]) + abs($testbox[7]);
-
         $content .= $l;
     }
 
     $array   = explode("\n", $content);
     $length  = count($array);
-
-    return ['content' => $content, 'height' => $length * $height];
+    return ['content' => $content, 'height' => $length * $height, 'h' => $height, 'length' => $length];
 }
 
-function test(){
-//    $content[$i] = '';
-//    $teststr .= $l;
-//    $fontBox = imagettfbbox($fontsize, $angle, $fontface, $teststr);
-//    // 判断拼接后的字符串是否超过预设的宽度
-//    if ($fontBox[2] > $width) {
-//        $content[$i] = $teststr;
-//        $i ++;
-//        $teststr = '';
-//    }
-//
-//    $height = abs($fontBox[1]) + abs($fontBox[7]);
-}
 
 /**
  * 校验日期格式是否正确
