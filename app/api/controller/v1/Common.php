@@ -9,6 +9,9 @@
 namespace app\api\controller\v1;
 
 use app\api\service\Imagick;
+use JonnyW\PhantomJs\Client;
+use JonnyW\PhantomJs\DependencyInjection\ServiceContainer;
+use JonnyW\PhantomJs\Http\CaptureRequest;
 use Qiniu\Auth;
 use Qiniu\Storage\UploadManager;
 use think\Controller;
@@ -91,16 +94,15 @@ class Common extends Home
             ]
         ];
 
-//        $html = $this->fetch('v1/common/index');
-//        $html = urldecode($html);
-        $url = 'http://api.xfnauto.com/index.html';
+        $url = 'http://api.mifengqiche.com/index.html';
         $html = file_get_contents($url, false, stream_context_create($options));
         $mpdf->WriteHTML($html);  //$html中的内容即为变成pdf格式的html内容。
         $microtime   = explode('.', microtime(true));
         $fileName    = date('YmdHis') . end($microtime);
         $pdfFileName = $fileName . '.pdf';
         //输出pdf文件
-        $mpdf->Output('upload/' . $pdfFileName); //'I'表示在线展示 'D'则显示下载窗口
+        $mpdf->Output('upload/' . $pdfFileName, 'D'); //'I'表示在线展示 'D'则显示下载窗口
+        die;
         $startTime = microtime(true);
         if(file_exists('upload/' . $pdfFileName)){
             $result = pdf2png('upload/' . $pdfFileName, 'upload/image');
@@ -327,70 +329,66 @@ class Common extends Home
 
 
 
-    public function test(){
-        (!isset($this->data['id']) || empty($this->data['id'])) && $this->apiReturn(201, '', 'ID非法');
-        $id = $this->data['id'] + 0;
-        $join = [
-            ['share_material sm', 'sm.material_id=info.material_id', 'left'],
-            ['system_user', 'info.system_user_id=usersId', 'left'],
+    public function upload(){
+        $file = request()->file('image');
+        !$file && $this->apiReturn(201, '', '请上传图片');
+
+        // 要上传图片的本地路径
+        $filePath = $file->getRealPath();
+        $ext      = pathinfo($file->getInfo('name'), PATHINFO_EXTENSION);  //后缀
+        $rule     = [
+            'size' => 2000000,
+            'ext'  => ['jpg', 'png', 'bmp', 'jpeg'],
         ];
-        $info = Db::name('share_material_info info')->where(['material_info_id' => $id])->field('sm.image materialImage')->join($join)->find();
-        // $info = Db::name('share_material_info info')->where(['material_info_id' => $id])->field('material_name as title,info.remarks,realName,phoneNumber')->join($join)->find();
-        if(!$info){
-            $this->apiReturn(201, '', '数据不存在');
+        if(!$file->check($rule)){
+            $this->apiReturn(201, '', $file->getError());
         }
 
-        if(isset($info['materialImage']) && $info['materialImage']){
-            $materialImage = explode(',', $info['materialImage']);
-            $info = array_merge($info, $materialImage);
-            unset($info['materialImage']);
+        // 上传到七牛后保存的文件名
+        $key = substr(md5($filePath) , 0, 5). date('YmdHis') . rand(0, 9999) . '.' . $ext;
+
+        vendor('Qiniu.autoload');
+        $auth  = new Auth(config('qiniu.accesskey'), config('qiniu.secretkey'));
+        $token = $auth->uploadToken(config('qiniu.bucket'));
+
+        $upload = new UploadManager();
+        list($ret, $err) = $upload->putFile($token, $key, $filePath);
+        if ($err !== null) {
+            $this->apiReturn(201, ['state' => 'error', 'msg' => $err]);
+        } else {
+            //返回图片的完整URL
+            $this->apiReturn(200, ['state' => 'success', 'url' => 'http://' . config('qiniu.domain') . '/' . $ret['key']]);
         }
+    }
 
-        foreach($info as $key => $value){
-            if(!in_array($key, ['image', 'realName', 'phoneNumber'], true)){
-                $data[] = $value;
-            }
+    public function getToken(){
+        vendor('Qiniu.autoload');
+        $auth  = new Auth(config('qiniu.accesskey'), config('qiniu.secretkey'));
+        $token = $auth->uploadToken(config('qiniu.bucket'));
+        $this->apiReturn(200, ['token' => $token]);
+    }
+
+    public function test(){
+        $client = Client::getInstance();
+        $width  = 800;
+        $height = 600;
+        $top    = 0;
+        $left   = 0;
+        if(is_writable('./upload/image/abc.jpg')){
+            dump('ok');
+        }else{
+            die('error');
         }
+        $url = 'http://api.mifengqiche.com/index.html';
+        $request = $client->getMessageFactory()->createCaptureRequest($url, 'get');
+        $CaptureRequest    = new CaptureRequest();
 
-//        $img  = 'upload/image/' . md5(serialize($data) . microtime(true)) . '.jpg';
-//        $img  = 'upload/image/1526019503781.jpg';
-        $img = 'http://opii7iyzy.bkt.clouddn.com/1526019499054';
-        $imageData = $this->dealWchatQcode($img);
-        if(!$imageData){
-            $this->apiReturn(201, '', 'file not found_372');
-        }
-        $targetWidth = 640;
-        $img = $imageData['filename'];
-        $path = resizeImage($img, $targetWidth);
-        dump($path);die;
+        $CaptureRequest->setOutputFile('./upload/image/');
+        $request->setViewportSize($width, $height);
+        $CaptureRequest->setCaptureDimensions($width, $height, $top, $left);
 
-
-        $width  = [];
-        $height = [];
-        $font   = './msyhbd.ttf';
-        $fontSize   = 10;//磅值字体
-        $rowSpacing = 120;//行距
-        $colSpacing = 30;//左右边距
-        $top        = 60;
-        $imageWidth = [];
-        $main       = [];
-        foreach($data as $key => $value){
-            $service = model('ImagickService', 'service');
-            $image   = $service->open($value);
-            dump($image);die;
-            $imageInfo = @get_headers($value, true);
-            $ext       = @explode('/', is_array($imageInfo['Content-Type']) ? $imageInfo['Content-Type'][1] : $imageInfo['Content-Type'])[1];
-
-            if(in_array($ext, ['png', 'jpeg', 'gif'])){
-                $imagecreate = 'imagecreatefrom' . $ext;
-                if(function_exists($imagecreate)){
-                    $main[$key]   = @$imagecreate($value);
-                    $width[$key]  = imagesx($main[$key]);
-                    $height[$key] = imagesy($main[$key]);
-                    $imageWidth[] = $width[$key];
-                }
-            }
-        }
+        $response = $client->getMessageFactory()->createResponse();
+        $client->send($request, $response);
     }
 
 }
