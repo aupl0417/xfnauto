@@ -279,9 +279,7 @@ function autowrap($fontsize, $angle, $fontface, $string, $width) {
         $content .= $l;
     }
 
-    $array   = explode("\n", $content);
-    $length  = count($array);
-    return ['content' => $content, 'height' => $length * $height, 'h' => $height, 'length' => $length];
+    return ['content' => $content, 'height' => $height];
 }
 
 
@@ -318,12 +316,40 @@ function resizeImage($img, $targetWidth = 640){
         $imgInfo = getimagesize($img);
         $width   = $imgInfo[0];
         $height  = $imgInfo[1];
+        $ext     = explode('/', $imgInfo['mime'])[1];
         $resizeHeight = $targetWidth * $height / $width;
 
         $service = new \app\api\service\ImagickService();
         $image   = $service->open($img);
         $result  = $service->resize($targetWidth, $resizeHeight);
-        $path    = 'upload/image/' . md5(microtime(true)) . '.jpg';
+        $path    = 'upload/image/' . md5(microtime(true)) . '.' . $ext;
+        $service->save_to($path);
+        if(!file_exists($path)){
+            return false;
+        }
+
+        return ['path' => $path, 'height' => $resizeHeight];
+    }
+}
+
+/**
+ * 按指定宽度等比缩放图片
+ * @param string  $img 图片相对地址
+ * @param int     $targetWidth 指定宽度
+ * @return Array  $path
+ * */
+function resize($img, $targetWidth = 640){
+    if(file_exists($img)){
+        $imgInfo = getimagesize($img);
+        $width   = $imgInfo[0];
+        $height  = $imgInfo[1];
+        $ext     = explode('/', $imgInfo['mime'])[1];
+        $resizeHeight = $targetWidth * $height / $width;
+
+        $service = new \app\api\service\ImagickService();
+        $image   = $service->open($img);
+        $result  = $service->resize($targetWidth, $resizeHeight);
+        $path    = 'upload/image/' . md5(microtime(true)) . '.' . $ext;
         $service->save_to($path);
         if(!file_exists($path)){
             return false;

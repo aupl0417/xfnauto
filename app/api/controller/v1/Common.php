@@ -162,7 +162,7 @@ class Common extends Home
 
         $url = $this->getWchatQcode($data);
         if(!$url){
-            $this->apiReturn(201, '', 'file not found_163');
+            $this->apiReturn(201, '', 'file not found');
         }
 
         $data[] = $url['url'];
@@ -184,13 +184,13 @@ class Common extends Home
             if(filter_var($value, FILTER_VALIDATE_URL)){
                 $wUrl = $this->dealWchatQcode($value);
                 if(!$wUrl){
-                    $this->apiReturn(201, '', 'file not found_186');
+                    $this->apiReturn(201, '', 'file not found');
                 }
                 $value = $wUrl['filename'];
                 $imageFile[] = $wUrl['filename'];
                 $imgInfo     = resizeImage($value, $targetWidth);//按画板宽度缩放该图片
                 if(!$imgInfo){
-                    $this->apiReturn(201, 'file not found_193');
+                    $this->apiReturn(201, 'file not found');
                 }
                 $value = $imgInfo['path'];
                 $height[$key] = $imgInfo['height'];
@@ -285,10 +285,10 @@ class Common extends Home
         file_put_contents($wImageName, $urlInfo);
 
         if(!file_exists($wImageName)){
-            $this->apiReturn(201, '', 'file not found_298');
+            $this->apiReturn(201, '', 'file not found');
         }
 
-        return ['url' => 'http://api.' . config('url_domain_root') . '/' . $wImageName, 'filename' => $wImageName];
+        return ['url' => (is_https() ? 'https://api.' : 'https://api.') . config('url_domain_root') . '/' . $wImageName, 'filename' => $wImageName];
     }
 
     public function upFile($img){
@@ -299,11 +299,11 @@ class Common extends Home
             list($ret, $err) = $upload->putFile($token, $img, $img);
             if($err === null){
                 unlink($img);
-                return 'http://' . config('qiniu.domain') . '/' . $ret['key'];
+                return 'https://' . config('qiniu.domain') . '/' . $ret['key'];
             }
             return ['error' => $err, 'ret' => $ret];
         }
-        return 'file not found_316';
+        return 'file not found';
     }
 
     /**
@@ -321,10 +321,10 @@ class Common extends Home
         file_put_contents($wImageName, $urlInfo);
 
         if(!file_exists($wImageName)){
-            $this->apiReturn(201, '', 'file not found_334');
+            return false;
         }
 
-        return ['url' => 'http://api.' . config('url_domain_root') . '/' . $wImageName, 'filename' => $wImageName];
+        return ['url' => (is_https() ? 'https://api.' : 'https://api.') . config('url_domain_root') . '/' . $wImageName, 'filename' => $wImageName];
     }
 
 
@@ -357,7 +357,7 @@ class Common extends Home
             $this->apiReturn(201, ['state' => 'error', 'msg' => $err]);
         } else {
             //返回图片的完整URL
-            $this->apiReturn(200, ['state' => 'success', 'url' => 'http://' . config('qiniu.domain') . '/' . $ret['key']]);
+            $this->apiReturn(200, ['state' => 'success', 'url' => 'https://' . config('qiniu.domain') . '/' . $ret['key']]);
         }
     }
 
@@ -395,11 +395,7 @@ class Common extends Home
         (!isset($this->data['orderId']) || empty($this->data['orderId'])) && $this->apiReturn(201, '', '参数错误');
         $orderId = $this->data['orderId'] + 0;
 
-        $url = 'http://tomcat.' . config('url_domain_root') . '/tauto/emInterface/employee/consumerOrder/getContractInfo?sessionId=' . $this->data['sessionId'] . '&orderId=' . $orderId;
-        $data = curl_get($url);
-        $data = json_decode($data, true);
-        !$data['success'] && $this->apiReturn(201, '', '数据错误');
-        $data = $data['data'];
+        $data = model('ConsumerOrder')->getOrderDetailByOrderId($orderId);
         $img  = 'upload/image/' . md5(serialize($this->data) . microtime(true)) . '.jpg';
         $head = [
             '甲方（供车方）：' . $data['partyA'],
@@ -440,54 +436,96 @@ class Common extends Home
             '    户　名：' . $data['bankAccountName'],
             '    账　号：' . $data['bankCardNum'],
             '    开户行：' . $data['bankBranch'],
+            '    ',
             '三、车辆机动车销售发票、合格证及相关资料由相应品牌专营开具并按约定时间交付；',
+            '    ',
             '四、乙方须提供准确真实客户信息，如发现作假资料不符合品牌区域销售管控的，本合约自动作废并没收定金；',
+            '    ',
             '五、车辆验收：提车时按车辆出厂标准由乙方或乙方委托的代表验收，如有异议应当场提出，如当场未提出异议，则视为乙方认可甲方代购的车辆符合出厂标准，车辆交接完毕后所产生的全部损失由乙方自行承担；',
+            '    ',
             '六、乙方购车客户须符合上牌资格，如因乙方客户自身原因导致不能上牌的责任由乙方负责，甲方不予退车或退款；',
+            '    ',
             '七、免责条款：协议生效后，因不可抗力的情况下（如因生产商停车，4S店发车时间、价格变动、4S店交通运输延误）而导致甲方无法履行合同，甲方有权解除本合约并退还所收定金；',
+            '    ',
             '八、本合同一式两份，于甲方收到购车定金即时生效，同时甲方保留本合约一切解释权',
+            '    ',
+            '    ',
             '盖章处：',
+            '    ',
+            '    ',
             '客户经理签名：' . $data['creator'],
-            '日期：' . (isset($data['createTime']) ? $data['createTime'] : '')
+            '日期：' . (isset($data['createTime']) ? date('Y-m-d', strtotime($data['createTime'])) : '')
         ];
 
-        $string = '';
+        $string    = '';
         $endHandle = "\n";
         $search  = ['{{carItem.carsName}}', '{{carItem.colorName}}', '{{carItem.interiorName}}', '{{carItem.carNum}}', '{{carItem.guidePrice}}', '{{carItem.nakedPrice}}', '{{carItem.trafficCompulsoryInsurancePrice}}', '{{carItem.commercialInsurancePrice}}', '{{carItem.changePrice}}', '{{carItem.remark}}', '{{carItem.mode}}'];
 
         foreach($data['customers'] as $key => $value){
             $string .= str_replace(['item.userName', 'item.userPhone'], [$value['userName'], $value['userPhone']], $customers[0]) . $endHandle;
             foreach($value['infos'] as $val){
-                $replace = [$val['carsName'], $val['colorName'], $val['interiorName'], $val['carNum'], $val['guidePrice'], $val['nakedPrice'], $val['trafficCompulsoryInsurancePrice'] ?: 0, $val['commercialInsurancePrice'] ?: 0, $val['changePrice'], $val['remark'], $val['changePrice'] > 0 ? '加价' : '优惠'];
-                $temp  = implode($endHandle, $cars);
-                $temp   = str_replace($search, $replace, $temp);
-                $string .= $temp;
+                $replace = [$val['carsName'], $val['colorName'], $val['interiorName'], $val['carNum'], $val['guidePrice'], $val['nakedPrice'], $val['trafficCompulsoryInsurancePrice'] ?: 0, $val['commercialInsurancePrice'] ?: 0, abs($val['changePrice']), trim($val['remark']), $val['changePrice'] > 0 ? '加价' : '优惠'];
+                $temp    = implode($endHandle, $cars);
+                $string .= str_replace($search, $replace, $temp) . $endHandle;
             }
             $string .= $endHandle;
         }
 
-        $string = implode($endHandle, $head) . $endHandle . $string . $endHandle . implode($endHandle, $info) . $endHandle . implode($endHandle, $footer);
-//        echo $string;
+        $string = implode($endHandle, $head) . $endHandle . $string . implode($endHandle, $info) . $endHandle . implode($endHandle, $footer);
+
+        $targetWidth      = 435;//画板宽度
+        $left             = 16;//左边距
+        $contentWidth     = $targetWidth - $left * 2;//内容宽度
+        $rowSpacing       = 15;//行间隔
+        $top              = 30;
+
+        //合同标题处理
+        $title            = '购车电子合同';
+        $titleFontSize    = 14;
+        $titleFont        = './msyhbd.ttf';
+        $titleTextInfo    = autowrap($titleFontSize, 0, $titleFont, $title, $contentWidth);
+        $title            = $titleTextInfo['content'];
+        $titleFontBox     = imagettfbbox($titleFontSize, 0, $titleFont, $title);//文字水平居中实质
+        $titleHeight      = $titleTextInfo['height'] + $rowSpacing;
+
+        //合同内容处理
         $fontSize         = 12;
-//        $font             = './msyhbd.ttf';
         $font             = './simsun.ttc';
-        $targetWidth      = 450;
-        $left             = 20;
-        $textInfo         = autowrap($fontSize, 0, $font, $string, $targetWidth - $left * 2);
+        $textInfo         = autowrap($fontSize, 0, $font, $string, $contentWidth);
         $value            = $textInfo['content'];
         $fontBox          = imagettfbbox($fontSize, 0, $font, $value);//文字水平居中实质
-        $height           = (abs($fontBox[1]) + abs($fontBox[7]) ) * 2 + 200;
-        $targetHeight     = $height;
-        $target       = imagecreatetruecolor($targetWidth, $targetHeight);
-        $white        = imagecolorallocate($target, 255, 255, 255);
-        imagefill ($target, 0, 0, $white );
-        $fontColor    = imagecolorallocate ($target, 50, 50, 50 );//字的RGB颜色
+        $height           = $textInfo['height'];
 
-        $w = ($targetWidth - $fontBox[2] ) / 2;
-        imagettftext($target, $fontSize, 0, ceil($w), 20, $fontColor, $font, $value);
+        //初始化画板
+        $targetHeight     = $height + $titleHeight + $top;
+        $target           = imagecreatetruecolor($targetWidth, $targetHeight);
+        $white            = imagecolorallocate($target, 255, 255, 255);
+        imagefill($target, 0, 0, $white);
+        $fontColor        = imagecolorallocate ($target, 0, 0, 0);//字的RGB颜色
+
+        //往画板写入标题
+        $titleWidth   = ($targetWidth - $titleFontBox[2] ) / 2;
+        imagettftext($target, $titleFontSize, 0, ceil($titleWidth), $top, $fontColor, $titleFont, $title);
+
+        //往画板写入合同内容
+        $w = ($targetWidth - $fontBox[2]) / 2;
+        imagettftext($target, $fontSize, 0, ceil($w), $top + $titleHeight, $fontColor, $font, $value);
+
+        //印章处理
+        $zhang   = $data['signet'];
+        $signet  = $this->dealWchatQcode($zhang);
+        !$signet && $this->apiReturn(201, '', '印章不存在');
+        $zhang   = $signet['filename'];
+        $zhang_w = 100;
+        $imgInfo = resizeImage($zhang, 100);
+        $zhang   = (is_https() ? 'https://api.' : 'http://api.') . config('url_domain_root') . '/' . $imgInfo['path'];
+        $temp    = @imagecreatefrompng($zhang);
+        imagecopy($target, $temp, 90, $targetHeight - $imgInfo['height'] - 60, 0, 0, $zhang_w - 1, $imgInfo['height']);
+
         imagejpeg ($target, './' . $img, 75);
 
         imagedestroy ($target);
+        unlink($signet['filename']);
 //        $this->apiReturn(201, (is_https() ? 'https://api.' : 'http://api.') . config('url_domain_root') . '/' . $img);
         $this->apiReturn(200, $this->upFile($img));
     }

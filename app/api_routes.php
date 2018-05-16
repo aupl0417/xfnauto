@@ -42,3 +42,4 @@ Route::post('article_v1/create','api/v1.Article/create');
 Route::post('article_v1/edit','api/v1.Article/edit');
 Route::get('article_v1/detail','api/v1.Article/detail');
 Route::get('article_v1/remove','api/v1.Article/remove');
+Route::get('ucenter_v1/consumerDetail','api/v1.Order/consumerDetail');

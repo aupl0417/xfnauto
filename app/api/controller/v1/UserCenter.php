@@ -153,9 +153,9 @@ class UserCenter extends Home
             }
         }
 
-        $total = $type == 1 ? $totalFee : ceil($totalFee * $this->data['down_payment_rate'] / 100);
+        $total = $type == 1 ? ceil($totalFee) : ceil($totalFee * $this->data['down_payment_rate'] / 100);
         if($this->data['total_fee'] != $total){
-            $this->apiReturn(201, '', '预计付费总金额不一致' . $total);
+            $this->apiReturn(201, '', '预计付费总金额不一致');
         }
 
         if($type == 1){
@@ -166,7 +166,7 @@ class UserCenter extends Home
             $this->data['mortgage'] = 0;
         }
 
-        $monthlySupply = $type == 2 ? $totalFee * (100 - $this->data['down_payment_rate']) * $this->data['annual_rate'] / $this->data['periods'] / 100 / 100 : 0;
+        $monthlySupply = $type == 2 ? $totalFee * (100 - $this->data['down_payment_rate']) * (100 + $this->data['annual_rate']) / $this->data['periods'] / 100 / 100 : 0;
         $monthlySupply = ceil($monthlySupply);
 //        $this->apiReturn(201, '', '月供不一致'. $monthlySupply . '_' . $this->data['monthly_supply']);
         if(intval($monthlySupply) != intval($this->data['monthly_supply'])){

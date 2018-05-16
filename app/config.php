@@ -256,8 +256,8 @@ return [
         'accesskey' => '540c9PMHKRytUmSi0879CAVu17gaDSFdOtz29vWI',
         'secretkey' => 'YYTu6sfB95H3EYnxIIuDsoxJcxRRCppkY-FqFSpD',
         'bucket'    => 'dcsx003',//上传的空间
-        'domain'    =>'p8kf9zbfm.bkt.clouddn.com',//空间绑定的域名
-        'pipeline'  =>'avvod-pipeline'//空间绑定的域名
+        'domain'    => 'qiniu.xfnauto.com',//空间绑定的域名
+        'pipeline'  => 'avvod-pipeline'//空间绑定的域名
     ],
 
 ];

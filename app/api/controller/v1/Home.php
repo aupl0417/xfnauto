@@ -38,7 +38,7 @@ class Home extends Controller {
 //            $this->apiReturn(201, $this->newSign);//暂时显示这个签名，用于测试时
 //            $this->apiReturn(201, '签名错误');
 //        }
-        if(!in_array(strtolower(request()->action()), ['quotationdetail', 'upload', 'gettoken'], true)){
+        if(!in_array(strtolower(request()->action()), ['quotationdetail', 'upload', 'gettoken'], true) && (request()->controller() . '/' . request()->action() != 'V1.Article/index')){
             (!isset($params['sessionId']) || empty($params['sessionId'])) && $this->apiReturn(201, 'SESSIONID不能为空');
             $sessionId  = trim($params['sessionId']);
             $user       = model('SystemUser')->getUserBySessionId($sessionId);
