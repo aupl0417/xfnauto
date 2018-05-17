@@ -23,73 +23,13 @@ class Article extends Home
         $rows  = isset($this->data['rows']) && !empty($this->data['rows']) ? $this->data['rows'] + 0 : 10;
         $field = 'a_id as id,a_title as title,a_publishedTime as publishedTime,a_icon as icon';
         $where = [
-            'a_deleteTime'    => ['eq', 0],
+            'a_state'         => ['eq', 1],
             'a_publishedTime' => ['neq', '']
         ];
         $data  = Db::name('article_post')->where($where)->field($field)->page($page, $rows)->order('a_publishedTime desc')->select();
-        if($data){
-            foreach($data as &$value){
-                $value['publishedTime'] = date('Y-m-d H:i', $value['publishedTime']);
-            }
-        }
         $this->apiReturn(200, $data);
     }
 
-    /**
-     * 添加文章
-     * */
-    public function create(){
-        unset($this->data['sessionId']);
-        $result = $this->validate($this->data, 'AddArticle');
-        if($result !== true){
-            $this->apiReturn(201, '', $result);
-        }
-
-        $time   = time();
-        $data   = [
-            'a_title'    => $this->data['title'],
-            'a_content'  => $this->data['content'],
-            'a_excerpt'  => $this->data['excerpt'],
-            'a_videoUrl' => isset($this->data['videoUrl']) ? $this->data['videoUrl'] : '',
-            'a_icon'     => isset($this->data['icon']) ? $this->data['icon'] : '',
-            'a_source'   => isset($this->data['source']) && !empty($this->data['source']) ? $this->data['source'] : '喜蜂鸟学堂',
-            'a_uid'      => $this->userId,
-            'a_createTime'    => $time,
-            'a_updateTime'    => $time,
-            'a_publishedTime' => $time,
-        ];
-
-        $result = Db::name('article_post')->insert($data);
-        !$result && $this->apiReturn(201, '', '添加失败');
-        $this->apiReturn(200, '', '添加成功');
-    }
-
-    public function edit(){
-        (!isset($this->data['id']) || empty($this->data['id'])) && $this->apiReturn(201, '', '文章ID非法');
-
-        $id = $this->data['id'] + 0;
-
-        unset($this->data['sessionId']);
-        $result = $this->validate($this->data, 'AddArticle');
-        if($result !== true){
-            $this->apiReturn(201, '', $result);
-        }
-
-        $time = time();
-        $data = [
-            'a_title'    => $this->data['title'],
-            'a_content'  => $this->data['content'],
-            'a_excerpt'  => $this->data['excerpt'],
-            'a_videoUrl' => isset($this->data['videoUrl']) ? $this->data['videoUrl'] : '',
-            'a_icon'     => isset($this->data['icon']) ? $this->data['icon'] : '',
-            'a_source'   => isset($this->data['source']) && !empty($this->data['source']) ? $this->data['source'] : '喜蜂鸟学堂',
-            'a_updateTime' => $time
-        ];
-
-        $result = Db::name('article_post')->where(['a_id' => $id])->update($data);
-        $result === false && $this->apiReturn(201, '', '编辑失败');
-        $this->apiReturn(200, '', '编辑成功');
-    }
 
     public function detail(){
         (!isset($this->data['id']) || empty($this->data['id'])) && $this->apiReturn(201, '', '文章ID非法');
@@ -102,20 +42,8 @@ class Article extends Home
               ->find();
 
         !$data&& $this->apiReturn(201, '', '文章不存在');
+        $data['content'] = htmlspecialchars_decode($data['content']);
         $this->apiReturn(200, $data);
-    }
-
-    /**
-     * 今日回访列表
-     * @return json
-     * */
-    public function remove(){
-        (!isset($this->data['id']) || empty($this->data['id'])) && $this->apiReturn(201, '', '文章ID非法');
-        $id = $this->data['id'] + 0;
-
-        $result = Db::name('article_post')->where(['a_id' => $id])->update(['a_deleteTime' => time()]);
-        $result === false && $this->apiReturn(201, '', '删除失败');
-        $this->apiReturn(200, '', '删除成功');
     }
 
 

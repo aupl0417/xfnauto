@@ -8,11 +8,9 @@
 
 namespace app\api\controller\v1\Backend;
 
-use app\api\controller\v1\Home;
-use app\api\model\CustomerOrder;
 use think\Controller;
 use think\Db;
-class StockCar extends Home
+class StockCar extends Base
 {
 
     public function index(){
@@ -40,20 +38,39 @@ class StockCar extends Home
             $where['org_id'] = ['in', $orgIds];
         }
         //入库时间查询，暂时先用一个开始时间
-        if(isset($this->data['stockTime']) && !empty($this->data['stockTime'])){
-            $where['sc.create_date'] = ['egt', $this->data['stockTime']];
-        }
-
-        $state = isset($this->data['state']) && !is_null($this->data['state']) ? $this->data['state'] + 0 : 0;
-        if($state == 1){
-            $where['lock_state'] = 1;
-        }elseif($state == 2){
-            $where['is_put_out'] = 1;
+        $startTime = isset($this->data['startTime']) && !empty($this->data['startTime']) ? $this->data['startTime'] : '';
+        $endTime   = isset($this->data['endTime'])   && !empty($this->data['endTime'])   ? $this->data['endTime'] : '';
+        if($startTime && !$endTime){
+            $where['sc.create_date'] = ['egt', $this->data['startTime']];
+        }elseif(!$startTime && $endTime){
+            $where['sc.create_date'] = ['elt', $this->data['endTime']];
         }else{
-            $where['is_put_out'] = 0;
+            $now = date('Y-m-d H:i:s');
+            if($startTime == $endTime && $endTime <= $now){
+                $where['sc.create_date'] = ['egt', $startTime];
+            }elseif($startTime == $endTime && $endTime >= $now){
+                $where['sc.create_date'] = ['elt', $startTime];
+            }else{
+                if($startTime > $endTime){
+                    $where['sc.create_date'] = ['between', [$endTime, $startTime]];
+                }else{
+                    $where['sc.create_date'] = ['between', [$startTime, $endTime]];
+                }
+            }
         }
 
-        $field = 'stock_car_id as id,cars_info as carsInfo,frame_number as frameNumber,interior_name as  interiorName,colour_name as colourName,so.shortName as orgName,warehouse_name as warehouseName,lock_state,is_put_out,guiding_price as guidingPrice,unit_price as unitPrice,freight,othersFee,sc.create_date as createDate';
+        $state = isset($this->data['state']) && !is_null($this->data['state']) ? $this->data['state'] + 0 : null;
+        if($state == 1){
+            $where['over_sure'] = 1;//已入库
+        }elseif($state == 2){
+            $where['lock_state'] = 1;//已锁定
+        }elseif($state == 3){
+            $where['is_put_out'] = 1;//已出库
+        }elseif($state == 0){
+            $where['over_sure'] = 0;//新建
+        }
+
+        $field = 'stock_car_id as id,cars_info as carsInfo,frame_number as frameNumber,interior_name as  interiorName,colour_name as colourName,so.shortName as orgName,warehouse_name as warehouseName,lock_state,is_put_out,over_sure,guiding_price as guidingPrice,unit_price as unitPrice,freight,othersFee,sc.create_date as createDate';
         $join  = [
             ['system_organization so', 'so.orgId=sc.org_id', 'left']
         ];
@@ -61,7 +78,7 @@ class StockCar extends Home
         $data  = Db::name('stock_car sc')->where($where)->field($field)->join($join)->page($page, $rows)->order('sc.create_date desc')->select();
         if($data){
             foreach($data as $key => &$value){
-                $value['state'] = $value['lock_state'] == 1 ? '已锁定' : ($value['is_put_out'] == 1 ? '已出库' : '在库');
+                $value['state'] = $value['lock_state'] == 1 ? '已锁定' : ($value['is_put_out'] == 1 ? '已出库' : ($value['over_sure'] == 1 ? '已入库' : '新建'));
             }
         }
         $this->apiReturn(200, ['list' => $data, 'page' => $page, 'rows' => $rows, 'total' => $count]);
@@ -73,8 +90,8 @@ class StockCar extends Home
         $id = $this->data['id'] + 0;
 
         $data['unit_price'] = input('unitPrice', '', 'htmlspecialchars,trim');
-        $data['freight']   = input('freight', '', 'htmlspecialchars,trim');
-        $data['othersFee'] = input('othersFee', '', 'htmlspecialchars,trim');
+        $data['freight']    = input('freight', '', 'htmlspecialchars,trim');
+        $data['othersFee']  = input('othersFee', '', 'htmlspecialchars,trim');
 
         $result = $this->validate($data, 'EditStock');
         $result !== true && $this->apiReturn(201, '', $result);
@@ -115,20 +132,39 @@ class StockCar extends Home
             $orgIds = array_column($orgIds, 'orgId');
             $where['org_id'] = ['in', $orgIds];
         }
-        //入库时间查询，暂时先用一个开始时间
-        if(isset($this->data['stockTime']) && !empty($this->data['stockTime'])){
-            $where['sc.create_date'] = ['egt', $this->data['stockTime']];
-        }
-
-        $state = isset($this->data['state']) && !is_null($this->data['state']) ? $this->data['state'] + 0 : 0;
-        if($state == 1){
-            $where['lock_state'] = 1;
-        }elseif($state == 2){
-            $where['is_put_out'] = 1;
+		
+        $startTime = isset($this->data['startTime']) && !empty($this->data['startTime']) ? $this->data['startTime'] : '';
+        $endTime   = isset($this->data['endTime'])   && !empty($this->data['endTime'])   ? $this->data['endTime'] : '';
+        if($startTime && !$endTime){
+            $where['sc.create_date'] = ['egt', $this->data['startTime']];
+        }elseif(!$startTime && $endTime){
+            $where['sc.create_date'] = ['elt', $this->data['endTime']];
         }else{
-            $where['is_put_out'] = 0;
+            $now = date('Y-m-d H:i:s');
+            if($startTime == $endTime && $endTime <= $now){
+                $where['sc.create_date'] = ['egt', $startTime];
+            }elseif($startTime == $endTime && $endTime >= $now){
+                $where['sc.create_date'] = ['elt', $startTime];
+            }else{
+                if($startTime > $endTime){
+                    $where['sc.create_date'] = ['between', [$endTime, $startTime]];
+                }else{
+                    $where['sc.create_date'] = ['between', [$startTime, $endTime]];
+                }
+            }
         }
 
+        $state = isset($this->data['state']) && !is_null($this->data['state']) ? $this->data['state'] + 0 : null;
+        if($state == 1){
+            $where['over_sure'] = 1;//已入库
+        }elseif($state == 2){
+            $where['lock_state'] = 1;//已锁定
+        }elseif($state == 3){
+            $where['is_put_out'] = 1;//已出库
+        }elseif($state == 0){
+            $where['over_sure'] = 0;//新建
+        }
+		
         $field = 'stock_car_id as id,cars_info as carsInfo,frame_number as frameNumber,interior_name as  interiorName,colour_name as colourName,so.shortName as orgName,warehouse_name as warehouseName,lock_state,is_put_out,guiding_price as guidingPrice,unit_price as unitPrice,freight,othersFee,sc.create_date as createDate';
         $join  = [
             ['system_organization so', 'so.orgId=sc.org_id', 'left']
@@ -165,7 +201,6 @@ class StockCar extends Home
             ->setCellValue('J2', '其他费用')
             ->setCellValue('K2', '入库时间');
 
-        $status = array(-1 => '驳回', '未处理', '结算', '在途');
         if($data){
             foreach($data as $k => $item){
 //                $item['state'] = $item['lock_state'] == 1 ? '已锁定' : ($item['is_put_out'] == 1 ? '已出库' : '在库');
@@ -189,7 +224,7 @@ class StockCar extends Home
         for ($i = 1; $i <= 10; $i++) {
             $objPHPExcel->getActiveSheet()->getColumnDimension($allLetter[$i])->setWidth(20);
         }
-//        $objPHPExcel->getActiveSheet()->getRowDimension(3)->setRowHeight(30);
+
         $endCell = 'K' . (count($data) + 2);
         $styleArray = array(
             'borders' => array(
@@ -223,7 +258,6 @@ class StockCar extends Home
         $objWriter = \PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
         $objWriter->save('php://output');
         exit;
-
     }
 
 }

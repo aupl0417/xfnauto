@@ -11,6 +11,8 @@ namespace app\api\controller\v1;
 use app\api\model\CustomerOrder;
 use think\Controller;
 use think\Db;
+use think\Exception;
+
 class Order extends Home
 {
 
@@ -138,6 +140,39 @@ class Order extends Home
         $orderId = $this->data['id'] + 0;
         $data    = model('ConsumerOrder')->getOrderDetailByOrderId($orderId);
         $this->apiReturn(200, $data);
+    }
+
+    /*
+     * 更新订单的出库状态
+     * */
+    public function stockOut(){
+        (!isset($this->data['orderId']) || empty($this->data['orderId'])) && $this->apiReturn(201, '', '订单ID非法');
+        (!isset($this->data['state'])   || empty($this->data['state']))   && $this->apiReturn(201, '', '状态非法');
+
+        $orderId = $this->data['orderId'] + 0;
+        $state   = $this->data['state'] + 0;
+
+        Db::startTrans();
+        try{
+            $result = Db::name('consumer_order')->where(['id' => $orderId])->update(['state' => $state]);
+            if($result === false){
+                throw new Exception('更新状态失败', 1);
+            }
+            $stockCar = Db::name('consumer_order_info oi')->where(['oi.order_id' => $orderId])->join('consumer_order_car oc', 'oc.info_id=oi.id')->field('stock_car_id')->select();
+            if(!$stockCar){
+                throw new Exception('数据不存在', 2);
+            }
+            $stockIds = array_column($stockCar, 'stock_car_id');
+            $result   = Db::name('stock_car')->where(['stock_car_id' => ['in', $stockIds]])->update(['is_put_out' => 1]);
+            if($result === false){
+                throw new Exception('更新库存表出库状态失败', 3);
+            }
+            Db::commit();
+            $this->apiReturn(200, '', '更新成功');
+        }catch (Exception $e){
+            Db::rollback();
+            $this->apiReturn(201, '', '更新失败');
+        }
     }
 
 }

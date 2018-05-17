@@ -51,6 +51,16 @@ class SystemUser extends Model
         return Db::name($this->table)->where(['usersId' => $userId])->field($field)->find();
     }
 
-
+    public function getUser($userId, $orgId, $field = '*'){
+        $where = [
+            'usersId' => $userId,
+            'orgId'   => $orgId,
+        ];
+        $result = Db::name($this->table)->where($where)->field($field)->find();
+        if(!$result){
+            return false;
+        }
+        return $result;
+    }
 
 }
