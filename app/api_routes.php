@@ -43,3 +43,7 @@ Route::post('article_v1/edit','api/v1.Article/edit');
 Route::get('article_v1/detail','api/v1.Article/detail');
 Route::get('article_v1/remove','api/v1.Article/remove');
 Route::get('ucenter_v1/consumerDetail','api/v1.Order/consumerDetail');
+Route::get('backend_v1/stock','api/v1.Backend.StockCar/index');
+Route::post('backend_v1/stock/edit','api/v1.Backend.StockCar/edit');
+Route::get('backend_v1/stock/detail','api/v1.Backend.StockCar/detail');
+Route::post('backend_v1/stock/export','api/v1.Backend.StockCar/export');
