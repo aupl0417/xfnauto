@@ -288,7 +288,7 @@ class Common extends Home
             $this->apiReturn(201, '', 'file not found');
         }
 
-        return ['url' => (is_https() ? 'https://api.' : 'https://api.') . config('url_domain_root') . '/' . $wImageName, 'filename' => $wImageName];
+        return ['url' => (is_https() ? 'https://api.' : 'http://api.') . config('url_domain_root') . '/' . $wImageName, 'filename' => $wImageName];
     }
 
     public function upFile($img){
@@ -324,7 +324,7 @@ class Common extends Home
             return false;
         }
 
-        return ['url' => (is_https() ? 'https://api.' : 'https://api.') . config('url_domain_root') . '/' . $wImageName, 'filename' => $wImageName];
+        return ['url' => (is_https() ? 'https://api.' : 'http://api.') . config('url_domain_root') . '/' . $wImageName, 'filename' => $wImageName];
     }
 
 
@@ -368,30 +368,12 @@ class Common extends Home
         $this->apiReturn(200, ['token' => $token]);
     }
 
-    public function test(){
-        $client = Client::getInstance();
-        $width  = 800;
-        $height = 600;
-        $top    = 0;
-        $left   = 0;
-        if(is_writable('./upload/image/abc.jpg')){
-            dump('ok');
-        }else{
-            die('error');
-        }
-        $url = 'http://api.mifengqiche.com/index.html';
-        $request = $client->getMessageFactory()->createCaptureRequest($url, 'get');
-        $CaptureRequest    = new CaptureRequest();
-
-        $CaptureRequest->setOutputFile('./upload/image/');
-        $request->setViewportSize($width, $height);
-        $CaptureRequest->setCaptureDimensions($width, $height, $top, $left);
-
-        $response = $client->getMessageFactory()->createResponse();
-        $client->send($request, $response);
-    }
-
-    public function share1(){
+    /**
+     * 生成电子合同
+     * @param orderId 资源订单ID
+     * @return json
+     * */
+    public function contract(){
         (!isset($this->data['orderId']) || empty($this->data['orderId'])) && $this->apiReturn(201, '', '参数错误');
         $orderId = $this->data['orderId'] + 0;
 

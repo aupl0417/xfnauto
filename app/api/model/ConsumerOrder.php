@@ -161,7 +161,11 @@ class ConsumerOrder extends Model
         create_time as createTime,creator_id as creatorId,creator,freight,shortName as partyA,openingBranch as bankBranch,bankAccount as bankCardNum,
         out_stocker as outStocker,countermand_reason as countermandReason,countermand_apply as countermandApply,countermand_pic as countermandPic,order_type as orderType,out_stock_time as outStockTime,idcard_owner as bankAccountName,signet';
         $where = ['id' => $orderId];
-        $data  = Db::name('consumer_order co')->where($where)->field($field)->join('system_organization org', 'orgId=org_id', 'left')->order('create_time desc')->find();
+        $join  = [
+            ['system_user su', 'su.usersId=co.creator_id', 'left'],
+            ['system_organization org', 'su.orgId=org.orgId', 'left']
+        ];
+        $data  = Db::name('consumer_order co')->where($where)->field($field)->join($join)->order('create_time desc')->find();
         if($data){
             $stateArr = [
                 '1' => '新建',
@@ -210,6 +214,68 @@ class ConsumerOrder extends Model
                 }
             }
             $data['orderPaymentVOs'] = Db::name('consumer_order_payment')->where(['order_id' => $orderId])->field('id,order_id as orderId,amount,type,voucher,remark')->select();
+        }
+
+        return $data;
+    }
+
+    public function getOrderListAll($where = '', $page = 1, $pageSize = 10){
+        $field = 'co.id as id,co.order_code as orderId,co.state as orderState,org_name as orgName,order_type as orderType,user_name as username,user_phone as phone,co.freight,creator,co.create_time as createTime';
+//        $field = 'co.id as id,co.order_code as orderId,co.state as orderState';
+        $data  = Db::name('consumer_order co')->where($where)->page($page, $pageSize)
+            ->field($field)->join('consumer_order_user ou', 'ou.order_id=co.id', 'left')->order('co.create_time desc')
+            ->select();//->join('consumer_order_info oi', 'co.id=oi.order_id', 'left')
+        if($data){
+            $stateArr = [
+                '1' => '新建',
+                '5' => '待收定金',
+                '10' => '待配车',
+                '15' => '待验车',
+                '20' => '换车申请',
+                '25' => '待换车',
+                '30' => '待协商',
+                '35' => '待收尾款',
+                '40' => '待出库',
+                '45' => '待上传票证',
+                '50' => '完成',
+            ];
+            $field = 'id,cars_name as carName,color_name as colorName,interior_name as interiorName,state as orderInfoState,car_num as carNum';
+            foreach($data as $key => &$value){
+                $orderId = $value['id'];
+                $value['orderStateName'] = $stateArr[$value['orderState']];
+                $field = 'id,cars_name as carName,color_name as colorName,interior_name as interiorName,state as orderInfoState,car_num as carNum';
+                $value['totalDepositPrice'] = Db::name('consumer_order_info')->where(['order_id' => $orderId])->sum('deposit_price');
+                $value['totalFinalPrice']   = 0;
+                $value['totalRestPrice']    = 0;
+                $orderInfo = Db::name('consumer_order_info')->where(['order_id' => $orderId])->field('naked_price,traffic_compulsory_insurance_price,commercial_insurance_price,car_num')->select();
+                if($orderInfo){
+                    $total = 0;
+                    foreach($orderInfo as $vo){
+                        $total += ($vo['naked_price'] + $vo['traffic_compulsory_insurance_price'] + $vo['commercial_insurance_price']) * $vo['car_num'];
+                    }
+                    $value['totalFinalPrice']   = $total + $value['freight'];
+                    $value['totalRestPrice']    = $value['totalFinalPrice'] - $value['totalDepositPrice'];
+                }
+
+                $orderUserField      = 'id,order_id as orderId,user_name as userName,user_phone as userPhone,id_card as idCard,id_card_pic_on as idCardPicOn,id_card_pic_off as idCardPicOff,type,create_time as createTime,is_del as isDel';
+                $value['customers']  = Db::name('consumer_order_user')->where(['order_id' => $orderId])->field($orderUserField)->select();
+                if($value['customers']){
+                    $field = 'id,cars_id as carsId,cars_name as carsName,order_id as orderId,customer_id as customerId,brand_id as brandId,brand_name as brandName,color_id as colorId,color_name as colorName,
+                interior_id as interiorId,interior_name as interiorName,family_id as familyId,family_name as familyName,car_num as carNum,guide_price as guidePrice,deposit_price as depositPrice,naked_price as nakedPrice,
+                traffic_compulsory_insurance_price as trafficCompulsoryInsurancePrice,commercial_insurance_price as commercialInsurancePrice,change_price as changePrice,ticket_pic as ticketPic,remark,create_time as createTime,state';
+//                $field = 'brand_id as brandId,cars_id as carsId,brand_name as brandName,car_num as carNum,cars_name as carsName,change_price as changePrice,color_id as colorId,color_name as colorName,commercial_insurance_price as commercialInsurancePrice,create_time as createTime,customer_id as customerId,deposit_price as depositPrice,family_id as familyId,family_name as familyName,guide_price as guidePrice,id,interior_id as interiorId,interior_name as interiorName,naked_price as nakedPrice,order_id as orderId,remark,state,ticket_pic as ticketPic,traffic_compulsory_insurance_price as trafficCompulsoryInsurancePrice';
+                    $carField = 'oc.vin,oc.audit_remark as auditRemark,oc.audit_state as auditState,oc.brand_id as brandId,oc.brand_name as brandName,oc.cars_id as carsId,oc.cars_name as carsName,oc.certification_pic as certificationPic,oc.check_car_pic as checkCarPic,oc.ci_pic as ciPic,oc.color_id as colorId,oc.color_name as colorName,oc.create_time as createTime,oc.express_pic as expressPic,oc.family_id as familyId,oc.family_name as familyName,oc.id,oc.info_id as infoId,oc.interior_id as interiorId,oc.interior_name as interiorName,oc.is_del as isDel,oc.other_pic as otherPic,oc.stock_car_id as stockCarId,oc.tci_pic as tciPic,oc.ticket_pic as ticketPic,oc.ticket_remark as ticketRemark,sc.frame_number as frameNumber,sc.engine_number';
+
+                    foreach($value['customers'] as $key => &$val){
+                        $val['infos'] = Db::name('consumer_order_info')->field($field)->where(['order_id' => $orderId])->select();
+                        if($val['infos']){
+                            foreach($val['infos'] as $k => &$v){
+                                $v['cars'] = Db::name('consumer_order_car oc')->where(['oc.cars_id' => $v['carsId']])->join('stock_car sc', 'sc.stock_car_id=oc.stock_car_id')->field($carField)->select();
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         return $data;
