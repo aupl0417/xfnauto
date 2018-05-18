@@ -58,7 +58,15 @@ Route::post('backend_v1/stock/edit','api/v1.Backend.StockCar/edit');
 Route::get('backend_v1/stock/detail','api/v1.Backend.StockCar/detail');
 Route::get('backend_v1/stock/export','api/v1.Backend.StockCar/export');
 Route::get('backend_v1/consumer/index','api/v1.Backend.ConsumerOrder/index');
+Route::get('backend_v1/consumer/detail','api/v1.Backend.ConsumerOrder/consumerDetail');
 
 //后台角色管理
 Route::get('backend_v1/role/index','api/v1.Backend.Role/index');
 Route::get('backend_v1/role/create','api/v1.Backend.Role/create');
+Route::get('backend_v1/role/edit','api/v1.Backend.Role/edit');
+Route::get('backend_v1/role/remove','api/v1.Backend.Role/remove');
+Route::get('backend_v1/roleaccess/index','api/v1.Backend.RoleAccess/index');
+Route::post('backend_v1/roleaccess/addauth','api/v1.Backend.RoleAccess/addAuth');
+Route::get('backend_v1/systemuser/index','api/v1.Backend.SystemUser/index');
+Route::post('backend_v1/systemuser/create','api/v1.Backend.SystemUser/create');
+Route::post('backend_v1/systemuser/edit','api/v1.Backend.SystemUser/edit');

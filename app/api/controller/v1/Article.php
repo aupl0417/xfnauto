@@ -36,7 +36,7 @@ class Article extends Home
         $id = $this->data['id'] + 0;
 
         $field = 'a_id as id,a_title as title,a_content as content,a_source as source,a_publishedTime as publishedTime,a_excerpt as excerpt,a_videoUrl as videoUrl,a_icon as icon,realName,a_like as likeCount';
-        $data = Db::name('article_post')->where(['a_id' => $id, 'a_deleteTime' => ['eq', '']])
+        $data = Db::name('article_post')->where(['a_id' => $id, 'a_state' => ['eq', 1]])
               ->field($field)
               ->join('system_user', 'a_uid=usersId', 'left')
               ->find();

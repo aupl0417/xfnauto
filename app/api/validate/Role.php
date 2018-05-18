@@ -10,17 +10,25 @@ use think\Db;
 use think\Validate;
 
 
-class AddRole extends Validate{
+class Role extends Validate{
 
     protected $rule = [
+        'roleId'                   => 'require|number',
         'orgId'                => 'require|number',
         'roleName'             => 'require',
 //        'remark'               => 'require',
     ];
 
     protected $message = [
+        'roleId.require'        => '角色ID不能为空',
+        'roleId.number'         => '角色ID非法',
         'orgId.require'         => '请选择所属机构',
         'orgId.number'          => '所属机构ID非法',
-        'roleName.require'       => '请输入角色名称'
+        'roleName.require'      => '请输入角色名称'
+    ];
+
+    protected $scene = [
+        'add'   =>  ['orgId','roleName'],
+        'edit'  =>  ['id', 'orgId', 'roleName'],
     ];
 }

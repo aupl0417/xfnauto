@@ -10,7 +10,7 @@ namespace app\api\controller\v1\Backend;
 
 use think\Controller;
 use think\Db;
-class StockCar extends Base
+class StockCar extends Admin
 {
 
     public function index(){
@@ -19,7 +19,6 @@ class StockCar extends Base
 
         $where = [
             'is_delete' => 0,
-            'org_id'    => $this->orgId
         ];
 
         if(isset($this->data['frame_number']) && !empty($this->data['frame_number'])){
@@ -45,16 +44,18 @@ class StockCar extends Base
         }elseif(!$startTime && $endTime){
             $where['sc.create_date'] = ['elt', $this->data['endTime']];
         }else{
-            $now = date('Y-m-d H:i:s');
-            if($startTime == $endTime && $endTime <= $now){
-                $where['sc.create_date'] = ['egt', $startTime];
-            }elseif($startTime == $endTime && $endTime >= $now){
-                $where['sc.create_date'] = ['elt', $startTime];
-            }else{
-                if($startTime > $endTime){
-                    $where['sc.create_date'] = ['between', [$endTime, $startTime]];
+            if($startTime && $endTime){
+                $now = date('Y-m-d H:i:s');
+                if($startTime == $endTime && $endTime <= $now){
+                    $where['sc.create_date'] = ['egt', $startTime];
+                }elseif($startTime == $endTime && $endTime >= $now){
+                    $where['sc.create_date'] = ['elt', $startTime];
                 }else{
-                    $where['sc.create_date'] = ['between', [$startTime, $endTime]];
+                    if($startTime > $endTime){
+                        $where['sc.create_date'] = ['between', [$endTime, $startTime]];
+                    }else{
+                        $where['sc.create_date'] = ['between', [$startTime, $endTime]];
+                    }
                 }
             }
         }
@@ -66,7 +67,7 @@ class StockCar extends Base
             $where['lock_state'] = 1;//已锁定
         }elseif($state == 3){
             $where['is_put_out'] = 1;//已出库
-        }elseif($state == 0){
+        }elseif($state === 0){
             $where['over_sure'] = 0;//新建
         }
 

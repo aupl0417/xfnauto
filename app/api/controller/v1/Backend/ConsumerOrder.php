@@ -10,7 +10,7 @@ namespace app\api\controller\v1\Backend;
 
 use think\Controller;
 use think\Db;
-class ConsumerOrder extends Base
+class ConsumerOrder extends Admin
 {
 
     /**
@@ -53,14 +53,14 @@ class ConsumerOrder extends Base
             $where['shortName'] = ['like', '%' . $orgName . '%'];
         }
 
-        $where['co.creator_id'] = $this->userId;
+//        $where['co.creator_id'] = $this->userId;
 
-        $startTime = isset($this->data['startTime']) && !empty($this->data['startTime']) ? $this->data['startTime'] : '';
-        $endTime   = isset($this->data['endTime'])   && !empty($this->data['endTime'])   ? $this->data['endTime'] : '';
+        $startTime = isset($this->data['startDate']) && !empty($this->data['startDate']) ? $this->data['startDate'] : '';
+        $endTime   = isset($this->data['endDate'])   && !empty($this->data['endDate'])   ? $this->data['endDate'] : '';
         if($startTime && !$endTime){
-            $where['co.create_time'] = ['egt', $this->data['startTime']];
+            $where['co.create_time'] = ['egt', $startTime];
         }elseif(!$startTime && $endTime){
-            $where['co.create_time'] = ['elt', $this->data['endTime']];
+            $where['co.create_time'] = ['elt', $endTime];
         }else{
             $now = date('Y-m-d H:i:s');
             if($startTime == $endTime && $endTime <= $now){
@@ -78,6 +78,17 @@ class ConsumerOrder extends Base
 
         $data = model('ConsumerOrder')->getOrderListAll($where, $page, $rows);
         $this->apiReturn(200, ['list' => $data, 'page' => $page, 'rows' => $rows, 'total' => count($data)]);
+    }
+
+    /**
+     * 资源订单详情
+     * */
+    public function consumerDetail(){
+        (!isset($this->data['id']) || empty($this->data['id'])) && $this->apiReturn(201, '', '参数非法');
+
+        $orderId = $this->data['id'] + 0;
+        $data    = model('ConsumerOrder')->getOrderDetailByOrderId($orderId);
+        $this->apiReturn(200, $data);
     }
 
 }

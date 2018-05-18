@@ -20,7 +20,7 @@ class RoleUser extends Model
         if(!$userId || !is_numeric($userId)){
             return false;
         }
-        $role = Db::name($this->table)->where(['userId' => $userId])->field('userRoleId as id,userId,roleId')->find();
+        $role = Db::name($this->table)->where(['userId' => $userId])->field('userRoleId as id,userId,roleId')->select();
         if(!$role){
             return false;
         }

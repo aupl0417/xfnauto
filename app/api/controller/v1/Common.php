@@ -317,7 +317,7 @@ class Common extends Home
             ]
         ];
         $wImageName = md5(json_encode($url) . microtime(true) . '_' . $this->userId) . '.jpg';
-        $urlInfo = file_get_contents($url, false, stream_context_create($options));
+        $urlInfo    = file_get_contents($url, false, stream_context_create($options));
         file_put_contents($wImageName, $urlInfo);
 
         if(!file_exists($wImageName)){
@@ -379,6 +379,9 @@ class Common extends Home
 
         $data = model('ConsumerOrder')->getOrderDetailByOrderId($orderId);
         $img  = 'upload/image/' . md5(serialize($this->data) . microtime(true)) . '.jpg';
+        if(!$data['signet']){
+            $this->apiReturn(201, '', '请上传印章');
+        }
         $head = [
             '甲方（供车方）：' . $data['partyA'],
             '乙方（购车方）：' . $data['orgName'],

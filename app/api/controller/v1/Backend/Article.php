@@ -10,7 +10,7 @@ namespace app\api\controller\v1\Backend;
 
 use think\Controller;
 use think\Db;
-class Article extends Base
+class Article extends Admin
 {
 
     /**
@@ -30,10 +30,10 @@ class Article extends Base
 
         $field = 'a_id as id,a_title as title,a_publishedTime as publishedTime,a_state as state';
         $count = Db::name('article_post')->where($where)->count();
-        $data  = Db::name('article_post')->where($where)->field($field)->page($page, $rows)->order('a_publishedTime desc')->select();
+        $data  = Db::name('article_post')->where($where)->field($field)->page($page, $rows)->order('a_createTime desc')->select();
         if($data){
             foreach($data as &$value){
-                $value['publishedTime'] = date('Y-m-d H:i', $value['publishedTime']);
+                $value['publishedTime'] = $value['publishedTime'] ? (is_numeric($value['publishedTime']) ? date('Y-m-d H:i:s', $value['publishedTime']) : $value['publishedTime']) : '';
                 $value['stateName']     = $value['state'] == -1 ? '禁用中' : ($value['state'] == 0 ? '未发布' : '启用中');
             }
         }
@@ -102,7 +102,7 @@ class Article extends Base
         $id = $this->data['id'] + 0;
 
         $field = 'a_id as id,a_title as title,a_content as content,a_source as source,a_publishedTime as publishedTime,a_excerpt as excerpt,a_videoUrl as videoUrl,a_icon as icon,realName,a_like as likeCount';
-        $data = Db::name('article_post')->where(['a_id' => $id, 'a_deleteTime' => ['eq', '']])
+        $data = Db::name('article_post')->where(['a_id' => $id])
               ->field($field)
               ->join('system_user', 'a_uid=usersId', 'left')
               ->find();

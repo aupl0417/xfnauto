@@ -13,11 +13,6 @@ use think\Db;
 use think\Request;
 class Base extends Controller {
     protected $data = array();
-    protected $userId;
-    protected $user;
-    protected $isRole;
-    protected $orgId;
-    protected $adminIds = array();
     protected $app  = array(
         '1' => 'D8OZLSE2NEDC0FR4XTGBKHY67UJZ8IK9', //ios
         '2' => 'DFHGKZLSE2NFDEHGFHHR4XTGBKHY67EJZ8IK9', //安卓
@@ -37,17 +32,6 @@ class Base extends Controller {
         header("Access-Control-Allow-Origin: {$url}" );
         $params = input('', '', 'htmlspecialchars,trim');
         //验证签名串是否存在或是否为空
-
-        (!isset($params['sessionId']) || empty($params['sessionId'])) && $this->apiReturn(201, 'SESSIONID不能为空');
-        $sessionId  = trim($params['sessionId']);
-        $user       = model('SystemUser')->getUserBySessionId($sessionId);
-        !$user && $this->apiReturn(4002, '', '请重新登录');
-        $this->isRole = $this->checkRole($user['usersId']);
-        $this->userId = $user['usersId'];
-        $this->orgId  = $user['orgId'];
-        $this->user   = $user;
-
-        $this->adminIds = [1];
 
         $this->data   = $params;
     }
@@ -138,80 +122,4 @@ class Base extends Controller {
         $user['orgId'] != $orgId && $this->apiReturn(201, '', '组织ID不正确');
         return true;
     }
-
-    /**
-     * 生成菜单中地址链接
-     * @param $controller string 控制器
-     * @param $action     string action
-     * @return string
-     * */
-    public function createMenuUrl($controller = '', $action = ''){
-        if(!$controller){
-            $controller = request()->controller();
-        }
-        if(!$action){
-            $action = request()->action();
-        }
-        $controller = explode('.', $controller);
-        array_shift($controller);
-        $controller = implode('/', $controller);
-        return $controller . '/' . $action;
-    }
-
-    /**
-     * 检查用户是否具有如下身份
-     * 总经理 IT部 仓管 仓管主管 B端客户总监 销售经理 资源部经理 物流主管
-     * @param $userId 用户ID
-     * @return bool
-     * */
-    public function checkRole($userId){
-        $role = [14,15,42,43,49,48,33,45];
-        $userRole = Db::name('system_user_role')->where(['userId' => $userId])->field('roleId')->find();
-        if(!$userRole){
-            return false;
-        }
-
-        if(!in_array($userRole['roleId'], $role)){
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * 检查一个用户是否属于指定的组织
-     * @param $userId 用户ID
-     * @param $orgId  组织ID
-     * */
-    public function checkUserIsBelongToOrg($userId, $orgId){
-        if(in_array($userId, $this->adminIds)){
-            return true;
-        }
-
-        $result = model('SystemUser')->getUser($userId, $orgId, 'usersId');
-        if(!$result){
-            return false;
-        }
-        return true;
-    }
-
-    public function checkUserAuth($userId){
-        $role = model('RoleUser')->getRoleByUserId($userId);
-        if(!$role){
-            return false;
-        }
-        $roleIds = array_column($role, 'roleId');
-        $roleAccess = model('RoleAccess')->getRoleAccessByRoleIds($roleIds);
-        if(!$roleIds){
-            return false;
-        }
-        $roleAccessAuth = array_filter(array_column($roleAccess, 'access_ids'));
-        $roleAccessAuth = implode(',', $roleAccessAuth);
-        $roleAccessAuth = explode(',', $roleAccessAuth);
-        $roleAccessAuth = array_unique($roleAccessAuth);
-
-        $url = $this->createMenuUrl();
-        $menu = model('Menu')->getMenuBySrc($url);
-    }
-
 }
