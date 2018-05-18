@@ -132,20 +132,39 @@ class StockCar extends Base
             $orgIds = array_column($orgIds, 'orgId');
             $where['org_id'] = ['in', $orgIds];
         }
-        //入库时间查询，暂时先用一个开始时间
-        if(isset($this->data['stockTime']) && !empty($this->data['stockTime'])){
-            $where['sc.create_date'] = ['egt', $this->data['stockTime']];
-        }
-
-        $state = isset($this->data['state']) && !is_null($this->data['state']) ? $this->data['state'] + 0 : 0;
-        if($state == 1){
-            $where['lock_state'] = 1;
-        }elseif($state == 2){
-            $where['is_put_out'] = 1;
+		
+        $startTime = isset($this->data['startTime']) && !empty($this->data['startTime']) ? $this->data['startTime'] : '';
+        $endTime   = isset($this->data['endTime'])   && !empty($this->data['endTime'])   ? $this->data['endTime'] : '';
+        if($startTime && !$endTime){
+            $where['sc.create_date'] = ['egt', $this->data['startTime']];
+        }elseif(!$startTime && $endTime){
+            $where['sc.create_date'] = ['elt', $this->data['endTime']];
         }else{
-            $where['is_put_out'] = 0;
+            $now = date('Y-m-d H:i:s');
+            if($startTime == $endTime && $endTime <= $now){
+                $where['sc.create_date'] = ['egt', $startTime];
+            }elseif($startTime == $endTime && $endTime >= $now){
+                $where['sc.create_date'] = ['elt', $startTime];
+            }else{
+                if($startTime > $endTime){
+                    $where['sc.create_date'] = ['between', [$endTime, $startTime]];
+                }else{
+                    $where['sc.create_date'] = ['between', [$startTime, $endTime]];
+                }
+            }
         }
 
+        $state = isset($this->data['state']) && !is_null($this->data['state']) ? $this->data['state'] + 0 : null;
+        if($state == 1){
+            $where['over_sure'] = 1;//已入库
+        }elseif($state == 2){
+            $where['lock_state'] = 1;//已锁定
+        }elseif($state == 3){
+            $where['is_put_out'] = 1;//已出库
+        }elseif($state == 0){
+            $where['over_sure'] = 0;//新建
+        }
+		
         $field = 'stock_car_id as id,cars_info as carsInfo,frame_number as frameNumber,interior_name as  interiorName,colour_name as colourName,so.shortName as orgName,warehouse_name as warehouseName,lock_state,is_put_out,guiding_price as guidingPrice,unit_price as unitPrice,freight,othersFee,sc.create_date as createDate';
         $join  = [
             ['system_organization so', 'so.orgId=sc.org_id', 'left']
