@@ -25,7 +25,7 @@ Route::get('ucenter_v1/customerlist','api/v1.Order/customerList');
 Route::get('ucenter_v1/customers','api/v1.UserCenter/customers');
 Route::get('order_v1/statistics','api/v1.Order/statistics');
 Route::get('ucenter_v1/visit','api/v1.UserCenter/visit');
-Route::get('ucenter_v1/stockOut','api/v1.Order/stockOut');
+Route::get('ucenter_v1/stockout','api/v1.Order/stockOut');
 Route::get('publics_v1/brand','api/v1.Common/brand');
 Route::get('publics_v1/series','api/v1.Common/series');
 Route::get('publics_v1/carlist','api/v1.Common/carList');
@@ -57,16 +57,24 @@ Route::get('backend_v1/stock','api/v1.Backend.StockCar/index');
 Route::post('backend_v1/stock/edit','api/v1.Backend.StockCar/edit');
 Route::get('backend_v1/stock/detail','api/v1.Backend.StockCar/detail');
 Route::get('backend_v1/stock/export','api/v1.Backend.StockCar/export');
+Route::get('backend_v1/consumer/export','api/v1.Backend.ConsumerOrder/export');
 Route::get('backend_v1/consumer/index','api/v1.Backend.ConsumerOrder/index');
 Route::get('backend_v1/consumer/detail','api/v1.Backend.ConsumerOrder/consumerDetail');
 
 //后台角色管理
 Route::get('backend_v1/role/index','api/v1.Backend.Role/index');
-Route::get('backend_v1/role/create','api/v1.Backend.Role/create');
-Route::get('backend_v1/role/edit','api/v1.Backend.Role/edit');
+Route::post('backend_v1/role/create','api/v1.Backend.Role/create');
+Route::post('backend_v1/role/edit','api/v1.Backend.Role/edit');
 Route::get('backend_v1/role/remove','api/v1.Backend.Role/remove');
 Route::get('backend_v1/roleaccess/index','api/v1.Backend.RoleAccess/index');
 Route::post('backend_v1/roleaccess/addauth','api/v1.Backend.RoleAccess/addAuth');
 Route::get('backend_v1/systemuser/index','api/v1.Backend.SystemUser/index');
 Route::post('backend_v1/systemuser/create','api/v1.Backend.SystemUser/create');
 Route::post('backend_v1/systemuser/edit','api/v1.Backend.SystemUser/edit');
+Route::get('backend_v1/role/list','api/v1.Backend.Role/lists');
+Route::get('backend_v1/systemuser/higherups','api/v1.Backend.SystemUser/higherUps');
+Route::get('backend_v1/systemuser/remove','api/v1.Backend.SystemUser/remove');
+
+//组织机构
+Route::get('backend_v1/organization/index','api/v1.Backend.Organization/index');
+Route::get('backend_v1/organization/getorg','api/v1.Backend.Organization/getOrg');

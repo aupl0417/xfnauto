@@ -72,8 +72,8 @@ class Role extends Admin
 
         $roleName = htmlspecialchars(trim($this->data['roleName']));
         $orgId    = $this->data['orgId'] + 0;
-        $roleId   = $this->data['roleId'] + 0;
-        if(Db::name('system_role')->where(['orgId' => $orgId, 'roleName' => $roleName, 'isDelete' => 0])->count()){
+        $roleId   = $this->data['id'] + 0;
+        if(Db::name('system_role')->where(['orgId' => $orgId, 'roleName' => $roleName, 'isDelete' => 0, 'roleId' => ['neq', $roleId]])->count()){
             $this->apiReturn(201, '', '该角色已存在');
         }
 
@@ -105,5 +105,12 @@ class Role extends Admin
         $result === false && $this->apiReturn(201, '', '删除失败');
         $this->apiReturn(200, '', '删除成功');
     }
+
+    public function lists(){
+        $data = model('Role')->getRoleByOrgIdAll($this->orgId, 'roleId as id,roleName');
+        $this->apiReturn(200, $data);
+    }
+    
+    
 
 }

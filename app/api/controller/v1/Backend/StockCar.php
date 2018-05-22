@@ -8,6 +8,8 @@
 
 namespace app\api\controller\v1\Backend;
 
+use Qiniu\Auth;
+use Qiniu\Storage\UploadManager;
 use think\Controller;
 use think\Db;
 class StockCar extends Admin
@@ -29,12 +31,8 @@ class StockCar extends Admin
             $where['cars_info'] = ['like', '%' . $this->data['cars_info'] . '%'];
         }
 
-        if(isset($this->data['orgName']) && !empty($this->data['orgName'])){
-            $condition['shortName'] = ['like', '%' . $this->data['orgName'] . '%'];
-            $orgIds = Db::name('system_organization')->where($condition)->field('orgId')->select();
-            !$orgIds && $this->apiReturn(200, ['list' => array(), 'page' => 1, 'rows' => $rows, 'total' => 0]);
-            $orgIds = array_column($orgIds, 'orgId');
-            $where['org_id'] = ['in', $orgIds];
+        if(isset($this->data['orgId']) && !empty($this->data['orgId'])){
+            $where['org_id'] = $this->data['orgId'] + 0;
         }
         //入库时间查询，暂时先用一个开始时间
         $startTime = isset($this->data['startTime']) && !empty($this->data['startTime']) ? $this->data['startTime'] : '';
@@ -59,19 +57,25 @@ class StockCar extends Admin
                 }
             }
         }
-
-        $state = isset($this->data['state']) && !is_null($this->data['state']) ? $this->data['state'] + 0 : null;
-        if($state == 1){
-            $where['over_sure'] = 1;//已入库
-        }elseif($state == 2){
-            $where['lock_state'] = 1;//已锁定
-        }elseif($state == 3){
-            $where['is_put_out'] = 1;//已出库
-        }elseif($state === 0){
-            $where['over_sure'] = 0;//新建
+        $state = isset($this->data['state']) ? $this->data['state'] : '';
+        !in_array($state, [1, 2, 3, 4, '', 0]) && $this->apiReturn(201, '', '参数非法');
+        if($state != ''){
+            if($state == 3){
+                $where['is_put_out'] = 1;//已出库
+            }elseif($state == 2){
+                $where['lock_state'] = 1;//已锁定
+                $where['is_put_out'] = 0;
+            }elseif($state == 0){//新建
+                $where['over_sure']  = 0;
+                $where['is_put_out'] = 0;
+                $where['lock_state'] = 2;
+            }else{
+                $where['over_sure'] = 1;//已入库
+                $where['is_put_out'] = 0;
+            }
         }
 
-        $field = 'stock_car_id as id,cars_info as carsInfo,frame_number as frameNumber,interior_name as  interiorName,colour_name as colourName,so.shortName as orgName,warehouse_name as warehouseName,lock_state,is_put_out,over_sure,guiding_price as guidingPrice,unit_price as unitPrice,freight,othersFee,sc.create_date as createDate';
+        $field = 'stock_car_id as id,cars_info as carsName,frame_number as frameNumber,interior_name as  interiorName,colour_name as colourName,so.shortName as orgName,warehouse_name as warehouseName,lock_state,is_put_out,over_sure,guiding_price as guidingPrice,unit_price as unitPrice,freight,othersFee,sc.create_date as createDate';
         $join  = [
             ['system_organization so', 'so.orgId=sc.org_id', 'left']
         ];
@@ -79,7 +83,20 @@ class StockCar extends Admin
         $data  = Db::name('stock_car sc')->where($where)->field($field)->join($join)->page($page, $rows)->order('sc.create_date desc')->select();
         if($data){
             foreach($data as $key => &$value){
-                $value['state'] = $value['lock_state'] == 1 ? '已锁定' : ($value['is_put_out'] == 1 ? '已出库' : ($value['over_sure'] == 1 ? '已入库' : '新建'));
+                if($value['is_put_out'] == 1){
+                    $state = '已出库';
+                }else{
+                    if($value['lock_state'] == 1){
+                        $state = '已锁定';
+                    }else{
+                        if($value['over_sure'] == 0){
+                            $state = '新建';
+                        }else{
+                            $state = '已入库';
+                        }
+                    }
+                }
+                $value['state'] = $state;
             }
         }
         $this->apiReturn(200, ['list' => $data, 'page' => $page, 'rows' => $rows, 'total' => $count]);
@@ -115,7 +132,6 @@ class StockCar extends Admin
     public function export(){
         $where = [
             'is_delete' => 0,
-            'org_id'    => $this->orgId
         ];
 
         if(isset($this->data['frame_number']) && !empty($this->data['frame_number'])){
@@ -126,12 +142,8 @@ class StockCar extends Admin
             $where['cars_info'] = ['like', '%' . $this->data['cars_info'] . '%'];
         }
 
-        if(isset($this->data['orgName']) && !empty($this->data['orgName'])){
-            $condition['shortName'] = ['like', '%' . $this->data['orgName'] . '%'];
-            $orgIds = Db::name('system_organization')->where($condition)->field('orgId')->select();
-            !$orgIds && $this->apiReturn(201, '暂无数据');
-            $orgIds = array_column($orgIds, 'orgId');
-            $where['org_id'] = ['in', $orgIds];
+        if(isset($this->data['orgId']) && !empty($this->data['orgId'])){
+            $where['org_id'] = $this->data['orgId'] + 0;
         }
 		
         $startTime = isset($this->data['startTime']) && !empty($this->data['startTime']) ? $this->data['startTime'] : '';
@@ -155,26 +167,30 @@ class StockCar extends Admin
             }
         }
 
-        $state = isset($this->data['state']) && !is_null($this->data['state']) ? $this->data['state'] + 0 : null;
-        if($state == 1){
-            $where['over_sure'] = 1;//已入库
-        }elseif($state == 2){
-            $where['lock_state'] = 1;//已锁定
-        }elseif($state == 3){
-            $where['is_put_out'] = 1;//已出库
-        }elseif($state == 0){
-            $where['over_sure'] = 0;//新建
+        $state = isset($this->data['state']) ? $this->data['state'] : '';
+        !in_array($state, [1, 2, 3, '', 0]) && $this->apiReturn(201, '', '参数非法');
+        if($state != ''){
+            if($state == 3){
+                $where['is_put_out'] = 1;//已出库
+            }elseif($state == 2){
+                $where['lock_state'] = 1;//已锁定
+                $where['is_put_out'] = 0;
+            }elseif($state == 0){//新建
+                $where['over_sure']  = 0;
+                $where['is_put_out'] = 0;
+                $where['lock_state'] = 2;
+            }else{
+                $where['over_sure'] = 1;//已入库
+                $where['is_put_out'] = 0;
+            }
         }
 		
-        $field = 'stock_car_id as id,cars_info as carsInfo,frame_number as frameNumber,interior_name as  interiorName,colour_name as colourName,so.shortName as orgName,warehouse_name as warehouseName,lock_state,is_put_out,guiding_price as guidingPrice,unit_price as unitPrice,freight,othersFee,sc.create_date as createDate';
+        $field = 'stock_car_id as id,cars_info as carsInfo,frame_number as frameNumber,interior_name as  interiorName,colour_name as colourName,so.shortName as orgName,warehouse_name as warehouseName,lock_state,is_put_out,over_sure,guiding_price as guidingPrice,unit_price as unitPrice,freight,othersFee,sc.create_date as createDate';
         $join  = [
             ['system_organization so', 'so.orgId=sc.org_id', 'left']
         ];
 
         $data  = Db::name('stock_car sc')->where($where)->field($field)->join($join)->order('sc.create_date desc')->select();
-
-
-
 
         $name = '库存列表导出';
         $objPHPExcel = new \PHPExcel();
@@ -206,13 +222,27 @@ class StockCar extends Admin
             foreach($data as $k => $item){
 //                $item['state'] = $item['lock_state'] == 1 ? '已锁定' : ($item['is_put_out'] == 1 ? '已出库' : '在库');
                 $num = $k + 3;
+                if($item['is_put_out'] == 1){
+                    $state = '已出库';
+                }else{
+                    if($item['lock_state'] == 1){
+                        $state = '已锁定';
+                    }else{
+                        if($item['over_sure'] == 0){
+                            $state = '新建';
+                        }else{
+                            $state = '已入库';
+                        }
+                    }
+                }
+
                 $objPHPExcel->setActiveSheetIndex(0)
                     ->setCellValue('A' . $num, $item['carsInfo'])
                     ->setCellValue('B' . $num, $item['frameNumber'])
                     ->setCellValue('C' . $num, $item['colourName'] . '/' . $item['interiorName'])
                     ->setCellValue('D' . $num, $item['orgName'])
                     ->setCellValue('E' . $num, $item['warehouseName'])
-                    ->setCellValue('F' . $num, $item['lock_state'] == 1 ? '已锁定' : ($item['is_put_out'] == 1 ? '已出库' : '在库'))
+                    ->setCellValue('F' . $num, $state)
                     ->setCellValue('G' . $num, $item['guidingPrice'])
                     ->setCellValue('H' . $num, $item['unitPrice'])
                     ->setCellValue('I' . $num, $item['freight'])
@@ -251,14 +281,25 @@ class StockCar extends Admin
 
         $objPHPExcel->getActiveSheet()->setTitle($name);
         $objPHPExcel->setActiveSheetIndex(0);
-
-        header('Content-Type: application/vnd.ms-excel');
-        header('Content-Disposition: attachment;filename="' . $name . '.xlsx"');
-        header('Cache-Control: max-age=0');
-
         $objWriter = \PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
-        $objWriter->save('php://output');
-        exit;
+        $objWriter->save($name . '.xlsx');
+        if(file_exists($name . '.xlsx')){
+            vendor('Qiniu.autoload');
+            $auth  = new Auth(config('qiniu.accesskey'), config('qiniu.secretkey'));
+            $token = $auth->uploadToken(config('qiniu.bucket'));
+
+            $upload = new UploadManager();
+            list($ret, $err) = $upload->putFile($token, md5($name . microtime(true)) . '.xlsx', $name . '.xlsx');
+            if ($err !== null) {
+                $this->apiReturn(201, ['state' => 'error', 'msg' => $err]);
+            } else {
+                unlink($name . '.xlsx');
+                //返回图片的完整URL
+                $this->apiReturn(200, ['state' => 'success', 'url' => 'https://' . config('qiniu.domain') . '/' . $ret['key']]);
+            }
+        }else{
+            $this->apiReturn(201, '', '文件不存在');
+        }
     }
 
 }

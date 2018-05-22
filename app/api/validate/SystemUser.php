@@ -43,6 +43,10 @@ class SystemUser extends Validate{
         'headPortrait.checkUrl'      => '头像地址格式非法',
     ];
 
+    protected $scene = [
+        'edit'  =>  ['orgId', 'realName', 'roleIds', 'parentIds', 'sex', 'birthday', 'cardNo', 'entryTime', 'basePay', 'headPortrait'],
+    ];
+
     public function checkPhone($phone){
         if(!checkPhone($phone)) {
             return false;

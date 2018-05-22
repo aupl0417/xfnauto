@@ -23,8 +23,8 @@ class SystemUser extends Model
         return Db::name($this->table)->field($field)->where(['sessionId' => $id])->find();
     }
 
-    public function getUserByOrgId($orgId, $field = '*'){
-        return Db::name($this->table)->where(['orgId' => $orgId])->field($field)->order('usersId desc')->select();
+    public function getUserByOrgId($orgId, $field = '*', $order = 'usersId asc'){
+        return Db::name($this->table)->where(['orgId' => $orgId])->field($field)->order($order)->select();
     }
 
     public function getUserGroupInfo($userId){
@@ -61,6 +61,29 @@ class SystemUser extends Model
             return false;
         }
         return $result;
+    }
+
+    public function getSystemUserList($where = array(), $field = '*', $page = 1, $rows = 10, $order = 'usersId desc'){
+        $count = Db::name($this->table)->where($where)->count();
+        $data  = Db::name($this->table)->where($where)->field($field)->page($page, $rows)->order($order)->select();
+        return ['list' => $data, 'total' => $count, 'page' => $page, 'rows' => $rows];
+    }
+
+    public function getDataAll($where = array(), $field = '*', $order = 'usersId desc'){
+        $data = Db::name($this->table)->where($where)->field($field)->order($order)->select();
+        return $data;
+    }
+
+    public function getAllLowerLevel($userId, &$data){
+        $field = 'usersId as userId,orgId,roleIds';
+        $user  = $this->getDataAll("find_in_set({$userId}, parentIds)", $field);
+        if($user){
+            foreach($user as $value){
+                $data[] = $value;
+                self::getAllLowerLevel($value['userId'], $data);
+            }
+        }
+        return $data;
     }
 
 }

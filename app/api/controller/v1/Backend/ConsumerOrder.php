@@ -8,6 +8,8 @@
 
 namespace app\api\controller\v1\Backend;
 
+use Qiniu\Auth;
+use Qiniu\Storage\UploadManager;
 use think\Controller;
 use think\Db;
 class ConsumerOrder extends Admin
@@ -23,7 +25,7 @@ class ConsumerOrder extends Admin
 
 
         $where = [
-            'co.state'   => ['not in', [-1, 37]],
+            'co.state'   => ['not in', [-1]],
             'co.is_del'  => 0
         ];
 
@@ -48,9 +50,14 @@ class ConsumerOrder extends Admin
             $where['co.id'] = ['in', $orderIds];
         }
 
-        if(isset($this->data['orgName'])&& !empty($this->data['orgName'])){
-            $orgName = htmlspecialchars(trim($this->data['orgName']));
-            $where['shortName'] = ['like', '%' . $orgName . '%'];
+        if(isset($this->data['orgId'])&& !empty($this->data['orgId'])){
+            $orgId = $this->data['orgId'] + 0;
+            $where['co.org_id'] = $orgId;
+        }
+
+        if(isset($this->data['state']) && !empty($this->data['state'])){
+            $state = $this->data['state'] + 0;
+            $where['co.state'] = $state;
         }
 
 //        $where['co.creator_id'] = $this->userId;
@@ -77,7 +84,8 @@ class ConsumerOrder extends Admin
         }
 
         $data = model('ConsumerOrder')->getOrderListAll($where, $page, $rows);
-        $this->apiReturn(200, ['list' => $data, 'page' => $page, 'rows' => $rows, 'total' => count($data)]);
+//        dump($data);die;
+        $this->apiReturn(200, ['list' => $data['list'], 'page' => $page, 'rows' => $rows, 'total' => $data['count']]);
     }
 
     /**
@@ -89,6 +97,200 @@ class ConsumerOrder extends Admin
         $orderId = $this->data['id'] + 0;
         $data    = model('ConsumerOrder')->getOrderDetailByOrderId($orderId);
         $this->apiReturn(200, $data);
+    }
+
+    public function export(){
+        $where = [
+            'co.state'   => ['not in', [-1]],
+            'co.is_del'  => 0
+        ];
+
+        if(isset($this->data['keywords'])&& !empty($this->data['keywords'])){
+            $keywords= htmlspecialchars(trim($this->data['keywords']));
+            $orderUser    = Db::name('consumer_order_user')->where(['user_name' => ['like', '%' . $keywords . '%']])->field('order_id')->select();
+            $orderUserIds = array();
+            if($orderUser){
+                $orderUserIds = array_column($orderUser, 'order_id');
+            }
+            $join = [
+                ['consumer_order_car oc', 'oc.stock_car_id=sc.stock_car_id', 'left'],
+                ['consumer_order_info oi', 'oi.id=oc.info_id', 'left'],
+            ];
+            $stockCar = Db::name('stock_car sc')->where(['frame_number' => ['like', '%' . $keywords . '%']])->join($join)->field('oi.order_id')->select();
+            $stockCarIds = array();
+            if($stockCar){
+                $stockCarIds = array_column($stockCar, 'order_id');
+
+            }
+            $orderIds = array_merge($orderUserIds, $stockCarIds);
+            $where['co.id'] = ['in', $orderIds];
+        }
+
+        if(isset($this->data['orgId'])&& !empty($this->data['orgId'])){
+            $orgId = $this->data['orgId'] + 0;
+            $where['co.org_id'] = $orgId;
+        }
+
+        if(isset($this->data['state']) && !empty($this->data['state'])){
+            $state = $this->data['state'] + 0;
+            $where['co.state'] = $state;
+        }
+
+        $startTime = isset($this->data['startDate']) && !empty($this->data['startDate']) ? $this->data['startDate'] : '';
+        $endTime   = isset($this->data['endDate'])   && !empty($this->data['endDate'])   ? $this->data['endDate'] : '';
+        if($startTime && !$endTime){
+            $where['co.create_time'] = ['egt', $startTime];
+        }elseif(!$startTime && $endTime){
+            $where['co.create_time'] = ['elt', $endTime];
+        }else{
+            $now = date('Y-m-d H:i:s');
+            if($startTime == $endTime && $endTime <= $now){
+                $where['co.create_time'] = ['egt', $startTime];
+            }elseif($startTime == $endTime && $endTime >= $now){
+                $where['co.create_time'] = ['elt', $startTime];
+            }else{
+                if($startTime > $endTime){
+                    $where['co.create_time'] = ['between', [$endTime, $startTime]];
+                }else{
+                    $where['co.create_time'] = ['between', [$startTime, $endTime]];
+                }
+            }
+        }
+
+        $field = 'co.id as id,co.order_code as orderId,co.state as orderState,org_name as orgName,order_type as orderType,co.freight,creator,co.create_time as createTime';
+        $data  = Db::name('consumer_order co')->where($where)->field($field)->order('co.create_time desc')->select();
+        if($data){
+            foreach($data as $key => &$value){
+                $orderId = $value['id'];
+                $value['orgName'] = trim($value['orgName']);
+                $value['totalDepositPrice'] = Db::name('consumer_order_info')->where(['order_id' => $orderId])->sum('deposit_price');
+                $value['totalFinalPrice']   = 0;
+                $value['totalRestPrice']    = 0;
+                $orderInfo = Db::name('consumer_order_info')->where(['order_id' => $orderId])->field('naked_price,traffic_compulsory_insurance_price,commercial_insurance_price,car_num')->select();
+                if($orderInfo){
+                    $total = 0;
+                    foreach($orderInfo as $vo){
+                        $total += ($vo['naked_price'] + $vo['traffic_compulsory_insurance_price'] + $vo['commercial_insurance_price']) * $vo['car_num'];
+                    }
+                    $value['totalFinalPrice']   = $total + $value['freight'];
+                    $value['totalRestPrice']    = $value['totalFinalPrice'] - $value['totalDepositPrice'];
+                }
+
+                $orderUserField      = 'id,order_id as orderId,user_name as userName,user_phone as userPhone';
+                $value['customers']  = Db::name('consumer_order_user')->where(['order_id' => $orderId, 'type' => 1])->field($orderUserField)->select();
+                if($value['customers']){
+                    foreach($value['customers'] as $key => &$val){
+                        $val['userName']  = $val['userName'] ?: '--';
+                        $val['userPhone'] = $val['userPhone'] ?: '--';
+                        $join = [
+                            ['consumer_order_car oc', 'oc.info_id=oi.id', 'left'],
+                            ['stock_car sc', 'sc.stock_car_id=oc.stock_car_id', 'left'],
+                        ];
+                        $val['infos'] = Db::name('consumer_order_info oi')->field('oi.id,sc.frame_number')->join($join)->where(['oi.order_id' => $orderId, 'oi.customer_id' => $val['id']])->select();
+                        $val['infos'] = $val['infos'] ? array_column($val['infos'], 'frame_number') : '--';
+                        $val['infos'] = $val['infos'] ? implode("\n", $val['infos']) : '--';
+                    }
+                    $value['frameNumber'] = $value['customers'] ? array_column($value['customers'], 'infos') : '--';
+                    $value['userName'] = $value['customers'] ? array_column($value['customers'], 'userName') : '--';
+                    $value['userPhone'] = $value['customers'] ? array_column($value['customers'], 'userPhone') : '--';
+                }
+            }
+        }
+
+        !$data && $this->apiReturn(201, '', '暂无数据');
+
+        $name = '资源列表导出';
+        $objPHPExcel = new \PHPExcel();
+        $allLetter   = range('A', 'Z');
+
+        $objPHPExcel->getProperties()->setCreator($this->user['realName']);
+
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('A1', $name);
+        $objPHPExcel->setActiveSheetIndex(0)->mergeCells('A1:I1');
+
+        $objPHPExcel->getActiveSheet()->getRowDimension(1)->setRowHeight(45);
+        $objPHPExcel->getActiveSheet()->getRowDimension(2)->setRowHeight(30);
+        $objPHPExcel->getActiveSheet()->getStyle('A1')->getFont()->setSize(24);
+
+        $objPHPExcel->setActiveSheetIndex(0)
+            ->setCellValue('A2', '订单号')
+            ->setCellValue('B2', '订购门店')
+            ->setCellValue('C2', '客户姓名')
+            ->setCellValue('D2', '手机号码')
+            ->setCellValue('E2', '车架号')
+            ->setCellValue('F2', '成交价')
+            ->setCellValue('G2', '定金')
+            ->setCellValue('H2', '尾款')
+            ->setCellValue('I2', '运费');
+
+        if($data){
+            foreach($data as $k => $item){
+                $num = $k + 3;
+                $objPHPExcel->setActiveSheetIndex(0)
+                    ->setCellValue('A' . $num, $item['orderId'])
+                    ->setCellValue('B' . $num, $item['orgName'])
+                    ->setCellValue('C' . $num, implode("\n", $item['userName']))
+                    ->setCellValue('D' . $num, implode("\n", $item['userPhone']))
+                    ->setCellValue('E' . $num, implode("\n", $item['frameNumber']))
+                    ->setCellValue('F' . $num, $item['totalFinalPrice'])
+                    ->setCellValue('G' . $num, $item['totalDepositPrice'])
+                    ->setCellValue('H' . $num, $item['totalRestPrice'])
+                    ->setCellValue('I' . $num, $item['freight']);
+                $objPHPExcel->getActiveSheet()->getRowDimension($num)->setRowHeight(30);
+            }
+        }
+
+        $objPHPExcel->getActiveSheet()->getColumnDimension('A')->setWidth(30);
+        $objPHPExcel->getActiveSheet()->getColumnDimension('B')->setWidth(30);
+        for ($i = 2; $i <= 9; $i++) {
+            $objPHPExcel->getActiveSheet()->getColumnDimension($allLetter[$i])->setWidth(20);
+        }
+
+        $endCell = 'I' . (count($data) + 2);
+        $styleArray = array(
+            'borders' => array(
+                'allborders' => array(
+                    'style'  => \PHPExcel_Style_Border::BORDER_THIN,
+                    'color'  => array('argb' => 'FF000000'),
+                ),
+            ),  'alignment'  => array(
+                'horizontal' => \PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
+                'vertical'   => \PHPExcel_Style_Alignment::VERTICAL_CENTER
+            ),
+        );
+
+        $objPHPExcel->setActiveSheetIndex(0)->getStyle('A2:' . $endCell)->applyFromArray($styleArray);
+        $objPHPExcel->getActiveSheet()->getStyle('A'.(count($data) + 4))
+            ->getAlignment()->setVertical(\PHPExcel_Style_Alignment::VERTICAL_CENTER)->setHorizontal(\PHPExcel_Style_Alignment::HORIZONTAL_LEFT);
+
+        $objPHPExcel->getActiveSheet()->getStyle('A'.(count($data) + 7))->getAlignment()->setVertical(\PHPExcel_Style_Alignment::VERTICAL_CENTER)->setHorizontal(\PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+
+        $objPHPExcel->getActiveSheet()->getStyle('A1')->getAlignment()->setVertical(\PHPExcel_Style_Alignment::VERTICAL_CENTER)->setHorizontal(\PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+        $objPHPExcel->getActiveSheet()->getStyle('A2')->getAlignment()->setVertical(\PHPExcel_Style_Alignment::VERTICAL_CENTER)->setHorizontal(\PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+        $objPHPExcel->getActiveSheet()->getStyle('A2:I2')->getAlignment()->setVertical(\PHPExcel_Style_Alignment::VERTICAL_CENTER)->setHorizontal(\PHPExcel_Style_Alignment::HORIZONTAL_CENTER)->setWrapText(true);
+
+        $objPHPExcel->getActiveSheet()->setTitle($name);
+        $objPHPExcel->setActiveSheetIndex(0);
+
+        $objWriter = \PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+        $objWriter->save($name . '.xlsx');
+        if(file_exists($name . '.xlsx')){
+            vendor('Qiniu.autoload');
+            $auth  = new Auth(config('qiniu.accesskey'), config('qiniu.secretkey'));
+            $token = $auth->uploadToken(config('qiniu.bucket'));
+
+            $upload = new UploadManager();
+            list($ret, $err) = $upload->putFile($token, md5($name . microtime(true)) . '.xlsx', $name . '.xlsx');
+            if ($err !== null) {
+                $this->apiReturn(201, ['state' => 'error', 'msg' => $err]);
+            } else {
+                //返回图片的完整URL
+                unlink($name . '.xlsx');
+                $this->apiReturn(200, ['state' => 'success', 'url' => 'https://' . config('qiniu.domain') . '/' . $ret['key']]);
+            }
+        }else{
+            $this->apiReturn(201, '', '文件不存在');
+        }
     }
 
 }

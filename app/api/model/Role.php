@@ -23,7 +23,7 @@ class Role extends Model
             $where['sr.orgId'] = $orgId;
         }
 
-        $field = 'roleId as id,shortName as orgName,roleName,sr.remark';
+        $field = 'roleId as id,shortName as orgName,roleName,sr.remark,sr.orgId';
         $count = Db::name($this->table . ' sr')->where($where)->count();
         $role  = Db::name($this->table . ' sr')->where($where)->field($field)->page($page, $rows)->join('system_organization so', 'so.orgId=sr.orgId', 'left')->select();
 
@@ -37,6 +37,31 @@ class Role extends Model
 
         $field = 'roleId as id,roleName,sr.remark';
         return Db::name($this->table)->where(['roleId' => $id])->field($field)->find();
+    }
+
+    public function getRoleByOrgIdAll($orgId = 0, $field = ''){
+        $where = ['isDelete' => 0];
+        if($orgId !== 0){
+            $where['sr.orgId'] = $orgId;
+        }
+
+        if(!$field){
+            $field = 'roleId as id,roleName,sr.remark';
+        }
+
+        return Db::name($this->table . ' sr')->where($where)->field($field)->select();
+    }
+
+    public function getRoleAll($where = array(), $field = ''){
+        if(!$where){
+            $where = ['isDelete' => 0];
+        }
+
+        if(!$field){
+            $field = 'roleId as id,roleName,sr.remark';
+        }
+
+        return Db::name($this->table . ' sr')->where($where)->field($field)->select();
     }
     
     

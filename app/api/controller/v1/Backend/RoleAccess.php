@@ -17,7 +17,23 @@ class RoleAccess extends Admin
      * 所有权限接口列表
      * */
     public function index(){
-
+        if(isset($this->data['id']) && !empty($this->data['id'])){
+            $roleIds = $this->data['id'] + 0;
+        }else{
+            $roleIds = $this->user['roleIds'];
+            if(!$roleIds){
+                $this->apiReturn(201, '', '您未分配角色');
+            }
+        }
+        $data = model('RoleAccess')->getRoleAccessByRoleIds($roleIds);
+        $menu = array();
+        if($data){
+            $authIds = implode(',', array_column($data, 'access_ids'));
+            $authIds = explode(',', $authIds);
+            $authIds = array_unique(array_filter($authIds));
+            $menu    = model('Menu')->getMenuTree($authIds, 0);
+        }
+        $this->apiReturn(200, $menu);
     }
     
     public function addAuth(){

@@ -270,7 +270,7 @@ function autowrap($fontsize, $angle, $fontface, $string, $width) {
     $height = 0;
     foreach ($letter as $l) {
         $teststr = $content." ".$l;
-        $testbox = imagettfbbox($fontsize, $angle, $fontface, $teststr);
+        $testbox = @imagettfbbox($fontsize, $angle, $fontface, $teststr);
         // 判断拼接后的字符串是否超过预设的宽度
         if (($testbox[2] > $width) && ($content !== "")) {
             $content .= "\n";

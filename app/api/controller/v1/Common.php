@@ -167,6 +167,9 @@ class Common extends Home
 
         $data[] = $url['url'];
         $data[] = '分享人：' . $info['realName'] . '　　电话：' . $info['phoneNumber'];
+
+        $data = array_filter($data);
+        $data = array_values($data);
 //dump($data);
         $img  = 'upload/image/' . md5(serialize($data) . microtime(true)) . '.jpg';
 
@@ -180,6 +183,8 @@ class Common extends Home
         $imageWidth = [];
         $main       = [];
         $targetWidth= 640;//画板宽度 *
+//        dump($data);die;
+        logs_write($data, request()->controller(), request()->action(), []);
         foreach($data as $key => &$value){
             if(filter_var($value, FILTER_VALIDATE_URL)){
                 $wUrl = $this->dealWchatQcode($value);
@@ -212,7 +217,7 @@ class Common extends Home
                 }
             }
         }
-
+        logs_write($height, request()->controller(), request()->action(), []);
         $targetHeight = array_sum($height) + $top;
         $target       = imagecreatetruecolor($targetWidth, $targetHeight);
         $white        = imagecolorallocate($target, 255, 255, 255);
@@ -402,7 +407,7 @@ class Common extends Home
             '    商业险：{{carItem.commercialInsurancePrice}}元   {{carItem.mode}}：{{carItem.changePrice}}元',
             '    备注：{{carItem.remark}}',
         ];
-        $wuliu = ['自提', '其它'];
+        $wuliu = ['自提', '其它', '送车'];
         $info = [
             '    提车地点：' . $data['pickCarAddr'],
             '    提车时间：' . $data['pickCarDate'],

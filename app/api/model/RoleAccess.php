@@ -41,7 +41,7 @@ class RoleAccess extends Model
             return false;
         }
         if(is_string($roleIds)){
-            $roleIds = implode(',', $roleIds);
+            $roleIds = explode(',', $roleIds);
         }
         $where['role_id'] = ['in', $roleIds];
         $data = Db::name($this->table)->field('id,role_id,access_ids')->where($where)->select();
