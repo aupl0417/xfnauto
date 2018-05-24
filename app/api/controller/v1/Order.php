@@ -38,8 +38,15 @@ class Order extends Home
         }
 
         $where['co.creator_id'] = $this->userId;
-        if($this->isRole){
+        /*if($this->isRole){
             $userIds = model('SystemUser')->getUserByOrgId($this->orgId, 'usersId');
+            if($userIds){
+                $userIds = array_column($userIds, 'usersId');
+                $where['co.creator_id'] = ['in', $userIds];
+            }
+        }*/
+        if(count($this->orgIds) > 1){//如果是大于1，则有下级
+            $userIds = model('SystemUser')->getDataAll(['orgId' => ['in', $this->orgIds], 'isEnable' => 1], 'usersId');
             if($userIds){
                 $userIds = array_column($userIds, 'usersId');
                 $where['co.creator_id'] = ['in', $userIds];
@@ -174,5 +181,40 @@ class Order extends Home
             $this->apiReturn(201, '', '更新失败');
         }
     }
+
+    public function stockList(){
+        $page = isset($this->data['page']) && !empty($this->data['page']) ? $this->data['page'] + 0 : 1;
+        $rows = isset($this->data['rows']) && !empty($this->data['rows']) ? $this->data['rows'] + 0 : 10;
+
+        $where = [
+            'is_delete' => 0
+        ];
+        if(isset($this->data['keywords']) && !empty($this->data['keywords'])){
+            $keywords = htmlspecialchars(trim($this->data['keywords']));
+            $where['storage_code'] = ['like', '%' . $keywords . '%'];
+        }
+
+        if(isset($this->data['storageCode']) && !empty($this->data['storageCode'])){
+            $storageCode = htmlspecialchars(trim($this->data['storageCode']));
+            $where['storage_code'] = ['like', '%' . $storageCode . '%'];
+        }
+
+        $where['org_id'] = ['in', $this->orgIds];
+        $field = 'storage_id as storageId,storage_code as storageCode,create_date as createDate,supplier_id as supplierId,supplier_name as supplierName,system_users_id as systemUsersId,
+                 system_user_name as systemUserName,total_purchase_price as totalPurchasePrice,total_purchase as totalPurchase,logistics_cost as logisticsCost,storage_source as storageSource,
+                 org_id as orgId,org_name as orgName,remarks,contract_number as contractNumber,contract_image as contractImage,over_sure as overSure';
+        $data  = Db::name('stock_storage')->where($where)->page($page, $rows)->field($field)->select();
+        if($data){
+            foreach($data as $key => &$value){
+                $map = ['storage_id' => $value['storageId'], 'is_delete' => 0, 'is_put_out' => 0];
+                $value['carsNumber'] = Db::name('stock_car')->where($map)->sum('number');
+            }
+        }
+
+        $count = Db::name('stock_storage')->where($where)->count();
+        $this->apiReturn(200, ['list' => $data, 'total' => $count, 'page' => $page, 'rows' => $rows]);
+    }
+
+    
 
 }

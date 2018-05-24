@@ -209,15 +209,16 @@ class ConsumerOrder extends Model
     }
 
     public function getOrderListAll($where = '', $page = 1, $pageSize = 10){
-        $field = 'co.id as id,co.order_code as orderId,co.state as orderState,org_name as orgName,order_type as orderType,co.freight,creator,co.create_time as createTime';
+        $field = 'co.id as id,co.order_code as orderId,co.state as orderState,org_name as orgName,order_type as orderType,co.freight,creator,co.create_time as createTime,countermand_apply as countermandApply,countermand_reason as countermandReason,countermand_pic as countermandPic';
         $count = Db::name('consumer_order co')->where($where)->count();
         $data  = Db::name('consumer_order co')->where($where)->page($page, $pageSize)
             ->field($field)->order('co.create_time desc')
             ->select();
+
         if($data){
             foreach($data as $key => &$value){
                 $orderId = $value['id'];
-                $value['orderStateName'] = $this->state[$value['orderState']];
+                $value['orderStateName']    = $value['countermandApply'] ? ($value['countermandApply'] == 1 ? '申请退款中' : '已退款') : $this->state[$value['orderState']];
                 $value['totalDepositPrice'] = Db::name('consumer_order_info')->where(['order_id' => $orderId])->sum('deposit_price');
                 $value['totalFinalPrice']   = 0;
                 $value['totalRestPrice']    = 0;

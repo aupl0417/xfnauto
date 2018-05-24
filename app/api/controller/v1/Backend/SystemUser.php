@@ -36,31 +36,27 @@ class SystemUser extends Admin
 
         if(isset($this->data['orgId']) && !empty($this->data['orgId'])){
             $orgId = $this->data['orgId'] + 0;
-            if(in_array($this->userId, $this->adminIds, true)){
+            if($this->isAdmin){
                 $where['orgId'] = $orgId;
             }else{
                 $where['orgId'] = $this->orgId;
             }
         }else{
-            $where['orgId'] = $this->orgId;
+            if(!$this->isAdmin){
+                $where['orgId'] = $this->orgId;
+            }
+
         }
 
-        $field = 'usersId as id,realName,phoneNumber as phone,parentIds,roleIds,orgName,status';
+        $field = 'usersId as id,realName,phoneNumber as phone,parentIds,roleIds,orgName,status,isEnable,orgId';
         $data  = model('SystemUser')->getSystemUserList($where, $field, $page, $rows);
         if($data){
             foreach($data['list'] as $key => &$value){
-                if($value['parentIds']){
-                    $higherUps = model('SystemUser')->getDataAll(['usersId' => ['in', $value['parentIds']]], 'realName');
-                    if($higherUps){
-                        $value['higherUps'] = $higherUps ? implode(',', array_column($higherUps, 'realName')) : '';
-                    }
-                }
-                if($value['roleIds']){
-                    $roles = model('Role')->getRoleAll(['roleId' => ['in', $value['roleIds']], 'isDelete' => 0], 'roleName');
-                    if($roles){
-                        $value['roles'] = $roles ? implode(',', array_column($roles, 'roleName')) : '';
-                    }
-                }
+                $higherUps = model('SystemUser')->getDataAll(['usersId' => ['in', $value['parentIds']]], 'realName');
+                $value['higherUps'] = $higherUps ? implode(',', array_column($higherUps, 'realName')) : '';
+
+                $roles = model('Role')->getRoleAll(['roleId' => ['in', $value['roleIds']], 'orgId' => $value['orgId'], 'isDelete' => 0], 'roleName');
+                $value['roles'] = $roles ? implode(',', array_column($roles, 'roleName')) : '';
             }
         }
 
@@ -129,7 +125,7 @@ class SystemUser extends Admin
     }
 
     /**
-     * 添加系统用户
+     * 编辑系统用户
      * */
     public function edit(){
         (!isset($this->data['id']) || empty($this->data['id'])) && $this->apiReturn(201, '', '参数非法');
@@ -228,15 +224,14 @@ class SystemUser extends Admin
         (!isset($this->data['id']) || empty($this->data['id'])) && $this->apiReturn(201, '', '参数非法');
 
         $userId = $this->data['id'] + 0;
-        $field  = 'usersId as id,headPortrait,realName,phoneNumber as phone,orgName,status,agentGender as gender,birthday,cardNo,entryTime,basePay,parentIds,roleIds';
+        $field  = 'usersId as id,headPortrait,realName,phoneNumber as phone,orgId,orgName,status,isEnable,agentGender as gender,birthday,cardNo,entryTime,basePay,parentIds,roleIds';
         $data   = model('SystemUser')->getUserById($userId, $field);
         !$data  && $this->apiReturn(201, '', '用户信息不存在');
-        if($data['parentIds']){
-            $data['parentUser'] = Db::name('system_user')->where(['usersId' => ['in', $data['parentIds']]])->field('realName')->select();
-        }
-        if($data['roleIds']){
-            $data['roles'] = Db::name('system_role')->where(['roleId' => ['in', $data['roleIds']], 'orgId' => $this->orgId, 'isDelete' => 0])->field('roleName')->select();
-        }
+        $data['birthday'] = date('Y-m-d', strtotime($data['birthday']));
+        $data['entryTime'] = date('Y-m-d', strtotime($data['entryTime']));
+        $data['parentUser'] = Db::name('system_user')->where(['usersId' => ['in', $data['parentIds']]])->field('usersId as id,realName')->select();
+        $data['roles'] = Db::name('system_role')->where(['roleId' => ['in', $data['roleIds']], 'orgId' => $this->orgId, 'isDelete' => 0])->field('roleId as id,roleName')->select();
+        unset($data['parentIds'], $data['roleIds']);
         $this->apiReturn(200, $data);
     }
 
@@ -244,7 +239,8 @@ class SystemUser extends Admin
      * 获取上级列表
      * */
     public function higherUps(){
-        $data = model('SystemUser')->getUserByOrgId($this->orgId, 'usersId as id,realName');
+        $orgId = isset($this->data['orgId']) && !empty($this->data['orgId']) ? $this->data['orgId'] + 0 : 0;
+        $data = model('SystemUser')->getUserByOrgId($orgId, 'usersId as id,realName');
         $this->apiReturn(200, $data);
     }
 
@@ -254,6 +250,10 @@ class SystemUser extends Admin
     public function remove(){
         (!isset($this->data['id']) || empty($this->data['id'])) && $this->apiReturn(201, '', '参数非法');
         $userId = $this->data['id'] + 0;
+
+        if($userId == $this->userId){
+            $this->apiReturn(201, '', '不能对自身进行此操作');
+        }
 
         $where = ['usersId' => $userId];
         $user = Db::name('system_user')->where($where)->field('isEnable')->find();

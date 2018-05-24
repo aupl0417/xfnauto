@@ -24,7 +24,11 @@ class SystemUser extends Model
     }
 
     public function getUserByOrgId($orgId, $field = '*', $order = 'usersId asc'){
-        return Db::name($this->table)->where(['orgId' => $orgId])->field($field)->order($order)->select();
+        $where = [];
+        if($orgId){
+            $where['orgId'] = $orgId;
+        }
+        return Db::name($this->table)->where($where)->field($field)->order($order)->select();
     }
 
     public function getUserGroupInfo($userId){

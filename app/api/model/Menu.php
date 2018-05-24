@@ -69,7 +69,7 @@ class Menu extends Model
     }
 
     public function getMenuTree($ids, $parentId = 0){
-        $field = 'menuId as id,parentId,menuName as name';
+        $field = 'menuId as id,parentId,menuName as name,src';
         $menus = $this->where(["parentId" => $parentId, 'menuId' => ['in', $ids], 'isDelete' => 0])->field($field)->order(["menuId" => "ASC"])->select();
         if($menus){
             foreach ($menus as $key => $menu) {

@@ -21,7 +21,22 @@ class Role extends Admin
         $page  = isset($this->data['page']) && !empty($this->data['page']) ? $this->data['page'] + 0 : 1;
         $rows  = isset($this->data['rows']) && !empty($this->data['rows']) ? $this->data['rows'] + 0 : 50;
 
-        $data  = model('Role')->getRoleByOrgId($this->orgId, $page, $rows);
+        $where = array();
+        if($this->isAdmin){
+            if(isset($this->data['orgId']) && !empty($this->data['orgId'])){
+                $orgId = $this->data['orgId'] + 0;
+                $where['sr.orgId'] = $orgId;
+            }
+        }else{
+            $where['sr.orgId'] = ['in', $this->orgIds];
+        }
+
+        if(isset($this->data['roleName']) && !empty($this->data['roleName'])){
+            $roleName = htmlspecialchars(trim($this->data['roleName']));
+            $where['sr.roleName'] = ['like', '%' . $roleName . '%'];
+        }
+
+        $data  = model('Role')->getRoleDataAll($where, $page, $rows);
         $this->apiReturn(200, ['list' => $data['data'], 'page' => $page, 'rows' => $rows, 'total' => $data['count']]);
     }
 
@@ -107,7 +122,8 @@ class Role extends Admin
     }
 
     public function lists(){
-        $data = model('Role')->getRoleByOrgIdAll($this->orgId, 'roleId as id,roleName');
+        $orgId = isset($this->data['orgId']) && !empty($this->data['orgId']) ? $this->data['orgId'] + 0 : 0;
+        $data  = model('Role')->getRoleByOrgIdAll($orgId, 'roleId as id,roleName');
         $this->apiReturn(200, $data);
     }
     

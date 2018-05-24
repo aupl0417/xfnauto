@@ -426,3 +426,62 @@ function pdf($html='<h1 style="color:red">hello word</h1>', $output, $type = '')
     $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
     $pdf->Output($output, $type);
 }
+
+function getRandomString($length = 32){
+    $string = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    $string = str_shuffle($string);
+    return strtoupper(substr(md5($string), 0, $length));
+}
+
+/**
+  16-19 位卡号校验位采用 Luhm 校验方法计算：
+    1，将未带校验位的 15 位卡号从右依次编号 1 到 15，位于奇数位号上的数字乘以 2
+    2，将奇位乘积的个十位全部相加，再加上所有偶数位上的数字
+    3，将加法和加上校验位能被 10 整除。
+*/
+function luhm($s) {
+    $n = 0;
+    for ($i = strlen($s); $i >= 1; $i--) {
+        $index = $i-1;
+        //偶数位
+        if ($i % 2 == 0){
+            $n += $s{$index};
+        }else{//奇数位
+            $t = $s{$index} * 2;
+            if ($t > 9){
+                $t =(int)($t/10)+ $t % 10;
+            }
+            $n += $t;
+        }
+    }
+    return ($n % 10) == 0;
+}
+
+function checkBankCardNumber($cardNumber){
+    $number = str_split($cardNumber);
+    $last_n = $number[count($number) - 1];
+    krsort($number);
+
+    $total = 0;
+    foreach ($number as $key => $n){
+        if(($key + 1) % 2 == 0){
+            $t = $n * 2;
+            if($t >= 10){
+                $t = 1 + ($t % 10);
+                $total += $t;
+            }else{
+                $total += $t;
+            }
+        }else{
+            $total += $n;
+        }
+    }
+
+    $total -= $last_n;
+    $total *= 9;
+    if($last_n == ($total % 10)){
+        return true;
+    }
+    return false;
+}
+

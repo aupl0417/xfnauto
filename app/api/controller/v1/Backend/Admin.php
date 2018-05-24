@@ -20,6 +20,7 @@ class Admin extends Base {
     protected $roleIds = array();
     protected $error;
     protected $errorCode;
+    protected $isAdmin;
     protected $adminIds = array();
 
     public function __construct(Request $request = null)
@@ -31,7 +32,13 @@ class Admin extends Base {
         $this->userId   = $user['usersId'];
         $this->orgId    = $user['orgId'];
         $this->user     = $user;
-        $this->adminIds = [1];//超级管理员ids
+
+        $org   = model('Organization')->getOrgAll(['orgLevel' => 1, 'status' => 1], 'orgLevel');
+        if($org){
+            $orgIds = array_column($org, 'orgLevel');
+            $users   = model('SystemUser')->getDataAll(['orgId' => ['in', $orgIds]], 'usersId');
+            $this->adminIds = $users ? array_column($users, 'usersId') : [];
+        }
 
         //获取所有下级用户
         $lowerLevel = array();
@@ -39,7 +46,7 @@ class Admin extends Base {
 
         $this->orgIds  = [$this->orgId];
         $this->userIds = [$this->userId];
-        $this->roleIds = [$user['roleIds']];
+        $this->roleIds = explode(',', $user['roleIds']);
         if($lowerLevel){
             $this->orgIds  = array_unique(array_merge($this->orgIds, array_column($lowerLevel, 'orgId')));//下级用户所在门店的ID
             $this->userIds = array_unique(array_merge($this->userIds, array_column($lowerLevel, 'userId')));//下级用户ID
@@ -47,14 +54,13 @@ class Admin extends Base {
             $this->roleIds = implode(',', array_unique($this->roleIds));//该账号的所有角色权限（包括下级用户的）
         }
 
-//        dump($this->orgIds);
-//        dump($this->userIds);
-//        dump($this->roleIds);die;
-//        if(!in_array($this->userId, $this->adminIds, true)){
-//            if(!$this->checkUserAuth($this->userId)){
-//                $this->apiReturn(201, '', $this->error);
-//            }
-//        }
+        $this->isAdmin = true;
+        if(!in_array($this->userId, $this->adminIds, true)){
+            $this->isAdmin = false;
+            if(!$this->checkUserAuth($this->userId)){
+                $this->apiReturn(201, '', $this->error);
+            }
+        }
     }
 
     /**
@@ -115,7 +121,7 @@ class Admin extends Base {
         $url  = $this->createMenuUrl();
         $menu = model('Menu')->getMenuBySrc($url);
         if(!$menu){
-            $this->error = '菜单不有不存在该接口';
+            $this->error = '菜单不存在该接口';
             return false;
         }
 

@@ -17,7 +17,7 @@ class SystemUser extends Validate{
         'orgId'                 => 'require|number',
         'realName'              => 'require',
         'roleIds'               => 'require',
-        'parentIds'             => 'require',
+//        'parentIds'             => 'require',
         'sex'                   => 'require|in:0,1',
         'birthday'              => 'checkTime',
         'cardNo'                => 'checkIdCard',
@@ -33,7 +33,7 @@ class SystemUser extends Validate{
         'orgId.require'              => '组织ID非法',
         'orgId.number'               => '组织ID非法',
         'roleIds.require'            => '请选择角色',
-        'parentIds.require'          => '请选择上级主管',
+//        'parentIds.require'          => '请选择上级主管',
         'agentGender.require'        => '请选择性别',
         'sex.in'                     => '性别格式非法',
         'birthday.checkTime'         => '生日格式非法',
@@ -72,6 +72,12 @@ class SystemUser extends Validate{
     }
 
     public function checkIdCard($value){
+        return true;
+        $idCard = new \IdCard();
+        $result = $idCard::idcard_checkIDCard($value);
+        if($result != 1){
+            return $result;
+        }
         return true;
     }
 

@@ -60,7 +60,9 @@ class ConsumerOrder extends Admin
             $where['co.state'] = $state;
         }
 
-//        $where['co.creator_id'] = $this->userId;
+        if(!$this->isAdmin){//如果不是超级管理员，则显示自己及下级的数据
+            $where['co.creator_id'] = ['in', $this->userIds];
+        }
 
         $startTime = isset($this->data['startDate']) && !empty($this->data['startDate']) ? $this->data['startDate'] : '';
         $endTime   = isset($this->data['endDate'])   && !empty($this->data['endDate'])   ? $this->data['endDate'] : '';
@@ -84,7 +86,6 @@ class ConsumerOrder extends Admin
         }
 
         $data = model('ConsumerOrder')->getOrderListAll($where, $page, $rows);
-//        dump($data);die;
         $this->apiReturn(200, ['list' => $data['list'], 'page' => $page, 'rows' => $rows, 'total' => $data['count']]);
     }
 

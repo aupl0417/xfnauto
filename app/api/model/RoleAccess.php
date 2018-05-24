@@ -36,14 +36,15 @@ class RoleAccess extends Model
      * @param $roleIds string/array 角色id集
      * @return boolean/array
      * */
-    public function getRoleAccessByRoleIds($roleIds){
-        if(!$roleIds){
-            return false;
+    public function getRoleAccessByRoleIds($roleIds = ''){
+        $where = ['is_delete' => 0];
+        if($roleIds){
+            if(is_string($roleIds)){
+                $roleIds = explode(',', $roleIds);
+            }
+            $where['role_id'] = ['in', $roleIds];
         }
-        if(is_string($roleIds)){
-            $roleIds = explode(',', $roleIds);
-        }
-        $where['role_id'] = ['in', $roleIds];
+
         $data = Db::name($this->table)->field('id,role_id,access_ids')->where($where)->select();
         if(!$data){
             return false;

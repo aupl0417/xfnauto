@@ -20,7 +20,10 @@ class Role extends Model
 
         $where = ['isDelete' => 0];
         if($orgId !== 0){
-            $where['sr.orgId'] = $orgId;
+            if(is_string($orgId)){
+                $orgId = explode(',', $orgId);
+            }
+            $where['sr.orgId'] = ['in', $orgId];
         }
 
         $field = 'roleId as id,shortName as orgName,roleName,sr.remark,sr.orgId';
@@ -62,6 +65,18 @@ class Role extends Model
         }
 
         return Db::name($this->table . ' sr')->where($where)->field($field)->select();
+    }
+
+    public function getRoleDataAll($where = array(), $page = 1, $rows){
+        if(!$where){
+            $where = ['isDelete' => 0];
+        }
+
+        $field = 'roleId as id,shortName as orgName,roleName,sr.remark,sr.orgId';
+        $count = Db::name($this->table . ' sr')->where($where)->count();
+        $role  = Db::name($this->table . ' sr')->where($where)->field($field)->page($page, $rows)->join('system_organization so', 'so.orgId=sr.orgId', 'left')->select();
+
+        return ['data' => $role, 'count' => $count];
     }
     
     

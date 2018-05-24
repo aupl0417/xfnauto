@@ -14,6 +14,9 @@ use think\Request;
 class Home extends Controller {
     protected $data = array();
     protected $userId;
+    protected $orgIds  = array();
+    protected $userIds = array();
+    protected $roleIds = array();
     protected $user;
     protected $isRole;
     protected $orgId;
@@ -47,6 +50,20 @@ class Home extends Controller {
             $this->userId = $user['usersId'];
             $this->orgId  = $user['orgId'];
             $this->user   = $user;
+
+            //获取所有下级用户
+            $lowerLevel = array();
+            model('SystemUser')->getAllLowerLevel($this->userId, $lowerLevel);
+
+            $this->orgIds  = [$this->orgId];
+            $this->userIds = [$this->userId];
+            $this->roleIds = [$user['roleIds']];
+            if($lowerLevel){
+                $this->orgIds  = array_unique(array_merge($this->orgIds, array_column($lowerLevel, 'orgId')));//下级用户所在门店的ID
+                $this->userIds = array_unique(array_merge($this->userIds, array_column($lowerLevel, 'userId')));//下级用户ID
+                $this->roleIds = explode(',', trim(implode(',', array_merge($this->roleIds, array_column($lowerLevel, 'roleIds'))), ','));
+                $this->roleIds = implode(',', array_unique($this->roleIds));//该账号的所有角色权限（包括下级用户的）
+            }
         }
 
 //        $controller = request()->controller();
