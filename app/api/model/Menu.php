@@ -15,7 +15,7 @@ class Menu extends Model
 {
 
     protected $table = 'system_menu';
-    protected $formatTree;
+    protected $formatTree = array();
 
     public function getMenuById($menuId){
         if(!$menuId || !is_numeric($menuId)){
@@ -68,9 +68,15 @@ class Menu extends Model
         return $data;
     }
 
-    public function getMenuTree($ids, $parentId = 0){
+    public function getMenuTree($ids = '', $parentId = 0){
+
         $field = 'menuId as id,parentId,menuName as name,src';
-        $menus = $this->where(["parentId" => $parentId, 'menuId' => ['in', $ids], 'isDelete' => 0])->field($field)->order(["menuId" => "ASC"])->select();
+        $where = ["parentId" => $parentId, 'isDelete' => 0];
+        if(!empty($ids)){
+            $where['menuId'] = ['in', $ids];
+        }
+
+        $menus = $this->where($where)->field($field)->order(["menuId" => "ASC"])->select();
         if($menus){
             foreach ($menus as $key => $menu) {
                 $children = $this->getMenuTree($ids, $menu['id']);
@@ -83,14 +89,14 @@ class Menu extends Model
         return $menus;
     }
 
-    private function _toFormatTree($list,$level=0,$title = 'name') {
+    private function _toFormatTree($list, $level=0, $title = 'name') {
         foreach($list as $key=>$val){
             $val[$title]  = $level== 0 ? $val[$title] . '　' :  $val[$title] . '';
-            if(!array_key_exists('_child', $val)){
+            if(!array_key_exists('children', $val)){
                 array_push($this->formatTree, $val);
             }else{
-                $tmp_ary = $val['_child'];
-                unset($val['_child']);
+                $tmp_ary = $val['children'];
+                unset($val['children']);
                 array_push($this->formatTree, $val);
                 $this->_toFormatTree($tmp_ary, $level + 1, $title); //进行下一层递归
             }
@@ -125,10 +131,9 @@ class Menu extends Model
         return $tree;
     }
 
-    public function getTree($list, $field = 'name'){
-        $list   = $this->list_to_tree($list);
-        $this->_toFormatTree($list, 0, $field);
-        return $this->formatTree;
+    public function getTree($list){
+        $list   = $this->list_to_tree($list, 'id', 'parentId', 'children', 0);
+        return $list;
     }
 
 

@@ -57,9 +57,10 @@ class Admin extends Base {
         $this->isAdmin = true;
         if(!in_array($this->userId, $this->adminIds, true)){
             $this->isAdmin = false;
-            if(!$this->checkUserAuth($this->userId)){
-                $this->apiReturn(201, '', $this->error);
-            }
+        }
+
+        if(!$this->checkUserAuth($this->userId)){
+            $this->apiReturn(201, '', $this->error);
         }
     }
 
@@ -105,28 +106,34 @@ class Admin extends Base {
      * @param $userId int  用户ID
      * @return boolean
      * */
-    public function checkUserAuth($userId){
+    public function checkUserAuth($userId, $menuId = 0){
         $role = model('RoleUser')->getRoleByUserId($userId);
         if(!$role){
-            $this->error = '该用户未分配角色';
+            $this->error = '没有该功能操作权限';
             return false;
         }
 
         $roleIds        = array_column($role, 'roleId');
         $roleAccessAuth = $this->getRoleAccessAuth($roleIds);
         if(!$roleAccessAuth){
+            $this->error = '您没有任何操作权限';
             return false;
         }
 
-        $url  = $this->createMenuUrl();
-        $menu = model('Menu')->getMenuBySrc($url);
+        if($menuId){
+            $menu = model('Menu')->getMenuById($menuId);
+        }else{
+            $url  = $this->createMenuUrl();
+            $menu = model('Menu')->getMenuBySrc($url);
+        }
+
         if(!$menu){
             $this->error = '菜单不存在该接口';
             return false;
         }
 
         if(!in_array($menu['id'], $roleAccessAuth)){
-            $this->error = '您没有该接口的访问权限';
+            $this->error = '您没有该接口的操作权限';
             return false;
         }
         return true;

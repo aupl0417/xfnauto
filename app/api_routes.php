@@ -40,6 +40,8 @@ Route::get('ucenter_v1/consumerDetail','api/v1.Order/consumerDetail');
 Route::get('ucenter_v1/stocklist','api/v1.Order/stockList');
 Route::get('ucenter_v1/organizationlist','api/v1.Organization/index');
 Route::get('ucenter_v1/logistics','api/v1.Logistics/index');
+Route::get('ucenter_v1/logistics/consignment','api/v1.Logistics/consignment');
+Route::get('ucenter_v1/shop','api/v1.Shop/index');
 //Route::get('publics_v1/test','api/v1.Common/test');
 //Route::get('activity_v1.1/index','api/v1._1.Test/index');
 //前台文章列表及详情
@@ -91,3 +93,14 @@ Route::get('backend_v1/menu/index','api/v1.Backend.Menu/index');
 Route::post('backend_v1/menu/create','api/v1.Backend.Menu/create');
 Route::post('backend_v1/menu/edit','api/v1.Backend.Menu/edit');
 Route::get('backend_v1/menu/remove','api/v1.Backend.Menu/remove');
+
+//验证JAVA接口权限
+Route::get('backend_v1/publics/checkauth','api/v1.Backend.Publics/checkJavaApiAuth');
+
+
+//管网
+Route::get('pc_v1/news','api/v1.PC.News/index');
+Route::get('pc_v1/news/detail','api/v1.PC.News/detail');
+Route::post('pc_v1/note','api/v1.PC.News/note');
+Route::get('backend_v1/note','api/v1.Backend.Note/index');
+Route::get('pc_v1/organization','api/v1.PC.News/organization');

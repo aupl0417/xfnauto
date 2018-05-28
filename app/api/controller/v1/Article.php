@@ -24,6 +24,7 @@ class Article extends Home
         $field = 'a_id as id,a_title as title,a_publishedTime as publishedTime,a_icon as icon';
         $where = [
             'a_state'         => ['eq', 1],
+            'a_type'          => ['eq', 4],
             'a_publishedTime' => ['neq', '']
         ];
         $data  = Db::name('article_post')->where($where)->field($field)->page($page, $rows)->order('a_publishedTime desc')->select();

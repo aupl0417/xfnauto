@@ -180,4 +180,29 @@ class Home extends Controller {
         return true;
     }
 
+    /**
+     * 按驼峰规则动态生成表字段(只支持单表)
+     * @param $table string
+     * @return string
+     * */
+    public function createField($table){
+        $field = Db::name($table)->getTableFields();
+        foreach($field as $key => $value){
+            $value = explode('_', $value);
+            foreach($value as $k => &$val){
+                if($k == 0){
+                    continue;
+                }
+                $val = ucfirst($val);
+            }
+            $fields[] = implode('', $value);
+        }
+        unset($value, $val);
+        foreach($field as $key => &$value){
+            $value .= ' ' . $fields[$key];
+        }
+        $field = implode(',', $field);
+        return $field;
+    }
+
 }

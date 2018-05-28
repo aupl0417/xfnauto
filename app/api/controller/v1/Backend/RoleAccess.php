@@ -20,10 +20,11 @@ class RoleAccess extends Admin
         if(isset($this->data['id']) && !empty($this->data['id'])){
             $roleIds = $this->data['id'] + 0;
         }else{
-            $roleIds = $this->user['roleIds'];
+            $roleIds = model('RoleUser')->getRoleByUserId($this->userId);
             if(!$roleIds){
                 $this->apiReturn(201, '', '您未分配角色');
             }
+            $roleIds = array_column($roleIds, 'roleId');
         }
         $data = model('RoleAccess')->getRoleAccessByRoleIds($roleIds);
         $menu = array();
@@ -31,7 +32,10 @@ class RoleAccess extends Admin
             $authIds = implode(',', array_column($data, 'access_ids'));
             $authIds = explode(',', $authIds);
             $authIds = array_unique(array_filter($authIds));
-            $menu    = model('Menu')->getMenuTree($authIds, 0);
+
+            $where   = ['menuId' => ['in', $authIds], 'isDelete' => 0];
+            $menu    = model('Menu')->getMenuAll($where, 'menuId as id,parentId,menuName as name,src');
+            $menu    = model('Menu')->getTree($menu);
         }
         $this->apiReturn(200, $menu);
     }

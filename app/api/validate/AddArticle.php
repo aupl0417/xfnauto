@@ -14,10 +14,8 @@ class AddArticle extends Validate{
 
     protected $rule = [
         'title'                 => 'require',
-//        'a_keywords'              => 'require|in:1,2',
         'content'               => 'require',
-//        'excerpt'               => 'require',
-//        'source'                => 'require',
+        'type'                  => 'require|in:1,2,3,4',
         'videoUrl'              => 'checkUrl',
         'icon'                  => 'checkUrl',
     ];
@@ -25,8 +23,8 @@ class AddArticle extends Validate{
     protected $message = [
         'title.require'         => '请输入标题',
         'content.require'       => '请输入文章内容',
-//        'excerpt.require'       => '请输入文章摘要',
-//        'source.require'        => '请输入文章来源',
+        'type.require'          => '请选择文章类型',
+        'type.in'               => '文章类型非法',
         'videoUrl.checkUrl'     => '视频地址非法',
         'icon.checkUrl'         => '图片地址非法',
     ];

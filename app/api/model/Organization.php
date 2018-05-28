@@ -75,8 +75,11 @@ class Organization extends Model
      * @param $order string/array
      * @return array
      * */
-    public function getOrgData($where, $whereOr = array(), $page = 1, $rows = 50, $order = 'orgId desc'){
-        $field = 'orgId,shortName,orgLevel,address,status,areaId,cityId,linkMan,provinceId,provinceName,remark as remarks,telephone as telePhone';
+    public function getOrgData($where, $whereOr = array(), $page = 1, $rows = 50, $order = 'orgId desc', $field = ''){
+        if(!$field){
+            $field = 'orgId,shortName,orgLevel,address,status,areaId,cityId,linkMan,provinceId,provinceName,remark as remarks,telephone as telePhone';
+        }
+
         $count = Db::name($this->table)->where($where)->whereOr($whereOr)->count();
         $data  = Db::name($this->table)->where($where)->whereOr($whereOr)->field($field)->page($page, $rows)->order($order)->select();
 
