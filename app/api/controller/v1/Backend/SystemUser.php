@@ -91,7 +91,7 @@ class SystemUser extends Admin
                 'entryTime'     => isset($this->data['entryTime'])    ? htmlspecialchars(trim($this->data['entryTime'])) : '',
                 'basePay'       => isset($this->data['basePay'])      ? floatval($this->data['basePay']) : 0,
                 'headPortrait'  => isset($this->data['headPortrait']) ? htmlspecialchars(trim($this->data['headPortrait'])) : '',
-                'password'      => md5('123456'),
+                'password'      => strtoupper(md5('1')),
                 'createTime'    => $time,
                 'updateTime'    => $time,
                 'orgName'       => trim($orgInfo['shortName']),
@@ -186,31 +186,31 @@ class SystemUser extends Admin
             $newRole = explode(',', $data['roleIds']);
             $oldRole = explode(',', $userInfo['roleIds']);
             //如果角色换了，就更新
-            if($userInfo['roleIds']){
-                if($oldRole != $newRole){
-                    $roleIntersect = array_intersect($oldRole, $newRole);
-                    if($roleIntersect){//如果有交集，则oldRole中去掉交集，并删除oldRole中剩余的数据，newRole中也去掉交集，并插入剩余的数据
-                        $oldRole = array_diff($oldRole, $roleIntersect);
-                        if($oldRole){
-                            $result = Db::name('system_user_role')->where(['userId' => $userId, 'roleId' => ['in', $oldRole]])->delete();
-                            if(!$result){
-                                throw new Exception('删除用户角色失败');
-                            }
-                        }
-                        $newRole = array_diff($newRole, $roleIntersect);
-                    }
-                    $role    = array();
-                    foreach($newRole as $key => $value){
-                        $role[$key]['userId'] = $userId;
-                        $role[$key]['roleId'] = $value;
-                    }
 
-                    $result = Db::name('system_user_role')->insertAll($role);
-                    if(!$result){
-                        throw new Exception('添加到用户角色表失败');
+            if($oldRole != $newRole){
+                $roleIntersect = array_intersect($oldRole, $newRole);
+                if($roleIntersect){//如果有交集，则oldRole中去掉交集，并删除oldRole中剩余的数据，newRole中也去掉交集，并插入剩余的数据
+                    $oldRole = array_diff($oldRole, $roleIntersect);
+                    if($oldRole){
+                        $result = Db::name('system_user_role')->where(['userId' => $userId, 'roleId' => ['in', $oldRole]])->delete();
+                        if(!$result){
+                            throw new Exception('删除用户角色失败');
+                        }
                     }
+                    $newRole = array_diff($newRole, $roleIntersect);
+                }
+                $role    = array();
+                foreach($newRole as $key => $value){
+                    $role[$key]['userId'] = $userId;
+                    $role[$key]['roleId'] = $value;
+                }
+
+                $result = Db::name('system_user_role')->insertAll($role);
+                if(!$result){
+                    throw new Exception('添加到用户角色表失败');
                 }
             }
+
 
             Db::commit();
             $this->apiReturn(200, '', '编辑成功');

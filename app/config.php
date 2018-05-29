@@ -97,7 +97,7 @@ return [
     // 域名部署
     'url_domain_deploy'      => true,
     // 域名根，如thinkphp.cn
-    'url_domain_root'        => 'xfnauto.com',
+    'url_domain_root'        => 'xfnautos.com',
     // 是否自动转换URL中的控制器和操作名
     'url_convert'            => true,
     // 默认的访问控制器层
@@ -206,7 +206,7 @@ return [
         'var_session_id' => '',
         // SESSION 前缀
         'prefix'         => 'xfn_',
-        'domain'         => 'xfnauto.com',
+        'domain'         => 'xfnautos.com',
         // 驱动方式 支持redis memcache memcached
         'type'           => '',
         // 是否自动开启 SESSION
@@ -224,7 +224,7 @@ return [
         // cookie 保存路径
         'path'      => '/',
         // cookie 有效域名
-        'domain'    => 'xfnauto.com',
+        'domain'    => 'xfnautos.com',
         //  cookie 启用安全传输
         'secure'    => false,
         // httponly设置

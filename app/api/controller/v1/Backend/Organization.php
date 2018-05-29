@@ -39,7 +39,7 @@ class Organization extends Admin
     }
 
     public function create(){
-        unset($this->data['sessionId']);
+        unset($this->data['sessionId'], $this->data['id']);
         $result = $this->validate($this->data, 'Organization');
         if($result !== true){
             $this->apiReturn(201, '', $result);

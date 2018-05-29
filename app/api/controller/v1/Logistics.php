@@ -46,8 +46,8 @@ class Logistics extends Home
         $data  = Db::name('logistics_distribution di')->where($where)->field($field)->join($join)->order('di.distribution_id desc')->group('ip.consignment_id')->page($page, $rows)->select();
         $count = Db::name('logistics_distribution di')->where($where)->field($field)->join($join)->order('di.distribution_id desc')->group('ip.consignment_id')->count();
         if($data){
-            $carsField = $this->createField('logistics_goods_car');
-            $logisticsCarField = $this->createField('logistics_car');
+            $carsField = $this->createField('logistics_goods_car', 'is_delete');
+            $logisticsCarField = $this->createField('logistics_car', 'is_delete');
             $state = [''];
             foreach($data as $key => &$value){
                 $value['goodsCars']    = array();

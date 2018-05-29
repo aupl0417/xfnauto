@@ -33,14 +33,14 @@ class Menu extends Admin
      * */
     public function index(){
         $menu = array();
-        if($this->isAdmin){
+//        if($this->isAdmin){
             $menuModel = model('Menu');
             if(!$menu = cache($this->cachekey)){
                 $menu    = $menuModel->getMenuAll(['isDelete' => 0], 'menuId as id,parentId,menuName as name,src');
                 $menu    = $menuModel->getTree($menu);
                 cache($this->cachekey, $menu, 300);
             }
-        }
+//        }
 
         $this->apiReturn(200, $menu);
     }
@@ -53,9 +53,9 @@ class Menu extends Admin
         (!isset($this->data['menuName']) || empty($this->data['menuName'])) && $this->apiReturn(201, '', '菜单名称不能为空');
         (!isset($this->data['src']) || empty($this->data['src'])) && $this->apiReturn(201, '', '菜单URL不能为空');
 
-        if(!$this->isAdmin){
-            $this->apiReturn(201, '', '您不是超级管理员');
-        }
+//        if(!$this->isAdmin){
+//            $this->apiReturn(201, '', '您不是超级管理员');
+//        }
 
         $parentId = isset($this->data['parentId']) && !empty($this->data['parentId']) ? $this->data['parentId'] + 0 : 0;
         $menuName = htmlspecialchars(trim($this->data['menuName']));
@@ -97,9 +97,9 @@ class Menu extends Admin
         (!isset($this->data['menuName']) || empty($this->data['menuName'])) && $this->apiReturn(201, '', '菜单名称不能为空');
         (!isset($this->data['src']) || empty($this->data['src'])) && $this->apiReturn(201, '', '菜单URL不能为空');
 
-        if(!$this->isAdmin){
-            $this->apiReturn(201, '', '您不是超级管理员');
-        }
+//        if(!$this->isAdmin){
+//            $this->apiReturn(201, '', '您不是超级管理员');
+//        }
 
         unset($this->data['sessionId']);
         $menuId = $this->data['menuId'] + 0;
@@ -134,9 +134,9 @@ class Menu extends Admin
         (!isset($this->data['menuId']) || empty($this->data['menuId'])) && $this->apiReturn(201, '', '菜单ID非法');
         $menuId = $this->data['menuId'] + 0;
 
-        if(!$this->isAdmin){
-            $this->apiReturn(201, '', '您不是超级管理员');
-        }
+//        if(!$this->isAdmin){
+//            $this->apiReturn(201, '', '您不是超级管理员');
+//        }
 
         $menu   = Db::name('system_menu')->where(['menuId' => $menuId])->field('isDelete')->find();
         if(!$menu){

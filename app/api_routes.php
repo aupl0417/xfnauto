@@ -42,6 +42,8 @@ Route::get('ucenter_v1/organizationlist','api/v1.Organization/index');
 Route::get('ucenter_v1/logistics','api/v1.Logistics/index');
 Route::get('ucenter_v1/logistics/consignment','api/v1.Logistics/consignment');
 Route::get('ucenter_v1/shop','api/v1.Shop/index');
+Route::get('ucenter_v1/shop/activity','api/v1.Shop/activity');
+Route::get('ucenter_v1/userlist','api/v1.UserCenter/userList');
 //Route::get('publics_v1/test','api/v1.Common/test');
 //Route::get('activity_v1.1/index','api/v1._1.Test/index');
 //前台文章列表及详情
