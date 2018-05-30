@@ -43,7 +43,8 @@ class Home extends Controller {
 
         $this->orgIds  = [$this->orgId];
         $this->userIds = [$this->userId];
-        $this->roleIds = [$user['roleIds']];
+        $this->roleIds = $user['roleIds'] ? explode(',', $user['roleIds']) : [];
+
         if($lowerLevel){
             $this->orgIds  = array_unique(array_merge($this->orgIds, array_column($lowerLevel, 'orgId')));//下级用户所在门店的ID
             $this->userIds = array_unique(array_merge($this->userIds, array_column($lowerLevel, 'userId')));//下级用户ID
@@ -167,7 +168,7 @@ class Home extends Controller {
      * @param $ignoreFields string/array  要过滤的字段
      * @return string
      * */
-    public function createField($table, $ignoreFields = ''){
+    public function createField($table, $ignoreFields = '', $returnArray = false){
         if($ignoreFields && is_string($ignoreFields)){
             $ignoreFields = explode(',', $ignoreFields);
         }
@@ -189,8 +190,7 @@ class Home extends Controller {
             $value .= ' AS ' . $fields[$key];
         }
         unset($fields, $value, $key);
-        $field = implode(',', $field);
-        return $field;
+        return !$returnArray ? implode(',', $field) : $field;
     }
 
 }

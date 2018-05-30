@@ -123,6 +123,8 @@ class Menu extends Model
                     if (isset($refer[$parentId])) {
                         $parent = &$refer[$parentId];
                         $parent[$child][] = &$list[$key];
+                    }else{
+                        $tree[] = &$list[$key];
                     }
                 }
             }

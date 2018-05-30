@@ -24,12 +24,14 @@ class CustomerOrg extends Model
             'time_of_appointment_date' => ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]],
         ];
 
-        $group = model('SystemUser')->getUserGroupInfo($userId);
+        /*$group = model('SystemUser')->getUserGroupInfo($userId);
         if($group['over_manage'] == 1){
             $where['org_id']         = $group['orgId'];
         }else{
             $where['system_user_id'] = $userId;
-        }
+        }*/
+        $where['system_user_id'] = ['in', $userId];
+        $where['org_id']         = ['in', $orgId];
 
         if($isIntensity){
             $where['intensity'] = '高';
@@ -44,12 +46,13 @@ class CustomerOrg extends Model
     public function customerAppointmentCount($userId, $orgId, $isRole = false){
         $where = [
             'appointment_date' => ['between', [date('Y-m-d'), date('Y-m-d 23:59:59')]],
-            'org_id' => $orgId
+            'org_id' => ['in', $orgId]
         ];
 
-        if(!$isRole){
-            $where['system_user_id'] = $userId;
-        }
+//        if(!$isRole){
+//            $where['system_user_id'] = $userId;
+//        }
+        $where['system_user_id'] = ['in', $userId];
 
         return Db::name($this->table)->where($where)->count();
     }

@@ -21,7 +21,7 @@ class Role extends Admin
         $page  = isset($this->data['page']) && !empty($this->data['page']) ? $this->data['page'] + 0 : 1;
         $rows  = isset($this->data['rows']) && !empty($this->data['rows']) ? $this->data['rows'] + 0 : 50;
 
-        $where = array();
+        $where = array('sr.isDelete' => 0);
         if($this->isAdmin){
             if(isset($this->data['orgId']) && !empty($this->data['orgId'])){
                 $orgId = $this->data['orgId'] + 0;

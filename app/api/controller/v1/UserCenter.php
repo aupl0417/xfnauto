@@ -8,6 +8,7 @@
 
 namespace app\api\controller\v1;
 
+use app\api\model\ConsumerOrder;
 use app\api\model\CustomerOrder;
 use think\Controller;
 use think\Db;
@@ -22,40 +23,40 @@ class UserCenter extends Home
         $data = array();
         $customerModel    = model('CustomerOrder');
         $customerOrgModel = model('CustomerOrg');
-        $data['intensityCount'] = $customerOrgModel->customerCount($this->userId, $this->orgId, true, $this->isRole);
+        $data['intensityCount'] = $customerOrgModel->customerCount($this->userIds, $this->orgIds, true, $this->isRole);
         $data['customer'] = [
-            'userCount'    => $customerOrgModel->customerCount($this->userId, $this->orgId, false, $this->isRole),
-            'total'        => $customerModel->orderCount('', $this->userId, $this->orgId, $this->isRole),
-            'unpayDeposit' => $customerModel->orderCount(1, $this->userId, $this->orgId, $this->isRole),
-            'bankAudit'    => $customerModel->orderCount(3, $this->userId, $this->orgId, $this->isRole),
-            'undelivery'   => $customerModel->orderCount(5, $this->userId, $this->orgId, $this->isRole),
-            'others'       => $customerModel->orderCount(6, $this->userId, $this->orgId, $this->isRole),
-            'unfinished'   => $customerModel->orderCount(15, $this->userId, $this->orgId, $this->isRole),
-            'finished'     => $customerModel->orderCount(17, $this->userId, $this->orgId, $this->isRole),
-            'insurance'    => $customerModel->orderFeeCount('insurance', $this->userId, $this->orgId, $this->isRole),
-            'mortgage'     => $customerModel->orderFeeCount('mortgage', $this->userId, $this->orgId, $this->isRole),
-            'boutique'     => $customerModel->orderFeeCount('boutique', $this->userId, $this->orgId, $this->isRole),
-            'license'      => $customerModel->orderFeeCount('license', $this->userId, $this->orgId, $this->isRole),
+            'userCount'    => $customerOrgModel->customerCount($this->userIds, $this->orgIds, false, $this->isRole),
+            'total'        => $customerModel->orderCount('', $this->userIds, $this->orgIds, $this->isRole),
+            'unpayDeposit' => $customerModel->orderCount(1, $this->userIds, $this->orgIds, $this->isRole),
+            'bankAudit'    => $customerModel->orderCount(3, $this->userIds, $this->orgIds, $this->isRole),
+            'undelivery'   => $customerModel->orderCount(5, $this->userIds, $this->orgIds, $this->isRole),
+            'others'       => $customerModel->orderCount(6, $this->userIds, $this->orgIds, $this->isRole),
+            'unfinished'   => $customerModel->orderCount(15, $this->userIds, $this->orgIds, $this->isRole),
+            'finished'     => $customerModel->orderCount(17, $this->userIds, $this->orgIds, $this->isRole),
+            'insurance'    => $customerModel->orderFeeCount('insurance', $this->userIds, $this->orgIds, $this->isRole),
+            'mortgage'     => $customerModel->orderFeeCount('mortgage', $this->userIds, $this->orgIds, $this->isRole),
+            'boutique'     => $customerModel->orderFeeCount('boutique', $this->userIds, $this->orgIds, $this->isRole),
+            'license'      => $customerModel->orderFeeCount('license', $this->userIds, $this->orgIds, $this->isRole),
         ];
 
         $consumerModel = model('ConsumerOrder');
         $data['consumer'] = [
-            'placeOrder'        => $consumerModel->orderCount(1, $this->userId, $this->orgId, $this->isRole),//开单
-            'total'             => $consumerModel->orderCount('', $this->userId, $this->orgId, $this->isRole),//本月总订单
-            'unpayDeposit'      => $consumerModel->orderCount(5, $this->userId, $this->orgId, $this->isRole),//待收定金
+            'placeOrder'        => $consumerModel->orderCount(1, $this->userIds, $this->orgIds, $this->isRole),//开单
+            'total'             => $consumerModel->orderCount('', $this->userIds, $this->orgIds, $this->isRole),//本月总订单
+            'unpayDeposit'      => $consumerModel->orderCount(5, $this->userIds, $this->orgIds, $this->isRole),//待收定金
 //            'unpayfinalpayment' => $consumerModel->orderCount(25, $this->userId, $this->orgId, $this->isRole),//待换车
-            'carMatch'          => $consumerModel->orderCount(10, $this->userId, $this->orgId, $this->isRole),//待配车
-            'carCheck'          => $consumerModel->orderCount(15, $this->userId, $this->orgId, $this->isRole),//待验车
+            'carMatch'          => $consumerModel->orderCount(10, $this->userIds, $this->orgIds, $this->isRole),//待配车
+            'carCheck'          => $consumerModel->orderCount(15, $this->userIds, $this->orgIds, $this->isRole),//待验车
 //            'consulting'        => $consumerModel->orderCount(30, $this->userId, $this->orgId, $this->isRole),//待协商
-            'finnalprice'       => $consumerModel->orderCount(35, $this->userId, $this->orgId, $this->isRole),//待收尾款
-            'outStock'          => $consumerModel->orderCount(40, $this->userId, $this->orgId, $this->isRole),//待出库
-            'tickitUploading'   => $consumerModel->orderCount(45, $this->userId, $this->orgId, $this->isRole),//待上传票证
-            'commercial'        => $consumerModel->orderFeeCount('commercial', $this->userId, $this->orgId, $this->isRole),//商业险
-            'traffic'           => $consumerModel->orderFeeCount('traffic', $this->userId, $this->orgId, $this->isRole),//交强险
+            'finnalprice'       => $consumerModel->orderCount(35, $this->userIds, $this->orgIds, $this->isRole),//待收尾款
+            'outStock'          => $consumerModel->orderCount(40, $this->userIds, $this->orgIds, $this->isRole),//待出库
+            'tickitUploading'   => $consumerModel->orderCount(45, $this->userIds, $this->orgIds, $this->isRole),//待上传票证
+            'commercial'        => $consumerModel->orderFeeCount('commercial', $this->userIds, $this->orgIds, $this->isRole),//商业险
+            'traffic'           => $consumerModel->orderFeeCount('traffic', $this->userIds, $this->orgIds, $this->isRole),//交强险
         ];
 
         $data['commission'] = [
-            'returnVisit' => $customerModel->getReturnVisitCount($this->userId, $this->orgId, $this->isRole),
+            'returnVisit' => $customerModel->getReturnVisitCount($this->userIds, $this->orgIds, $this->isRole),
             'appointment' => $customerOrgModel->customerAppointmentCount($this->userId, $this->orgId, $this->isRole)
         ];
 
@@ -68,12 +69,13 @@ class UserCenter extends Home
         $type  = isset($this->data['type']) && !empty($this->data['type']) ? trim($this->data['type']) : 'all';
         !in_array($type, ['all', 'intensity', 'visit']) && $this->apiReturn(201, '', '参数非法');
 
-        $group = model('SystemUser')->getUserGroupInfo($this->userId);
-        if($group['over_manage'] == 1){
-            $where['org_id']         = $group['orgId'];
-        }else{
-            $where['system_user_id'] = $this->userId;
-        }
+//        $group = model('SystemUser')->getUserGroupInfo($this->userId);
+//        if($group['over_manage'] == 1){
+//            $where['org_id']         = $group['orgId'];
+//        }else{
+//            $where['system_user_id'] = $this->userId;
+//        }
+        $where['org_id'] = ['in', $this->orgIds];
 
         if($type == 'intensity'){
             $where['intensity'] = '高';
@@ -109,16 +111,16 @@ class UserCenter extends Home
         $where = [
             'create_date'          => ['between', [date('Y-m-d', strtotime('-7 day')), date('Y-m-d H:i:s')]],
             'customer_order_state' => 17,
-            'org_id'               => $this->orgId,
+            'org_id'               => ['in', $this->orgIds],
             'is_delete'            => 0,
         ];
 
-        $group = model('SystemUser')->getUserGroupInfo($this->userId);
-        if($group['over_manage'] == 1){
-            $where['org_id']         = $group['orgId'];
-        }else{
-            $where['system_user_id'] = $this->userId;
-        }
+//        $group = model('SystemUser')->getUserGroupInfo($this->userId);
+//        if($group['over_manage'] == 1){
+//            $where['org_id']         = $group['orgId'];
+//        }else{
+//            $where['system_user_id'] = $this->userId;
+//        }
 
         if(isset($this->data['keywords']) && !empty($this->data['keywords'])){
             $keywords = htmlspecialchars(trim($this->data['keywords']));
@@ -138,7 +140,7 @@ class UserCenter extends Home
     public function quotation(){
         $result = $this->validate($this->data, 'AddQuotation');
         if($result !== true){
-            $this->apiReturn(201, '', $result . '_1');
+            $this->apiReturn(201, '', $result);
         }
         
         $priceListKey = ['bareCarPrice', 'purchase_tax', 'license_plate_priace', 'vehicle_vessel_tax', 'insurance_price', 'traffic_insurance_price', 'boutique_priace', 'quality_assurance', 'other'];
@@ -168,7 +170,6 @@ class UserCenter extends Home
 
         $monthlySupply = $type == 2 ? $totalFee * (100 - $this->data['down_payment_rate']) * (100 + $this->data['annual_rate']) / $this->data['periods'] / 100 / 100 : 0;
         $monthlySupply = ceil($monthlySupply);
-//        $this->apiReturn(201, '', '月供不一致'. $monthlySupply . '_' . $this->data['monthly_supply']);
         if(intval($monthlySupply) != intval($this->data['monthly_supply'])){
             $this->apiReturn(201, '', '月供不一致');
         }
@@ -247,6 +248,15 @@ class UserCenter extends Home
         }
 
         $this->apiReturn(200, ['list' => $data, 'total' => $count, 'page' => $page, 'rows' => $rows]);
+    }
+
+    public function test(){
+
+        //get 1 是获取id为 1 的数据
+        //find() 是查找
+        //toArray()  是获取到的数据转为数组
+        $consumerOrder = ConsumerOrder::get(237);
+        var_dump($consumerOrder->find()->toArray());
     }
 
 }

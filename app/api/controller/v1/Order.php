@@ -37,7 +37,7 @@ class Order extends Home
             $where['co.state'] = $this->data['state'] + 0;
         }
 
-        $where['co.creator_id'] = $this->userId;
+        $where['co.creator_id'] = ['in', $this->userIds];
         /*if($this->isRole){
             $userIds = model('SystemUser')->getUserByOrgId($this->orgId, 'usersId');
             if($userIds){
@@ -45,13 +45,13 @@ class Order extends Home
                 $where['co.creator_id'] = ['in', $userIds];
             }
         }*/
-        if(count($this->orgIds) > 1){//如果是大于1，则有下级
-            $userIds = model('SystemUser')->getDataAll(['orgId' => ['in', $this->orgIds], 'isEnable' => 1], 'usersId');
-            if($userIds){
-                $userIds = array_column($userIds, 'usersId');
-                $where['co.creator_id'] = ['in', $userIds];
-            }
-        }
+//        if(count($this->orgIds) > 1){//如果是大于1，则有下级
+//            $userIds = model('SystemUser')->getDataAll(['orgId' => ['in', $this->orgIds], 'isEnable' => 1], 'usersId');
+//            if($userIds){
+//                $userIds = array_column($userIds, 'usersId');
+//                $where['co.creator_id'] = ['in', $userIds];
+//            }
+//        }
 
         if(isset($this->data['month']) && !empty($this->data['month'])){
             $month      = trim($this->data['month']);
@@ -105,12 +105,13 @@ class Order extends Home
 //        if(!$this->isRole){
 //            $where['system_user_id'] = $this->userId;
 //        }
-        $group = model('SystemUser')->getUserGroupInfo($this->userId);
-        if($group['over_manage'] == 1){
-            $where['org_id']         = $group['orgId'];
-        }else{
-            $where['system_user_id'] = $this->userId;
-        }
+//        $group = model('SystemUser')->getUserGroupInfo($this->userId);
+//        if($group['over_manage'] == 1){
+//            $where['org_id']         = $group['orgId'];
+//        }else{
+//            $where['system_user_id'] = $this->userId;
+//        }
+        $where['org_id']         = ['in', $this->orgIds];
         $where['create_date']    = ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]];
         $where['is_delete']      = 0;
 
@@ -136,7 +137,7 @@ class Order extends Home
             !in_array($mode, ['traffic', 'commercial']) && $this->apiReturn(201, '', '统计类型非法');
             $model = 'ConsumerOrder';
         }
-        $data = model($model)->orderFeeList($mode, $this->userId, $this->orgId, $this->isRole, $page, $rows);
+        $data = model($model)->orderFeeList($mode, $this->userIds, $this->orgIds, $this->isRole, $page, $rows);
 //        echo model($model)->getLastSql();die;
         $this->apiReturn(200, $data);
     }

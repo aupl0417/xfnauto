@@ -46,7 +46,7 @@ class Admin extends Base {
 
         $this->orgIds  = [$this->orgId];
         $this->userIds = [$this->userId];
-        $this->roleIds = explode(',', $user['roleIds']);
+        $this->roleIds = $user['roleIds'] ? explode(',', $user['roleIds']) : [];
         if($lowerLevel){
             $this->orgIds  = array_unique(array_merge($this->orgIds, array_column($lowerLevel, 'orgId')));//下级用户所在门店的ID
             $this->userIds = array_unique(array_merge($this->userIds, array_column($lowerLevel, 'userId')));//下级用户ID

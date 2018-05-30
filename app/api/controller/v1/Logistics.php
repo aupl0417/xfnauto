@@ -66,6 +66,10 @@ class Logistics extends Home
         $this->apiReturn(200, ['list' => $data, 'page' => $page, 'rows' => $rows, 'total' => $count]);
     }
 
+
+    /**
+     * 托运单列表
+     * */
     public function consignment(){
         $page  = isset($this->data['page']) && !empty($this->data['page']) ? $this->data['page'] + 0 : 1;
         $rows  = isset($this->data['rows']) && !empty($this->data['rows']) ? $this->data['rows'] + 0 : 10;
