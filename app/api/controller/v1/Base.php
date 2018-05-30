@@ -18,29 +18,7 @@ class Base extends Controller {
     );
 
     public function __construct(){
-        $params = input('');
-        //验证签名串是否存在或是否为空
-        (!isset($params['token']) || empty($params['token'])) && $this->apiReturn(201, '签名不能为空');
-        (!isset($params['appId']) || empty($params['appId'])) && $this->apiReturn(201, 'appId不能为空');
-
-        $token = $params['token'];
-        unset($params['token']);
-
-        //验证签名
-        if(!$this->tokenValidate($params, $token)){
-            $this->apiReturn(201, $this->newSign);//暂时显示这个签名，用于测试时
-            $this->apiReturn(201, '签名错误');
-        }
-
-        $controller = request()->controller();
-        $controller = explode('.', $controller);
-        $workController = ['SellerManage', 'ShopManage', 'CarManage', 'ActivityManage', 'Order'];
-        if(in_array($controller[1], $workController)){
-            (!isset($params['userId']) || empty($params['userId'])) && $this->apiReturn(201, '', '用户ID不能为空');
-            $member = model('Member')->getMemberById($params['userId']);
-            !$member && $this->apiReturn(201, '', '用户不存在');
-        }
-
+        $params = input('', '', 'htmlspecialchars,trim');
         $this->data = $params;
     }
 

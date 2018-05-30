@@ -11,7 +11,7 @@ namespace app\api\controller\v1;
 use app\api\model\CustomerOrder;
 use think\Controller;
 use think\Db;
-class Article extends Home
+class Article extends Base
 {
 
     /**

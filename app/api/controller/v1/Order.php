@@ -141,14 +141,6 @@ class Order extends Home
         $this->apiReturn(200, $data);
     }
 
-    public function consumerDetail(){
-        (!isset($this->data['id']) || empty($this->data['id'])) && $this->apiReturn(201, '', '参数非法');
-
-        $orderId = $this->data['id'] + 0;
-        $data    = model('ConsumerOrder')->getOrderDetailByOrderId($orderId);
-        $this->apiReturn(200, $data);
-    }
-
     /*
      * 更新订单的出库状态
      * */

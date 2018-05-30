@@ -27,48 +27,29 @@ class Home extends Controller {
 
     public function __construct(Request $request = null){
         $params = input('', '', 'htmlspecialchars,trim');
-        //验证签名串是否存在或是否为空
-//        (!isset($params['token']) || empty($params['token'])) && $this->apiReturn(201, '签名不能为空');
-//        (!isset($params['appId']) || empty($params['appId'])) && $this->apiReturn(201, 'appId不能为空');
-//        (!isset($params['deviceId']) || empty($params['deviceId'])) && $this->apiReturn(201, '设备ID不能为空');
 
+        (!isset($params['sessionId']) || empty($params['sessionId'])) && $this->apiReturn(201, 'SESSIONID不能为空');
+        $sessionId  = trim($params['sessionId']);
+        $user       = model('SystemUser')->getUserBySessionId($sessionId);
+        !$user && $this->apiReturn(4002, '', '请重新登录');
+        $this->isRole = $this->checkRole($user['usersId']);
+        $this->userId = $user['usersId'];
+        $this->orgId  = $user['orgId'];
+        $this->user   = $user;
 
-//        $token = $params['token'];
-//        unset($params['token']);
+        //获取所有下级用户
+        $lowerLevel = array();
+        model('SystemUser')->getAllLowerLevel($this->userId, $lowerLevel);
 
-        //验证签名
-//        if(!$this->tokenValidate($params, $token)){
-//            $this->apiReturn(201, $this->newSign);//暂时显示这个签名，用于测试时
-//            $this->apiReturn(201, '签名错误');
-//        }
-        if(!in_array(strtolower(request()->action()), ['quotationdetail', 'upload', 'gettoken', 'contract', 'consumerdetail'], true) && (request()->controller() . '/' . request()->action() != 'V1.Article/index') && (request()->controller() . '/' . request()->action() != 'V1.Article/detail')){
-            (!isset($params['sessionId']) || empty($params['sessionId'])) && $this->apiReturn(201, 'SESSIONID不能为空');
-            $sessionId  = trim($params['sessionId']);
-            $user       = model('SystemUser')->getUserBySessionId($sessionId);
-            !$user && $this->apiReturn(4002, '', '请重新登录');
-            $this->isRole = $this->checkRole($user['usersId']);
-            $this->userId = $user['usersId'];
-            $this->orgId  = $user['orgId'];
-            $this->user   = $user;
-
-            //获取所有下级用户
-            $lowerLevel = array();
-            model('SystemUser')->getAllLowerLevel($this->userId, $lowerLevel);
-
-            $this->orgIds  = [$this->orgId];
-            $this->userIds = [$this->userId];
-            $this->roleIds = [$user['roleIds']];
-            if($lowerLevel){
-                $this->orgIds  = array_unique(array_merge($this->orgIds, array_column($lowerLevel, 'orgId')));//下级用户所在门店的ID
-                $this->userIds = array_unique(array_merge($this->userIds, array_column($lowerLevel, 'userId')));//下级用户ID
-                $this->roleIds = explode(',', trim(implode(',', array_merge($this->roleIds, array_column($lowerLevel, 'roleIds'))), ','));
-                $this->roleIds = implode(',', array_unique($this->roleIds));//该账号的所有角色权限（包括下级用户的）
-            }
+        $this->orgIds  = [$this->orgId];
+        $this->userIds = [$this->userId];
+        $this->roleIds = [$user['roleIds']];
+        if($lowerLevel){
+            $this->orgIds  = array_unique(array_merge($this->orgIds, array_column($lowerLevel, 'orgId')));//下级用户所在门店的ID
+            $this->userIds = array_unique(array_merge($this->userIds, array_column($lowerLevel, 'userId')));//下级用户ID
+            $this->roleIds = explode(',', trim(implode(',', array_merge($this->roleIds, array_column($lowerLevel, 'roleIds'))), ','));
+            $this->roleIds = implode(',', array_unique($this->roleIds));//该账号的所有角色权限（包括下级用户的）
         }
-
-//        $controller = request()->controller();
-//        $controller = explode('.', $controller);
-
 
         $this->data   = $params;
     }

@@ -182,21 +182,6 @@ class UserCenter extends Home
         $this->apiReturn(200, ['id' => Db::name('consumer_car_quotation')->getLastInsID()]);
     }
 
-    public function quotationDetail(){
-        (!isset($this->data['id']) || empty($this->data['id'])) && $this->apiReturn(201, '', '报价单ID非法');
-
-        $id   = $this->data['id'] + 0;
-
-        $data = Db::name('consumer_car_quotation')->where(['id' => $id])->find();
-        !$data && $this->apiReturn(201, '', '报价单数据不存在');
-        $user = model('SystemUser')->getUserById($data['create_user_id']);
-        $data['user'] = ['username' => $user['realName'], 'phone' => $user['phoneNumber']];
-        $data['carName'] = Db::name('car_cars')->where(['carId' => $data['carId']])->field('carName')->find()['carName'];
-        $data['buycarStyle'] = $data['type'] == 1 ? '全款' : '按揭';
-        unset($data['carId'], $data['create_user_id']);
-        $this->apiReturn(200, $data);
-    }
-
     /**
      * 客户管理
      * @param page int

@@ -90,4 +90,12 @@ class SystemUser extends Model
         return $data;
     }
 
+    public function getUserByPhone($phone, $field = '*'){
+        if(!$phone || !checkPhone($phone)){
+            return false;
+        }
+        $user = Db::name($this->table)->where(['phoneNumber' => $phone, 'isEnable' => 1, 'status' => 1])->field($field)->find();
+        return $user?: false;
+    }
+
 }

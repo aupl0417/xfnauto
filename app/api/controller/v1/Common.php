@@ -18,7 +18,7 @@ use think\Controller;
 use think\Db;
 use think\Request;
 
-class Common extends Home
+class Common extends Base
 {
     public function _initialize(Request $request = null)
     {
@@ -518,6 +518,36 @@ class Common extends Home
         unlink($signet['filename']);
 //        $this->apiReturn(201, (is_https() ? 'https://api.' : 'http://api.') . config('url_domain_root') . '/' . $img);
         $this->apiReturn(200, $this->upFile($img));
+    }
+
+    /**
+     * 报价单详情
+     * */
+    public function quotationDetail(){
+        (!isset($this->data['id']) || empty($this->data['id'])) && $this->apiReturn(201, '', '报价单ID非法');
+
+        $id   = $this->data['id'] + 0;
+
+        $data = Db::name('consumer_car_quotation')->where(['id' => $id])->find();
+        !$data && $this->apiReturn(201, '', '报价单数据不存在');
+        $user = model('SystemUser')->getUserById($data['create_user_id']);
+        $data['user'] = ['username' => $user['realName'], 'phone' => $user['phoneNumber']];
+        $data['carName'] = Db::name('car_cars')->where(['carId' => $data['carId']])->field('carName')->find()['carName'];
+        $data['buycarStyle'] = $data['type'] == 1 ? '全款' : '按揭';
+        unset($data['carId'], $data['create_user_id']);
+        $this->apiReturn(200, $data);
+    }
+
+
+    /**
+     * 资源订单详情
+     * */
+    public function consumerDetail(){
+        (!isset($this->data['id']) || empty($this->data['id'])) && $this->apiReturn(201, '', '参数非法');
+
+        $orderId = $this->data['id'] + 0;
+        $data    = model('ConsumerOrder')->getOrderDetailByOrderId($orderId);
+        $this->apiReturn(200, $data);
     }
 
 }

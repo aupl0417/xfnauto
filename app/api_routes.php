@@ -32,11 +32,11 @@ Route::get('publics_v1/carlist','api/v1.Common/carList');
 Route::post('publics_v1/upload','api/v1.Common/upload');
 Route::get('publics_v1/gettoken','api/v1.Common/getToken');
 Route::post('ucenter_v1/quotation','api/v1.UserCenter/quotation');
-Route::get('ucenter_v1/quotationDetail','api/v1.UserCenter/quotationDetail');
+Route::get('ucenter_v1/quotationDetail','api/v1.Common/quotationDetail');
 Route::get('publics_v1/share','api/v1.Common/share');
 Route::get('publics_v1/contract','api/v1.Common/contract');
 Route::get('publics_v1/createImage','api/v1.Common/createImage');
-Route::get('ucenter_v1/consumerDetail','api/v1.Order/consumerDetail');
+Route::get('ucenter_v1/consumerDetail','api/v1.Common/consumerDetail');
 Route::get('ucenter_v1/stocklist','api/v1.Order/stockList');
 Route::get('ucenter_v1/organizationlist','api/v1.Organization/index');
 Route::get('ucenter_v1/logistics','api/v1.Logistics/index');
@@ -95,12 +95,13 @@ Route::get('backend_v1/menu/index','api/v1.Backend.Menu/index');
 Route::post('backend_v1/menu/create','api/v1.Backend.Menu/create');
 Route::post('backend_v1/menu/edit','api/v1.Backend.Menu/edit');
 Route::get('backend_v1/menu/remove','api/v1.Backend.Menu/remove');
+Route::post('backend_v1/login','api/v1.Backend.Login/index');
 
 //验证JAVA接口权限
 Route::get('backend_v1/publics/checkauth','api/v1.Backend.Publics/checkJavaApiAuth');
 
 
-//管网
+//官网
 Route::get('pc_v1/news','api/v1.PC.News/index');
 Route::get('pc_v1/news/detail','api/v1.PC.News/detail');
 Route::post('pc_v1/note','api/v1.PC.News/note');
