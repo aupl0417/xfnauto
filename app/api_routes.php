@@ -44,7 +44,6 @@ Route::get('ucenter_v1/logistics/consignment','api/v1.Logistics/consignment');
 Route::get('ucenter_v1/shop','api/v1.Shop/index');
 Route::get('ucenter_v1/shop/activity','api/v1.Shop/activity');
 Route::get('ucenter_v1/userlist','api/v1.UserCenter/userList');
-Route::get('ucenter_v1/test','api/v1.UserCenter/test');
 //Route::get('publics_v1/test','api/v1.Common/test');
 //Route::get('activity_v1.1/index','api/v1._1.Test/index');
 //前台文章列表及详情
@@ -68,6 +67,9 @@ Route::get('backend_v1/stock/export','api/v1.Backend.StockCar/export');
 Route::get('backend_v1/consumer/export','api/v1.Backend.ConsumerOrder/export');
 Route::get('backend_v1/consumer/index','api/v1.Backend.ConsumerOrder/index');
 Route::get('backend_v1/consumer/detail','api/v1.Backend.ConsumerOrder/consumerDetail');
+Route::get('backend_v1/supplier','api/v1.Backend.Supplier/index');
+Route::get('backend_v1/car','api/v1.Backend.Car/index');
+Route::get('backend_v1/car/family','api/v1.Backend.Car/family');
 
 //后台角色管理
 Route::get('backend_v1/role/index','api/v1.Backend.Role/index');

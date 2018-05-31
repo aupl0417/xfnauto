@@ -14,7 +14,7 @@ use think\Model;
 class RoleUser extends Model
 {
 
-    protected $table = 'system_user_role';
+    protected $table = 'system_role_user';
 
     public function getRoleByUserId($userId){
         if(!$userId || !is_numeric($userId)){

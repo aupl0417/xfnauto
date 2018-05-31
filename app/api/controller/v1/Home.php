@@ -150,7 +150,7 @@ class Home extends Controller {
      * */
     public function checkRole($userId){
         $role = [14,15,42,43,49,48,33,45];
-        $userRole = Db::name('system_user_role')->where(['userId' => $userId])->field('roleId')->find();
+        $userRole = Db::name('system_role_user')->where(['userId' => $userId])->field('roleId')->find();
         if(!$userRole){
             return false;
         }

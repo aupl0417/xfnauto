@@ -86,10 +86,10 @@ class SystemUser extends Admin
                 'roleIds'       => $this->data['roleIds'],
                 'parentIds'     => $this->data['parentIds'],
                 'agentGender'   => $this->data['sex'] + 0,
-                'birthday'      => isset($this->data['birthday'])     ? htmlspecialchars(trim($this->data['birthday'])) : null,
-                'cardNo'        => isset($this->data['cardNo'])       ? htmlspecialchars(trim($this->data['cardNo'])) : '',
-                'entryTime'     => isset($this->data['entryTime'])    ? htmlspecialchars(trim($this->data['entryTime'])) : null,
-                'basePay'       => isset($this->data['basePay'])      ? floatval($this->data['basePay']) : 0,
+                'birthday'      => isset($this->data['birthday']) && !empty($this->data['birthday'])     ? htmlspecialchars(trim($this->data['birthday'])) : null,
+                'cardNo'        => isset($this->data['cardNo'])   && !empty($this->data['cardNo'])       ? htmlspecialchars(trim($this->data['cardNo'])) : '',
+                'entryTime'     => isset($this->data['entryTime'])&& !empty($this->data['entryTime'])    ? htmlspecialchars(trim($this->data['entryTime'])) : null,
+                'basePay'       => isset($this->data['basePay'])  && !empty($this->data['basePay'])      ? floatval($this->data['basePay']) : 0,
                 'headPortrait'  => isset($this->data['headPortrait']) ? htmlspecialchars(trim($this->data['headPortrait'])) : '',
                 'password'      => strtoupper(md5('1')),
                 'createTime'    => $time,
@@ -112,7 +112,7 @@ class SystemUser extends Admin
                 $role[$key]['roleId'] = $value;
             }
 
-            $result = Db::name('system_user_role')->insertAll($role);
+            $result = Db::name('system_role_user')->insertAll($role);
             if(!$result){
                 throw new Exception('添加到用户角色表失败');
             }
@@ -192,7 +192,7 @@ class SystemUser extends Admin
                 if($roleIntersect){//如果有交集，则oldRole中去掉交集，并删除oldRole中剩余的数据，newRole中也去掉交集，并插入剩余的数据
                     $oldRole = array_diff($oldRole, $roleIntersect);
                     if($oldRole){
-                        $result = Db::name('system_user_role')->where(['userId' => $userId, 'roleId' => ['in', $oldRole]])->delete();
+                        $result = Db::name('system_role_user')->where(['userId' => $userId, 'roleId' => ['in', $oldRole]])->delete();
                         if(!$result){
                             throw new Exception('删除用户角色失败');
                         }
@@ -205,7 +205,7 @@ class SystemUser extends Admin
                     $role[$key]['roleId'] = $value;
                 }
 
-                $result = Db::name('system_user_role')->insertAll($role);
+                $result = Db::name('system_role_user')->insertAll($role);
                 if(!$result){
                     throw new Exception('添加到用户角色表失败');
                 }

@@ -45,16 +45,33 @@ class Organization extends Admin
             $this->apiReturn(201, '', $result);
         }
 
-        $this->data['orgCode']     = getRandomString(6);
-        $this->data['create_date'] = date('Y-m-d H:i:s');
-        $this->data['status']      = 1;
-        $this->data['orgLevel']    = 2;
-        $this->data['orgtype']     = $this->data['orgType'];
-        $this->data['provinceName']= isset($this->data['province']) ? htmlspecialchars(trim($this->data['province'])) : '';
-        $this->data['cityName']    = isset($this->data['city']) ? htmlspecialchars(trim($this->data['city'])) : '';
-        $this->data['areaName']    = isset($this->data['area']) ? htmlspecialchars(trim($this->data['area'])) : '';
-        unset($this->data['orgType'], $this->data['province'], $this->data['city'], $this->data['area']);
-        $result = Db::name('system_organization')->insert($this->data);
+        $data = [
+            'shortName'     => $this->data['shortName'],
+            'orgtype'       => $this->data['orgType'],
+            'telephone'     => $this->data['telephone'],
+            'address'       => $this->data['address'],
+            'longitude'     => isset($this->data['longitude']) && !empty($this->data['longitude']) ? $this->data['longitude'] : 0,
+            'latitude'      => isset($this->data['latitude']) && !empty($this->data['latitude']) ? $this->data['latitude'] : 0,
+            'provinceId'    => $this->data['provinceId'],
+            'cityId'        => $this->data['cityId'],
+            'areaId'        => $this->data['areaId'],
+            'introduce'     => $this->data['introduce'],
+            'bankAccount'   => $this->data['bankAccount'],
+            'nameOfAccount' => $this->data['nameOfAccount'],
+            'bankName'      => $this->data['bankName'],
+            'openingBranch' => $this->data['openingBranch'],
+            'imageurl'      => $this->data['imageurl'],
+            'orgCode'       => getRandomString(6),
+            'create_date'   => date('Y-m-d H:i:s'),
+            'status'        => 1,
+            'orgLevel'      => 3,
+            'provinceName'  => isset($this->data['province']) ? htmlspecialchars(trim($this->data['province'])) : '',
+            'cityName'      => isset($this->data['city']) ? htmlspecialchars(trim($this->data['city'])) : '',
+            'areaName'      => isset($this->data['area']) ? htmlspecialchars(trim($this->data['area'])) : '',
+        ];
+
+        $result = Db::name('system_organization')->insert($data);
+        unset($this->data, $data);
         !$result && $this->apiReturn(201, '', '添加失败');
         $this->apiReturn(200, '', '添加成功');
     }
@@ -69,15 +86,33 @@ class Organization extends Admin
             $this->apiReturn(201, '', $result);
         }
 
+        $data = [
+            'shortName'     => $this->data['shortName'],
+            'orgtype'       => $this->data['orgType'],
+            'telephone'     => $this->data['telephone'],
+            'address'       => $this->data['address'],
+            'longitude'     => isset($this->data['longitude']) && !empty($this->data['longitude']) ? $this->data['longitude'] : 0,
+            'latitude'      => isset($this->data['latitude']) && !empty($this->data['latitude']) ? $this->data['latitude'] : 0,
+            'provinceId'    => $this->data['provinceId'],
+            'cityId'        => $this->data['cityId'],
+            'areaId'        => $this->data['areaId'],
+            'introduce'     => $this->data['introduce'],
+            'bankAccount'   => $this->data['bankAccount'],
+            'nameOfAccount' => $this->data['nameOfAccount'],
+            'bankName'      => $this->data['bankName'],
+            'openingBranch' => $this->data['openingBranch'],
+            'imageurl'      => $this->data['imageurl'],
+            'provinceName'  => isset($this->data['province']) ? htmlspecialchars(trim($this->data['province'])) : '',
+            'cityName'      => isset($this->data['city']) ? htmlspecialchars(trim($this->data['city'])) : '',
+            'areaName'      => isset($this->data['area']) ? htmlspecialchars(trim($this->data['area'])) : '',
+        ];
+
 //        if(Db::name('system_organization')->where(['orgId' => ['neq', $id], 'shortName' => $this->data['shortName']])->count()){
 //            $this->apiReturn(201, '', '该门店名称已存在');
 //        }
-        $this->data['orgtype']     = $this->data['orgType'];
-        $this->data['provinceName']= isset($this->data['province']) ? htmlspecialchars(trim($this->data['province'])) : '';
-        $this->data['cityName']    = isset($this->data['city']) ? htmlspecialchars(trim($this->data['city'])) : '';
-        $this->data['areaName']    = isset($this->data['area']) ? htmlspecialchars(trim($this->data['area'])) : '';
-        unset($this->data['orgType'], $this->data['province'], $this->data['city'], $this->data['area']);
-        $result = Db::name('system_organization')->where(['orgId' => $id])->update($this->data);
+
+        $result = Db::name('system_organization')->where(['orgId' => $id])->update($data);
+        unset($this->data, $data);
         $result === false && $this->apiReturn(201, '', '编辑失败');
         $this->apiReturn(200, '', '编辑成功');
     }

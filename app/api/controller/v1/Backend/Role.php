@@ -112,11 +112,11 @@ class Role extends Admin
         (!isset($this->data['roleId']) || empty($this->data['roleId'])) && $this->apiReturn(201, '', '角色ID非法');
         $roleId = $this->data['roleId'] + 0;
 
-        if($roleId == 1){//暂时设定超级管理员的角色ID为1
-            $this->apiReturn(201, '', '超级管理员不能删除');
-        }
+//        if($roleId == 1){//暂时设定超级管理员的角色ID为1
+//            $this->apiReturn(201, '', '超级管理员不能删除');
+//        }
 
-        $result = Db::name('system_role')->where(['roleId' => $roleId, 'orgId' => $this->orgId])->update(['isDelete' => 1]);
+        $result = Db::name('system_role')->where(['roleId' => $roleId])->update(['isDelete' => 1]);
         $result === false && $this->apiReturn(201, '', '删除失败');
         $this->apiReturn(200, '', '删除成功');
     }

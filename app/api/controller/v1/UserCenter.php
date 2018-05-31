@@ -250,13 +250,4 @@ class UserCenter extends Home
         $this->apiReturn(200, ['list' => $data, 'total' => $count, 'page' => $page, 'rows' => $rows]);
     }
 
-    public function test(){
-
-        //get 1 是获取id为 1 的数据
-        //find() 是查找
-        //toArray()  是获取到的数据转为数组
-        $consumerOrder = ConsumerOrder::get(237);
-        var_dump($consumerOrder->find()->toArray());
-    }
-
 }

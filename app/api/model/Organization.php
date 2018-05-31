@@ -18,7 +18,7 @@ class Organization extends Model
 
     public function getOrganizationByOrgId($orgId, $field = '*'){
         $where = [];
-        if(!$orgId){
+        if($orgId){
             $where['orgId'] = $orgId;
         }
 

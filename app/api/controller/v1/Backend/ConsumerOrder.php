@@ -137,6 +137,10 @@ class ConsumerOrder extends Admin
             $where['co.state'] = $state;
         }
 
+        if(!$this->isAdmin){//如果不是超级管理员，则显示自己及下级的数据
+            $where['co.creator_id'] = ['in', $this->userIds];
+        }
+
         $startTime = isset($this->data['startDate']) && !empty($this->data['startDate']) ? $this->data['startDate'] : '';
         $endTime   = isset($this->data['endDate'])   && !empty($this->data['endDate'])   ? $this->data['endDate'] : '';
         if($startTime && !$endTime){
@@ -158,7 +162,22 @@ class ConsumerOrder extends Admin
             }
         }
 
-        $field = 'co.id as id,co.order_code as orderId,co.state as orderState,org_name as orgName,order_type as orderType,co.freight,creator,co.create_time as createTime';
+        $state = [
+            '1' => '新建',
+            '5' => '待收定金',
+            '10' => '待配车',
+            '15' => '待验车',
+            '20' => '换车申请',
+            '25' => '待换车',
+            '30' => '待协商',
+            '35' => '待收尾款',
+            '37' => '已退款',
+            '40' => '待出库',
+            '45' => '待上传票证',
+            '50' => '完成',
+        ];
+
+        $field = 'co.id as id,co.order_code as orderId,co.state as orderState,org_name as orgName,order_type as orderType,co.freight,creator,co.create_time as createTime,countermand_apply as countermandApply';
         $data  = Db::name('consumer_order co')->where($where)->field($field)->order('co.create_time desc')->select();
         if($data){
             foreach($data as $key => &$value){
@@ -167,6 +186,8 @@ class ConsumerOrder extends Admin
                 $value['totalDepositPrice'] = Db::name('consumer_order_info')->where(['order_id' => $orderId])->sum('deposit_price');
                 $value['totalFinalPrice']   = 0;
                 $value['totalRestPrice']    = 0;
+                $value['orderType']         = $value['orderType'] == 1 ? '常规单' : '炒车单';
+                $value['orderState']        = $value['countermandApply'] ? ($value['countermandApply'] == 1 ? '申请退款中' : '已退款') : $state[$value['orderState']];
                 $orderInfo = Db::name('consumer_order_info')->where(['order_id' => $orderId])->field('naked_price,traffic_compulsory_insurance_price,commercial_insurance_price,car_num')->select();
                 if($orderInfo){
                     $total = 0;
@@ -207,7 +228,7 @@ class ConsumerOrder extends Admin
         $objPHPExcel->getProperties()->setCreator($this->user['realName']);
 
         $objPHPExcel->setActiveSheetIndex(0)->setCellValue('A1', $name);
-        $objPHPExcel->setActiveSheetIndex(0)->mergeCells('A1:I1');
+        $objPHPExcel->setActiveSheetIndex(0)->mergeCells('A1:M1');
 
         $objPHPExcel->getActiveSheet()->getRowDimension(1)->setRowHeight(45);
         $objPHPExcel->getActiveSheet()->getRowDimension(2)->setRowHeight(30);
@@ -222,7 +243,11 @@ class ConsumerOrder extends Admin
             ->setCellValue('F2', '成交价')
             ->setCellValue('G2', '定金')
             ->setCellValue('H2', '尾款')
-            ->setCellValue('I2', '运费');
+            ->setCellValue('I2', '运费')
+            ->setCellValue('J2', '建单员')
+            ->setCellValue('K2', '建单日期')
+            ->setCellValue('L2', '订单类型')
+            ->setCellValue('M2', '订单状态');
 
         if($data){
             foreach($data as $k => $item){
@@ -236,18 +261,22 @@ class ConsumerOrder extends Admin
                     ->setCellValue('F' . $num, $item['totalFinalPrice'])
                     ->setCellValue('G' . $num, $item['totalDepositPrice'])
                     ->setCellValue('H' . $num, $item['totalRestPrice'])
-                    ->setCellValue('I' . $num, $item['freight']);
+                    ->setCellValue('I' . $num, $item['freight'])
+                    ->setCellValue('J' . $num, $item['creator'])
+                    ->setCellValue('K' . $num, $item['createTime'])
+                    ->setCellValue('L' . $num, $item['orderType'])
+                    ->setCellValue('M' . $num, $item['orderState']);
                 $objPHPExcel->getActiveSheet()->getRowDimension($num)->setRowHeight(30);
             }
         }
 
         $objPHPExcel->getActiveSheet()->getColumnDimension('A')->setWidth(30);
         $objPHPExcel->getActiveSheet()->getColumnDimension('B')->setWidth(30);
-        for ($i = 2; $i <= 9; $i++) {
+        for ($i = 2; $i <= 13; $i++) {
             $objPHPExcel->getActiveSheet()->getColumnDimension($allLetter[$i])->setWidth(20);
         }
 
-        $endCell = 'I' . (count($data) + 2);
+        $endCell = 'M' . (count($data) + 2);
         $styleArray = array(
             'borders' => array(
                 'allborders' => array(
@@ -268,7 +297,7 @@ class ConsumerOrder extends Admin
 
         $objPHPExcel->getActiveSheet()->getStyle('A1')->getAlignment()->setVertical(\PHPExcel_Style_Alignment::VERTICAL_CENTER)->setHorizontal(\PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
         $objPHPExcel->getActiveSheet()->getStyle('A2')->getAlignment()->setVertical(\PHPExcel_Style_Alignment::VERTICAL_CENTER)->setHorizontal(\PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
-        $objPHPExcel->getActiveSheet()->getStyle('A2:I2')->getAlignment()->setVertical(\PHPExcel_Style_Alignment::VERTICAL_CENTER)->setHorizontal(\PHPExcel_Style_Alignment::HORIZONTAL_CENTER)->setWrapText(true);
+        $objPHPExcel->getActiveSheet()->getStyle('A2:M2')->getAlignment()->setVertical(\PHPExcel_Style_Alignment::VERTICAL_CENTER)->setHorizontal(\PHPExcel_Style_Alignment::HORIZONTAL_CENTER)->setWrapText(true);
 
         $objPHPExcel->getActiveSheet()->setTitle($name);
         $objPHPExcel->setActiveSheetIndex(0);

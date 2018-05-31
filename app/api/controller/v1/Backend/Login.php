@@ -45,8 +45,8 @@ class Login extends Base
             $roleName= model('Role')->getRoleAll(['roleId' => ['in', $roleIds], 'isDelete' => 0]);
             $roleName= $roleName ? implode(',', array_column($roleName, 'roleName')) : '';
             $menus   = model('RoleAccess')->getRoleAccessByRoleIds($roleIds);
-            $menus   = array_filter(array_column($menus, 'access_ids'));
-            $menus   = explode(',', implode(',', $menus));
+            $menus   = $menus ? array_filter(array_column($menus, 'access_ids')) : [];
+            $menus   = $menus ? explode(',', implode(',', $menus)) : [];
             $menus   = array_unique($menus);
         }
 

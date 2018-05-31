@@ -122,4 +122,35 @@ class Base extends Controller {
         $user['orgId'] != $orgId && $this->apiReturn(201, '', '组织ID不正确');
         return true;
     }
+
+    /**
+     * 按驼峰规则动态生成表字段(只支持单表)
+     * @param $table string
+     * @param $ignoreFields string/array  要过滤的字段
+     * @return string
+     * */
+    public function createField($table, $ignoreFields = '', $returnArray = false){
+        if($ignoreFields && is_string($ignoreFields)){
+            $ignoreFields = explode(',', $ignoreFields);
+        }
+        $field = Db::name($table)->getTableFields();
+        $field = array_diff($field, $ignoreFields ?: []);//删除$field中与$ignoreFields中重复的元素
+        $field = array_values($field);//重排key
+        foreach($field as $key => $value){
+            $value = explode('_', $value);
+            foreach($value as $k => &$val){
+                if($k == 0){
+                    continue;
+                }
+                $val = ucfirst($val);
+            }
+            $fields[] = implode('', $value);
+        }
+        unset($value, $val);//删除
+        foreach($field as $key => &$value){
+            $value .= ' AS ' . $fields[$key];
+        }
+        unset($fields, $value, $key);
+        return !$returnArray ? implode(',', $field) : $field;
+    }
 }

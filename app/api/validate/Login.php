@@ -26,6 +26,7 @@ class Login extends Validate{
     ];
 
     public function checkPhone($phone){
+        return true;
         if(!checkPhone($phone)) {
             return false;
         }
