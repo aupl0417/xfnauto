@@ -12,6 +12,13 @@ use think\Controller;
 use think\Db;
 class Base extends Controller {
     protected $data = array();
+    protected $userId;
+    protected $orgIds  = array();
+    protected $userIds = array();
+    protected $roleIds = array();
+    protected $user;
+    protected $isRole;
+    protected $orgId;
     protected $app  = array(
         '1' => 'D8OZLSE2NEDC0FR4XTGBKHY67UJZ8IK9', //ios
         '2' => 'DFHGKZLSE2NFDEHGFHHR4XTGBKHY67EJZ8IK9', //安卓
@@ -19,6 +26,15 @@ class Base extends Controller {
 
     public function __construct(){
         $params = input('', '', 'htmlspecialchars,trim');
+        if(in_array(strtolower(request()->action()), ['contract', 'createimage'])){
+            (!isset($params['sessionId']) || empty($params['sessionId'])) && $this->apiReturn(201, 'SESSIONID不能为空');
+            $sessionId  = trim($params['sessionId']);
+            $user       = model('SystemUser')->getUserBySessionId($sessionId);
+            !$user && $this->apiReturn(4002, '', '请重新登录');
+            $this->userId = $user['usersId'];
+            $this->orgId  = $user['orgId'];
+            $this->user   = $user;
+        }
         $this->data = $params;
     }
 
@@ -69,9 +85,9 @@ class Base extends Controller {
         header('Content-Type:application/json; charset=utf-8');//返回JSON数据格式到客户端 包含状态信息
 
         $jsonData = array(
-            'code' => $code,
-            'msg'  => $msg ?: ($code == 200 ? '操作成功' : '操作失败'),
-            'data' => $data ? $data : null
+            'resultCode' => $code,
+            'message'    => $msg ?: ($code == 200 ? '请求成功' : '请求失败'),
+            'data'       => $data ? $data : null
         );
 
         exit(json_encode($jsonData));

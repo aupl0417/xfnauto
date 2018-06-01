@@ -58,17 +58,18 @@ class ConsumerOrder extends Model
      * 单月各状态的订单统计
      * */
     public function orderCount($condition = '', $userId, $orgId, $isRole = false){
-        /*$where['creator_id'] = $userId;
+        $where['creator_id'] = $userId;
         if($isRole){
             $userIds = model('SystemUser')->getUserByOrgId($orgId, 'usersId');
             if($userIds){
                 $userIds = array_column($userIds, 'usersId');
                 $where['creator_id'] = ['in', $userIds];
             }
-        }*/
-        $where['creator_id'] = ['in', $userId];
+        }else{
+            $where['co.create_time']    = ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]];
+        }
 
-        $where['create_time']    = ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]];
+//        $where['create_time']    = ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]];
         $obj  = Db::name($this->table)->where($where);
         $cond = array('is_del' => 0);
         if($condition){
@@ -96,17 +97,16 @@ class ConsumerOrder extends Model
             'co.is_del' => 0
         ];
 
-        /*$where['co.creator_id'] = $userId;
+        $where['co.creator_id'] = $userId;
         if($isRole){
             $userIds = model('SystemUser')->getUserByOrgId($orgId, 'usersId');
             if($userIds){
                 $userIds = array_column($userIds, 'usersId');
                 $where['co.creator_id'] = ['in', $userIds];
             }
-        }*/
-        $where['co.creator_id'] = ['in', $userId];
-
-        $where['co.create_time']    = ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]];
+        }else{
+            $where['co.create_time']    = ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]];
+        }
 //        $where['co.org_id']         = $orgId;
 
         $obj = Db::name('consumer_order co')->where($where)->join('consumer_order_info oi', 'co.id=oi.order_id', 'left');
@@ -131,17 +131,19 @@ class ConsumerOrder extends Model
             'co.is_del' => 0
         ];
 
-        $where['co.creator_id'] = ['in', $userId];
-//        if($isRole){
-//            $userIds = model('SystemUser')->getUserByOrgId($orgId, 'usersId');
-//            if($userIds){
-//                $userIds = array_column($userIds, 'usersId');
-//                $where['creator_id'] = ['in', $userIds];
-//            }
-//        }
+        $where['co.creator_id'] = $userId;
+        if($isRole){
+            $userIds = model('SystemUser')->getUserByOrgId($orgId, 'usersId');
+            if($userIds){
+                $userIds = array_column($userIds, 'usersId');
+                $where['creator_id'] = ['in', $userIds];
+            }
+        }else{
+            $where['co.create_time']    = ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]];
+        }
 
-        $where['co.create_time']    = ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]];
-        $where['co.org_id']         = ['in', $orgId];
+//        $where['co.create_time']    = ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]];
+//        $where['co.org_id']         = $orgId;
         
         $field = 'co.id as id,co.order_code as orderId,co.state as orderState,oi.cars_name as carName,oi.color_name as colorName,oi.interior_name as interiorName,oi.state as orderInfoState,oi.car_num as carNum';
         switch ($type){
