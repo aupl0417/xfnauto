@@ -6,7 +6,7 @@
  * Time: 9:28
  */
 
-namespace app\api\controller\v1;
+namespace app\api\controller\v2\Frontend;
 
 use app\api\model\CustomerOrder;
 use think\Controller;
@@ -29,31 +29,17 @@ class Order extends Home
             'co.is_del'  => 0
         ];
 
+        if(isset($this->data['state'])&& !empty($this->data['state'])){
+            $where['co.state'] = $this->data['state'] + 0;
+        }
+
         if(isset($this->data['keywords'])&& !empty($this->data['keywords'])){
             $keywords= htmlspecialchars(trim($this->data['keywords']));
             $field = !preg_match('/^DG\d+/', $keywords) ? 'cars_name' : 'order_code';
             $where[$field] = ['like', '%' . $keywords . '%'];
         }
 
-        if(isset($this->data['state'])&& !empty($this->data['state'])){
-            $where['co.state'] = $this->data['state'] + 0;
-        }
-
         $where['co.creator_id'] = ['in', $this->userIds];
-        /*if($this->isRole){
-            $userIds = model('SystemUser')->getUserByOrgId($this->orgId, 'usersId');
-            if($userIds){
-                $userIds = array_column($userIds, 'usersId');
-                $where['co.creator_id'] = ['in', $userIds];
-            }
-        }*/
-//        if(count($this->orgIds) > 1){//如果是大于1，则有下级
-//            $userIds = model('SystemUser')->getDataAll(['orgId' => ['in', $this->orgIds], 'isEnable' => 1], 'usersId');
-//            if($userIds){
-//                $userIds = array_column($userIds, 'usersId');
-//                $where['co.creator_id'] = ['in', $userIds];
-//            }
-//        }
 
         if(isset($this->data['month']) && !empty($this->data['month'])){
             $month      = trim($this->data['month']);
@@ -62,9 +48,6 @@ class Order extends Home
             $monthEnd   = $month . '-' . date('t') . ' 23:59:59';
             $where['co.create_time']    = ['between', [date($monthStart), date($monthEnd)]];
         }
-
-
-//        $where['co.org_id']         = $this->orgId;
 
         $data = model('ConsumerOrder')->getOrderList($where, $page, $rows);
         if($data){
@@ -75,7 +58,6 @@ class Order extends Home
                 if($value['infos']){
                     foreach($value['infos'] as $k => &$val){
                         $val['cars'] = Db::name('consumer_order_car oc')->where(['oc.cars_id' => $val['carsId']])->join('stock_car sc', 'sc.stock_car_id=oc.stock_car_id')->field($carField)->select();
-//                        $val['cars'] = $cars ? array_column($cars, 'vin') : [];
                     }
                 }
             }
@@ -104,15 +86,6 @@ class Order extends Home
             }
         }
 
-//        if(!$this->isRole){
-//            $where['system_user_id'] = $this->userId;
-//        }
-//        $group = model('SystemUser')->getUserGroupInfo($this->userId);
-//        if($group['over_manage'] == 1){
-//            $where['org_id']         = $group['orgId'];
-//        }else{
-//            $where['system_user_id'] = $this->userId;
-//        }
         $where['org_id']         = ['in', $this->orgIds];
         $where['create_date']    = ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]];
         $where['is_delete']      = 0;
@@ -140,7 +113,6 @@ class Order extends Home
             $model = 'ConsumerOrder';
         }
         $data = model($model)->orderFeeList($mode, $this->userIds, $this->orgIds, $this->isRole, $page, $rows);
-//        echo model($model)->getLastSql();die;
         $this->apiReturn(200, $data);
     }
 

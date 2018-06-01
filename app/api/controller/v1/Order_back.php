@@ -23,37 +23,28 @@ class Order extends Home
     public function consumerList(){
         $page  = isset($this->data['page']) && !empty($this->data['page']) ? $this->data['page'] + 0 : 1;
         $rows  = isset($this->data['rows']) && !empty($this->data['rows']) ? $this->data['rows'] + 0 : 10;
-
-        $where = [
-            'co.state'   => ['not in', [-1, 37]],
-            'co.is_del'  => 0
-        ];
-
         if(isset($this->data['keywords'])&& !empty($this->data['keywords'])){
             $keywords= htmlspecialchars(trim($this->data['keywords']));
             $field = !preg_match('/^DG\d+/', $keywords) ? 'cars_name' : 'order_code';
             $where[$field] = ['like', '%' . $keywords . '%'];
         }
+        $where = [
+            'co.state'   => ['not in', [-1, 37]],
+            'co.is_del'  => 0
+        ];
 
         if(isset($this->data['state'])&& !empty($this->data['state'])){
             $where['co.state'] = $this->data['state'] + 0;
         }
 
-        $where['co.creator_id'] = ['in', $this->userIds];
-        /*if($this->isRole){
+        $where['co.creator_id'] = $this->userId;
+        if($this->isRole){
             $userIds = model('SystemUser')->getUserByOrgId($this->orgId, 'usersId');
             if($userIds){
                 $userIds = array_column($userIds, 'usersId');
                 $where['co.creator_id'] = ['in', $userIds];
             }
-        }*/
-//        if(count($this->orgIds) > 1){//如果是大于1，则有下级
-//            $userIds = model('SystemUser')->getDataAll(['orgId' => ['in', $this->orgIds], 'isEnable' => 1], 'usersId');
-//            if($userIds){
-//                $userIds = array_column($userIds, 'usersId');
-//                $where['co.creator_id'] = ['in', $userIds];
-//            }
-//        }
+        }
 
         if(isset($this->data['month']) && !empty($this->data['month'])){
             $month      = trim($this->data['month']);
@@ -107,14 +98,14 @@ class Order extends Home
 //        if(!$this->isRole){
 //            $where['system_user_id'] = $this->userId;
 //        }
-//        $group = model('SystemUser')->getUserGroupInfo($this->userId);
-//        if($group['over_manage'] == 1){
-//            $where['org_id']         = $group['orgId'];
-//        }else{
-//            $where['system_user_id'] = $this->userId;
-//        }
-        $where['org_id']         = ['in', $this->orgIds];
-        $where['create_date']    = ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]];
+        $group = model('SystemUser')->getUserGroupInfo($this->userId);
+        if($group['over_manage'] == 1){
+            $where['org_id']         = $group['orgId'];
+        }else{
+            $where['system_user_id'] = $this->userId;
+            $where['create_date']    = ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]];
+        }
+
         $where['is_delete']      = 0;
 
         $data = model('CustomerOrder')->getOrderList($where, $page, $rows);
@@ -139,8 +130,16 @@ class Order extends Home
             !in_array($mode, ['traffic', 'commercial']) && $this->apiReturn(201, '', '统计类型非法');
             $model = 'ConsumerOrder';
         }
-        $data = model($model)->orderFeeList($mode, $this->userIds, $this->orgIds, $this->isRole, $page, $rows);
+        $data = model($model)->orderFeeList($mode, $this->userId, $this->orgId, $this->isRole, $page, $rows);
 //        echo model($model)->getLastSql();die;
+        $this->apiReturn(200, $data);
+    }
+
+    public function consumerDetail(){
+        (!isset($this->data['id']) || empty($this->data['id'])) && $this->apiReturn(201, '', '参数非法');
+
+        $orderId = $this->data['id'] + 0;
+        $data    = model('ConsumerOrder')->getOrderDetailByOrderId($orderId);
         $this->apiReturn(200, $data);
     }
 
@@ -176,40 +175,5 @@ class Order extends Home
             $this->apiReturn(201, '', '更新失败');
         }
     }
-
-    public function stockList(){
-        $page = isset($this->data['page']) && !empty($this->data['page']) ? $this->data['page'] + 0 : 1;
-        $rows = isset($this->data['rows']) && !empty($this->data['rows']) ? $this->data['rows'] + 0 : 10;
-
-        $where = [
-            'is_delete' => 0
-        ];
-        if(isset($this->data['keywords']) && !empty($this->data['keywords'])){
-            $keywords = htmlspecialchars(trim($this->data['keywords']));
-            $where['storage_code'] = ['like', '%' . $keywords . '%'];
-        }
-
-        if(isset($this->data['storageCode']) && !empty($this->data['storageCode'])){
-            $storageCode = htmlspecialchars(trim($this->data['storageCode']));
-            $where['storage_code'] = ['like', '%' . $storageCode . '%'];
-        }
-
-        $where['org_id'] = ['in', $this->orgIds];
-        $field = 'storage_id as storageId,storage_code as storageCode,create_date as createDate,supplier_id as supplierId,supplier_name as supplierName,system_users_id as systemUsersId,
-                 system_user_name as systemUserName,total_purchase_price as totalPurchasePrice,total_purchase as totalPurchase,logistics_cost as logisticsCost,storage_source as storageSource,
-                 org_id as orgId,org_name as orgName,remarks,contract_number as contractNumber,contract_image as contractImage,over_sure as overSure';
-        $data  = Db::name('stock_storage')->where($where)->page($page, $rows)->field($field)->select();
-        if($data){
-            foreach($data as $key => &$value){
-                $map = ['storage_id' => $value['storageId'], 'is_delete' => 0, 'is_put_out' => 0];
-                $value['carsNumber'] = Db::name('stock_car')->where($map)->sum('number');
-            }
-        }
-
-        $count = Db::name('stock_storage')->where($where)->count();
-        $this->apiReturn(200, ['list' => $data, 'total' => $count, 'page' => $page, 'rows' => $rows]);
-    }
-
-    
 
 }
