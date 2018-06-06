@@ -20,9 +20,9 @@ class RoleAccess extends Admin
         if(isset($this->data['id']) && !empty($this->data['id'])) {
             $roleIds = $this->data['id'] + 0;
         }else{
-            $roleIds = model('RoleUser')->getRoleByUserId($this->userId);
+            $roleIds = model('RoleUser')->getRoleByUserId($this->userId, $this->orgId);
             !$roleIds && $this->apiReturn(201, '', '用户没任何权限');
-            $roleIds = array_column($roleIds, 'roleId');
+            $roleIds = array_unique(array_column($roleIds, 'roleId'));
         }
         $data = model('RoleAccess')->getRoleAccessByRoleIds($roleIds);
         $menu = array();

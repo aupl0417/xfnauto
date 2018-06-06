@@ -85,6 +85,18 @@ class Organization extends Model
 
         return ['list' => $data, 'total' => $count, 'page' => $page, 'rows' => $rows];
     }
+
+
+    public function getAllChildOrg($orgIds, &$data){
+        $field = 'orgId';
+        $org  = $this->getOrgAll(['parentId' => ['in', $orgIds]], $field);
+        if($org){
+            $org  = array_column($org, $field);
+            $data = array_merge($data, $org);
+            self::getAllChildOrg($org, $data);
+        }
+        return $data;
+    }
     
     
 

@@ -107,13 +107,13 @@ class Admin extends Base {
      * @return boolean
      * */
     public function checkUserAuth($userId, $menuId = 0){
-        $role = model('RoleUser')->getRoleByUserId($userId);
+        $role = model('RoleUser')->getRoleByUserId($userId, $this->orgId);
         if(!$role){
             $this->error = '没有该功能操作权限';
             return false;
         }
 
-        $roleIds        = array_column($role, 'roleId');
+        $roleIds        = array_unique(array_column($role, 'roleId'));
         $roleAccessAuth = $this->getRoleAccessAuth($roleIds);
         if(!$roleAccessAuth){
             $this->error = '您没有任何操作权限';
@@ -133,7 +133,7 @@ class Admin extends Base {
         }
 
         if(!in_array($menu['id'], $roleAccessAuth)){
-            $this->error = '您没有该接口的操作权限';
+            $this->error = '您没有该接口的操作权限_' . $menu['id'];
             return false;
         }
         return true;

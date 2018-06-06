@@ -306,6 +306,28 @@ function checkDateIsValid($date, $formats = array("Y-m-d", "Y/m/d")) {
 }
 
 /**
+ * 校验日期格式是否正确
+ *
+ * @param string $date 日期
+ * @param array $formats 需要检验的格式数组
+ * @return boolean
+ */
+function checkTimeIsValid($date, $formats = array("Y-m-d H:i:s", "Y/m/d H:i:s")) {
+    $unixTime = strtotime($date);
+    if (!$unixTime) { //strtotime转换不对，日期格式显然不对。
+        return false;
+    }
+    //校验日期的有效性，只要满足其中一个格式就OK
+    foreach ($formats as $format) {
+        if (date($format, $unixTime) == $date) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
  * 按指定宽度等比缩放图片
  * @param string  $img 图片相对地址
  * @param int     $targetWidth 指定宽度

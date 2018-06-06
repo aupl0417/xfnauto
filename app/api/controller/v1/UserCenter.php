@@ -250,4 +250,19 @@ class UserCenter extends Home
         $this->apiReturn(200, ['list' => $data, 'total' => $count, 'page' => $page, 'rows' => $rows]);
     }
 
+    public function userDetail(){
+        (!isset($this->data['id']) || empty($this->data['id'])) && $this->apiReturn(201, '', '参数非法');
+
+        $userId = $this->data['id'] + 0;
+        $data   = Db::name('customer_customerusers')->where(['customerUsersId' => $userId])->field('customerUsersId as id,customerUsersName as userName,phoneNumber as phone,headPortrait,agentGender')->find();
+        if($data){
+            $carInfoField    = $this->createField('customer_customerorg');
+            $data['carInfo'] = Db::name('customer_customerorg')->where(['customer_users_Id' => $userId])->field($carInfoField)->select();
+            $remarkField     = $this->createField('customer_remarks', 'org_id,org_code');
+            $data['remarks'] = Db::name('customer_remarks')->where(['customer_id' => $userId])->field($remarkField)->select();
+        }
+
+        $this->apiReturn(200, $data);
+    }
+
 }

@@ -16,11 +16,16 @@ class RoleUser extends Model
 
     protected $table = 'system_role_user';
 
-    public function getRoleByUserId($userId){
+    public function getRoleByUserId($userId, $orgId){
         if(!$userId || !is_numeric($userId)){
             return false;
         }
-        $role = Db::name($this->table)->where(['userId' => $userId])->field('userRoleId as id,userId,roleId')->select();
+
+        $join = [
+            ['system_role sr', 'ur.roleId=sr.roleId', 'left']
+        ];
+
+        $role = Db::name($this->table . ' ur')->where(['ur.userId' => $userId, 'sr.orgId' => $orgId])->join($join)->field('userRoleId as id,userId,ur.roleId')->select();
         if(!$role){
             return false;
         }

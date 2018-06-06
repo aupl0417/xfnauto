@@ -38,10 +38,10 @@ class Login extends Base
         $result === false && $this->apiReturn(201, '', '登录失败');
 
         $menus = [];
-        $role  = model('RoleUser')->getRoleByUserId($user['usersId']);
+        $role  = model('RoleUser')->getRoleByUserId($user['usersId'], $user['orgId']);
         $roleName = '';
         if($role){
-            $roleIds = array_column($role, 'roleId');
+            $roleIds = array_unique(array_column($role, 'roleId'));
             $roleName= model('Role')->getRoleAll(['roleId' => ['in', $roleIds], 'isDelete' => 0]);
             $roleName= $roleName ? implode(',', array_column($roleName, 'roleName')) : '';
             $menus   = model('RoleAccess')->getRoleAccessByRoleIds($roleIds);

@@ -146,7 +146,7 @@ class ConsumerOrder extends Model
             $data['bankBranch'] = $data['bankName'] . ' ' . $data['bankBranch'];
             $field = 'id,cars_name as carName,color_name as colorName,interior_name as interiorName,state as orderInfoState,car_num as carNum';
             $data['orderStateName']    = $this->state[$data['state']];
-            $data['totalDepositPrice'] = Db::name('consumer_order_info')->where(['order_id' => $orderId, 'is_del'])->sum('deposit_price');
+            $data['totalDepositPrice'] = Db::name('consumer_order_info')->where(['order_id' => $orderId, 'is_del' => 0])->sum('deposit_price');
             $data['totalFinalPrice']   = 0;
             $data['totalRestPrice']    = 0;
             $orderInfo = Db::name('consumer_order_info')->where(['order_id' => $orderId, 'is_del' => 0])->field('naked_price,traffic_compulsory_insurance_price,commercial_insurance_price,car_num')->select();
