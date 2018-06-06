@@ -1,0 +1,40 @@
+---------------------------------------------------------------
+[ 2018-06-06T09:56:39+08:00 ] 127.0.0.1 GET /backend_v1/consumer/index?keywords=&startDate=&endDate=&orgId=&state=&page=1&rows=50&sessionId=d67fd26a3074fefbfb7d45eff75d6e0d
+[ info ] api.xfnautos.com/backend_v1/consumer/index?keywords=&startDate=&endDate=&orgId=&state=&page=1&rows=50&sessionId=d67fd26a3074fefbfb7d45eff75d6e0d [运行时间：0.161347s][吞吐率：6.20req/s] [内存消耗：3,408.92kb] [文件加载：55]
+[ info ] [ LANG ] C:\wamp\www\xfnauto\thinkphp\lang\zh-cn.php
+[ info ] [ BIND ] 'api'
+[ info ] [ ROUTE ] array (
+  'type' => 'module',
+  'module' => 
+  array (
+    0 => 'api',
+    1 => 'v1.Backend.ConsumerOrder',
+    2 => 'index',
+  ),
+  'convert' => false,
+)
+[ info ] [ HEADER ] array (
+  'host' => 'api.xfnautos.com',
+  'connection' => 'keep-alive',
+  'cache-control' => 'max-age=0',
+  'upgrade-insecure-requests' => '1',
+  'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36',
+  'accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+  'accept-encoding' => 'gzip, deflate',
+  'accept-language' => 'zh-CN,zh;q=0.9',
+)
+[ info ] [ PARAM ] array (
+  'keywords' => '',
+  'startDate' => '',
+  'endDate' => '',
+  'orgId' => '',
+  'state' => '',
+  'page' => '1',
+  'rows' => '50',
+  'sessionId' => 'd67fd26a3074fefbfb7d45eff75d6e0d',
+)
+[ info ] [ DB ] INIT mysql
+[ info ] [ LOG ] INIT File
+[ sql ] [ DB ] CONNECT:[ UseTime:0.026333s ] mysql:host=gz-cdb-b1xeazxc.sql.tencentcdb.com;port=63840;dbname=tautotest;charset=utf8
+[ sql ] [ SQL ] SHOW COLUMNS FROM `system_user` [ RunTime:0.016540s ]
+[ sql ] [ SQL ] SELECT * FROM `system_user` WHERE  `sessionId` = 'd67fd26a3074fefbfb7d45eff75d6e0d' LIMIT 1 [ RunTime:0.016504s ]
