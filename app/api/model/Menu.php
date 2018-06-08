@@ -32,7 +32,7 @@ class Menu extends Model
         if(!$url || !is_string($url)){
             return false;
         }
-        $menu = Db::name($this->table)->where(['src' => $url])->field('menuId as id,parentId,seq,iconUrl,menuName,src,levelNum')->find();
+        $menu = Db::name($this->table)->where(['src' => $url, 'isDelete' => 0])->field('menuId as id,parentId,seq,iconUrl,menuName,src,levelNum')->find();
         if(!$menu){
             return false;
         }

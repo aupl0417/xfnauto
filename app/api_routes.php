@@ -45,6 +45,7 @@ Route::get('ucenter_v1/shop','api/v1.Shop/index');
 Route::get('ucenter_v1/shop/activity','api/v1.Shop/activity');
 Route::get('ucenter_v1/userlist','api/v1.UserCenter/userList');
 Route::get('ucenter_v1/userdetail','api/v1.UserCenter/userDetail');
+Route::get('ucenter_v1/supplier','api/v1.Supplier/index');
 //Route::get('publics_v1/test','api/v1.Common/test');
 //Route::get('activity_v1.1/index','api/v1._1.Test/index');
 //前台文章列表及详情
@@ -107,6 +108,7 @@ Route::get('backend_v1/systemuser/info','api/v1.Backend.SystemUser/userInfo');
 
 //验证JAVA接口权限
 Route::get('backend_v1/publics/checkauth','api/v1.Backend.Publics/checkJavaApiAuth');
+Route::get('ucenter_v1/export/test','api/v1.Export/test');
 
 
 //官网

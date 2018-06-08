@@ -31,6 +31,18 @@ class RoleUser extends Model
         }
         return $role;
     }
+
+    public function getByUserId($userId){
+        if(!$userId || !is_numeric($userId)){
+            return false;
+        }
+
+        $role = Db::name($this->table)->where(['userId' => $userId])->field('userRoleId as id,userId,roleId')->select();
+        if(!$role){
+            return false;
+        }
+        return $role;
+    }
     
     
 

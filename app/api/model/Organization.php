@@ -17,7 +17,7 @@ class Organization extends Model
     protected $table = 'system_organization';
 
     public function getOrganizationByOrgId($orgId, $field = '*'){
-        $where = [];
+        $where = ['status' => 1];
         if($orgId){
             $where['orgId'] = $orgId;
         }

@@ -312,7 +312,7 @@ function checkDateIsValid($date, $formats = array("Y-m-d", "Y/m/d")) {
  * @param array $formats 需要检验的格式数组
  * @return boolean
  */
-function checkTimeIsValid($date, $formats = array("Y-m-d H:i:s", "Y/m/d H:i:s")) {
+function checkTimeIsValid($date, $formats = array("Y-m-d H:i:s", "Y/m/d  H:i:s")) {
     $unixTime = strtotime($date);
     if (!$unixTime) { //strtotime转换不对，日期格式显然不对。
         return false;

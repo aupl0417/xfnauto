@@ -184,10 +184,10 @@ class ConsumerOrder extends Model
     }
 
     public function getOrderListAll($where = '', $page = 1, $pageSize = 10){
-        $field = 'co.id as id,co.order_code as orderId,co.state as orderState,org_name as orgName,order_type as orderType,co.freight,creator,co.create_time as createTime,countermand_apply as countermandApply,countermand_reason as countermandReason,countermand_pic as countermandPic';
-        $count = Db::name('consumer_order co')->where($where)->count();
-        $data  = Db::name('consumer_order co')->where($where)->page($page, $pageSize)
-            ->field($field)->order('co.create_time desc')
+        $field = 'id as id,order_code as orderId,state as orderState,org_name as orgName,order_type as orderType,freight,creator,create_time as createTime,countermand_apply as countermandApply,countermand_reason as countermandReason,countermand_pic as countermandPic';
+        $count = Db::name('consumer_order')->where($where)->count();
+        $data  = Db::name('consumer_order')->where($where)->page($page, $pageSize)
+            ->field($field)->order('id desc')
             ->select();
 
         if($data){
@@ -198,6 +198,7 @@ class ConsumerOrder extends Model
                 $value['totalFinalPrice']   = 0;
                 $value['totalRestPrice']    = 0;
                 $orderInfo = Db::name('consumer_order_info')->where(['order_id' => $orderId, 'is_del' => 0])->field('naked_price,traffic_compulsory_insurance_price,commercial_insurance_price,car_num')->select();
+//                echo Db::name('consumer_order_info')->getLastSql();die;
                 if($orderInfo){
                     $total = 0;
                     foreach($orderInfo as $vo){

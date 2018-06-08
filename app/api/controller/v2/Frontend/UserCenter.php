@@ -25,6 +25,7 @@ class UserCenter extends Home
         $customerModel    = new CustomerOrder();
         $customerOrgModel = new CustomerOrg();
         $data['intensityCount'] = $customerOrgModel->customerCount($this->userIds, $this->orgIds, true);
+        dump($data);die;
         $data['customer'] = [
             'userCount'    => $customerOrgModel->customerCount($this->userIds, $this->orgIds, false),
             'total'        => $customerModel->orderCount('', $this->userIds, $this->orgIds),
@@ -70,7 +71,7 @@ class UserCenter extends Home
         $type  = isset($this->data['type']) && !empty($this->data['type']) ? trim($this->data['type']) : 'all';
         !in_array($type, ['all', 'intensity', 'visit']) && $this->apiReturn(201, '', '参数非法');
 
-        $where['org_id']         = ['in', $this->orgIds];
+//        $where['org_id']         = ['in', $this->orgIds];
         $where['system_user_id'] = ['in', $this->userIds];
 
         if($type == 'intensity'){
