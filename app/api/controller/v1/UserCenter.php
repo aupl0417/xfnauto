@@ -197,7 +197,7 @@ class UserCenter extends Home
         $page  = isset($this->data['page']) && !empty($this->data['page']) ? $this->data['page'] + 0 : 1;
         $rows  = isset($this->data['rows']) && !empty($this->data['rows']) ? $this->data['rows'] + 0 : 10;
 
-        $where = ['cu.org_id' => ['in', $this->orgIds], 'co.is_delete' => 0];
+        $where = ['cu.system_user_id' => ['in', $this->userIds]];
         if(isset($this->data['buyCarAlready']) && $this->data['buyCarAlready'] != ''){
             $buyCarAlready = $this->data['buyCarAlready'] + 0;
             $where['cus.buyCarAlready'] = $buyCarAlready;
@@ -209,11 +209,6 @@ class UserCenter extends Home
             $where['cu.expect_way_id'] = $paymentWay;
         }
 
-        if(isset($this->data['orderStates']) && $this->data['orderStates'] != ''){
-            $orderStates = $this->data['orderStates'];
-            $where['co.customer_order_state'] = $orderStates;
-        }
-
         if(isset($this->data['customerUsersSearch']) && !empty($this->data['customerUsersSearch'])){
             $customerUsersSearch = trim($this->data['customerUsersSearch']);
             $searchField = !checkPhone($customerUsersSearch) ? 'customer_users_name' : 'phone_number';
@@ -221,31 +216,11 @@ class UserCenter extends Home
         }
 
         $join  = [
-            ['customer_order co', 'co.customer_id=cu.customer_users_Id', 'left'],
             ['customer_customerusers cus', 'cus.customerUsersId=cu.customer_users_Id', 'left'],
         ];
-        $field = 'cu.customer_users_org_id as id,cu.intention_car_info as carsName,co.customer_order_id as customerOrderId,cu.customer_users_Id as customerUsersId,cu.customer_users_name as customerUsersName,cus.headPortrait,co.customer_order_state as orderState,cu.expect_way_id as paymentWay,cu.phone_number as phoneNumber,cu.system_user_name as systemUserName';
+        $field = 'cu.customer_users_org_id as id,cu.intention_car_info as carsName,cu.customer_users_Id as customerUsersId,cu.customer_users_name as customerUsersName,cus.headPortrait,cu.expect_way_id as paymentWay,cu.phone_number as phoneNumber,cu.system_user_name as systemUserName,org_id as customerUsersOrgId';
         $data  = Db::name('customer_customerorg cu')->where($where)->field($field)->join($join)->page($page, $rows)->order('cu.create_date desc')->select();
         $count = Db::name('customer_customerorg cu')->where($where)->join($join)->count();
-        if($data){
-            $stateArr = [
-                '0' => '初始',
-                '1' => '待收定金',
-                '3' => '等待银行审核',
-                '4' => '银行审核不通过',
-                '5' => '等待车辆出库',
-                '7' => '等待加装精品',
-                '9' => '等待上牌',
-                '11' => '等待贴膜',
-                '13' => '等待交车',
-                '15' => '人车已合照',
-                '17' => '已完款,交车放行',
-                '19' => '已回访',
-            ];
-            foreach($data as &$value){
-                $value['orderStateName'] = $value['orderState'] ? $stateArr[$value['orderState']] : '';
-            }
-        }
 
         $this->apiReturn(200, ['list' => $data, 'total' => $count, 'page' => $page, 'rows' => $rows]);
     }

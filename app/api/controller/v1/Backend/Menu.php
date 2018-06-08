@@ -35,11 +35,11 @@ class Menu extends Admin
         $menu = array();
 //        if($this->isAdmin){
             $menuModel = model('Menu');
-            if(!$menu = cache($this->cachekey)){
+//            if(!$menu = cache($this->cachekey)){
                 $menu    = $menuModel->getMenuAll(['isDelete' => 0], 'menuId as id,parentId,menuName as name,src');
                 $menu    = $menuModel->getTree($menu);
-                cache($this->cachekey, $menu, 300);
-            }
+//                cache($this->cachekey, $menu, 300);
+//            }
 //        }
 
         $this->apiReturn(200, $menu);
@@ -51,7 +51,7 @@ class Menu extends Admin
     public function create(){
         unset($this->data['sessionId']);
         (!isset($this->data['menuName']) || empty($this->data['menuName'])) && $this->apiReturn(201, '', '菜单名称不能为空');
-        (!isset($this->data['src']) || empty($this->data['src'])) && $this->apiReturn(201, '', '菜单URL不能为空');
+//        (!isset($this->data['src']) || empty($this->data['src'])) && $this->apiReturn(201, '', '菜单URL不能为空');
 
 //        if(!$this->isAdmin){
 //            $this->apiReturn(201, '', '您不是超级管理员');
@@ -59,9 +59,10 @@ class Menu extends Admin
 
         $parentId = isset($this->data['parentId']) && !empty($this->data['parentId']) ? $this->data['parentId'] + 0 : 0;
         $menuName = htmlspecialchars(trim($this->data['menuName']));
-        $src      = htmlspecialchars(trim($this->data['src']));
+        $src      = (isset($this->data['src']) && !empty($this->data['src'])) ? htmlspecialchars(trim($this->data['src'])) : '';
+        $remark   = (isset($this->data['remark']) && !empty($this->data['remark'])) ? htmlspecialchars(trim($this->data['remark'])) : '';
 
-        if(Db::name('system_menu')->where(['src' => $src])->count()){
+        if($src && Db::name('system_menu')->where(['src' => $src])->count()){
             $this->apiReturn(201, '', '该菜单地址已存在');
         }
 
@@ -69,6 +70,7 @@ class Menu extends Admin
             'parentId' => $parentId,
             'menuName' => $menuName,
             'src'      => $src,
+            'remark'   => $remark
         ];
 
         try{
@@ -80,11 +82,9 @@ class Menu extends Admin
             }
 
             $data['menuId'] = Db::name('system_menu')->getLastInsID();
-//            $roleAccess = $this->getRoleAccessAuth($this->user['roleIds']);
-//            $roleAccess[] = $data['menuId'];
-//            $result = Db::name('system_role_access')->where()
+
             Db::commit();
-            cache($this->cachekey, null);
+//            cache($this->cachekey, null);
             $this->apiReturn(200, $data, '添加菜单成功');
         }catch (Exception $e){
             Db::rollback();
@@ -95,21 +95,22 @@ class Menu extends Admin
     public function edit(){
         (!isset($this->data['menuId']) || empty($this->data['menuId'])) && $this->apiReturn(201, '', '菜单ID非法');
         (!isset($this->data['menuName']) || empty($this->data['menuName'])) && $this->apiReturn(201, '', '菜单名称不能为空');
-        (!isset($this->data['src']) || empty($this->data['src'])) && $this->apiReturn(201, '', '菜单URL不能为空');
+//        (!isset($this->data['src']) || empty($this->data['src'])) && $this->apiReturn(201, '', '菜单URL不能为空');
 
 //        if(!$this->isAdmin){
 //            $this->apiReturn(201, '', '您不是超级管理员');
 //        }
 
         unset($this->data['sessionId']);
-        $menuId = $this->data['menuId'] + 0;
+        $menuId   = $this->data['menuId'] + 0;
         $parentId = isset($this->data['parentId']) && !empty($this->data['parentId']) ? $this->data['parentId'] + 0 : 0;
         $menuName = htmlspecialchars(trim($this->data['menuName']));
-        $src      = htmlspecialchars(trim($this->data['src']));
+        $src      = (isset($this->data['src']) && !empty($this->data['src'])) ? htmlspecialchars(trim($this->data['src'])) : '';
+        $remark   = (isset($this->data['remark']) && !empty($this->data['remark'])) ? htmlspecialchars(trim($this->data['remark'])) : '';
 
         unset($this->data['sessionId']);
 
-        if(Db::name('system_menu')->where(['src' => $src, 'menuName' => $menuName, 'isDelete' => 0, 'menuId' => ['neq', $menuId]])->count()){
+        if($src && Db::name('system_menu')->where(['src' => $src, 'menuName' => $menuName, 'isDelete' => 0, 'menuId' => ['neq', $menuId]])->count()){
             $this->apiReturn(201, '', '该菜单已存在');
         }
 
@@ -117,11 +118,12 @@ class Menu extends Admin
             'parentId' => $parentId,
             'menuName' => $menuName,
             'src'      => $src,
+            'remark'   => $remark
         ];
 
         $result = Db::name('system_menu')->where(['menuId' => $menuId])->update($data);
         $result === false && $this->apiReturn(201, '', '编辑菜单失败');
-        cache($this->cachekey, null);
+//        cache($this->cachekey, null);
         $this->apiReturn(200, $this->data, '编辑菜单成功');
     }
 
@@ -143,18 +145,18 @@ class Menu extends Admin
             $this->apiReturn(201, '', '该菜单不存在');
         }
 
-        if($menu['isDelete'] == 0){
-            $status = 1;//删除
-            $msg    = '删除';
-        }else{
-            $status = 0;//恢复
-            $msg    = '恢复';
-        }
+//        if($menu['isDelete'] == 0){
+//            $status = 1;//删除
+//            $msg    = '删除';
+//        }else{
+//            $status = 0;//恢复
+//            $msg    = '恢复';
+//        }
 
-        $result = Db::name('system_menu')->where(['menuId' => $menuId])->update(['isDelete' => $status]);
-        $result === false && $this->apiReturn(201, '', $msg . '失败');
-        cache($this->cachekey, null);
-        $this->apiReturn(200, '', $msg . '成功');
+        $result = Db::name('system_menu')->where(['menuId' => $menuId])->update(['isDelete' => 1]);
+        $result === false && $this->apiReturn(201, '', '删除失败');
+//        cache($this->cachekey, null);
+        $this->apiReturn(200, '', '删除成功');
     }
     
     

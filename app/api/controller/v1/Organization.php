@@ -21,18 +21,17 @@ class Organization extends Home
         $page  = isset($this->data['page']) && !empty($this->data['page']) ? $this->data['page'] + 0 : 1;
         $rows  = isset($this->data['rows']) && !empty($this->data['rows']) ? $this->data['rows'] + 0 : 10;
 
-        $orgIds = [];
-        foreach($this->orgIds as $k => &$val){
-            if($val != $this->orgId){
-                $orgIds[] = $val;
-            }
-        }
+//        $orgIds = [];
+//        foreach($this->orgIds as $k => &$val){
+//            if($val != $this->orgId){
+//                $orgIds[] = $val;
+//            }
+//        }
 
-        $org = [];
-        model('Organization')->getAllChildOrg($this->orgIds, $org);
-
+        $org = model('Organization')->getOrgAll(['parentId' => ['in', $this->orgIds], 'status' => 1], 'orgId');
+        $org = array_column($org, 'orgId');
         $where   = ['status' => 1];
-        if($orgIds){
+        if($org){
             $where['orgId']    = ['in', $org];
         }
 

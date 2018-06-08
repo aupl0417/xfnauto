@@ -76,11 +76,12 @@ class SystemUser extends Admin
             $this->apiReturn(201, '', $result);
         }
 
-        $orgInfo = Db::name('system_organization')->where(['orgId' => $this->data['orgId']])->field('shortName,orgCode')->find();
-
         Db::startTrans();
         try{
-
+            $orgInfo  = model('Organization')->getOrganizationByOrgId($this->data['orgId'], 'shortName,orgCode');
+            if(!$orgInfo){
+                throw new Exception('门店不存在');
+            }
             $time = date('Y-m-d H:i:s');
             $data = [
                 'phoneNumber'   => $this->data['phoneNumber'],
@@ -140,7 +141,10 @@ class SystemUser extends Admin
             $this->apiReturn(201, '', $result);
         }
 
-        $orgInfo  = Db::name('system_organization')->where(['orgId' => $this->data['orgId']])->field('shortName,orgCode')->find();
+        $orgInfo  = model('Organization')->getOrganizationByOrgId($this->data['orgId'], 'shortName,orgCode');
+        if(!$orgInfo){
+            $this->apiReturn(201, '', '门店不存在');
+        }
         $userInfo = model('SystemUser')->getUserById($userId, 'usersId,parentIds,roleIds');
         if(!$userInfo){
             $this->apiReturn(201, '', '用户不存在');
@@ -187,9 +191,9 @@ class SystemUser extends Admin
             }
 
             $newRole = explode(',', $data['roleIds']);
-            $oldRole = explode(',', $userInfo['roleIds']);
+            $oldRole = model('RoleUser')->getByUserId($userId);
+            $oldRole = $oldRole ? array_column($oldRole, 'roleId') : [];
             //如果角色换了，就更新
-
             if($oldRole != $newRole){
                 $roleIntersect = array_intersect($oldRole, $newRole);
                 if($roleIntersect){//如果有交集，则oldRole中去掉交集，并删除oldRole中剩余的数据，newRole中也去掉交集，并插入剩余的数据
@@ -216,12 +220,11 @@ class SystemUser extends Admin
                 }
             }
 
-
             Db::commit();
             $this->apiReturn(200, '', '编辑成功');
         }catch (Exception $e){
             Db::rollback();
-            $this->apiReturn(201, '', '编辑失败' . $e->getMessage());
+            $this->apiReturn(201, '', '编辑失败');
         }
     }
 

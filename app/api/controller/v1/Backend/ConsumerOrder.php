@@ -25,8 +25,8 @@ class ConsumerOrder extends Admin
 
 
         $where = [
-            'co.state'   => ['not in', [-1]],
-            'co.is_del'  => 0
+            'state'   => ['not in', [-1]],
+            'is_del'  => 0
         ];
 
         if(isset($this->data['keywords'])&& !empty($this->data['keywords'])){
@@ -47,40 +47,40 @@ class ConsumerOrder extends Admin
 
             }
             $orderIds = array_merge($orderUserIds, $stockCarIds);
-            $where['co.id'] = ['in', $orderIds];
+            $where['id'] = ['in', $orderIds];
         }
 
         if(isset($this->data['orgId'])&& !empty($this->data['orgId'])){
             $orgId = $this->data['orgId'] + 0;
-            $where['co.org_id'] = $orgId;
+            $where['org_id'] = $orgId;
         }
 
         if(isset($this->data['state']) && !empty($this->data['state'])){
             $state = $this->data['state'] + 0;
-            $where['co.state'] = $state;
+            $where['state'] = $state;
         }
 
         if(!$this->isAdmin){//如果不是超级管理员，则显示自己及下级的数据
-            $where['co.creator_id'] = ['in', $this->userIds];
+            $where['creator_id'] = ['in', $this->userIds];
         }
 
         $startTime = isset($this->data['startDate']) && !empty($this->data['startDate']) ? $this->data['startDate'] : '';
         $endTime   = isset($this->data['endDate'])   && !empty($this->data['endDate'])   ? $this->data['endDate'] : '';
         if($startTime && !$endTime){
-            $where['co.create_time'] = ['egt', $startTime];
+            $where['create_time'] = ['egt', $startTime];
         }elseif(!$startTime && $endTime){
-            $where['co.create_time'] = ['elt', $endTime];
+            $where['create_time'] = ['elt', $endTime];
         }else{
             $now = date('Y-m-d H:i:s');
             if($startTime == $endTime && $endTime <= $now){
-                $where['co.create_time'] = ['egt', $startTime];
+                $where['create_time'] = ['egt', $startTime];
             }elseif($startTime == $endTime && $endTime >= $now){
-                $where['co.create_time'] = ['elt', $startTime];
+                $where['create_time'] = ['elt', $startTime];
             }else{
                 if($startTime > $endTime){
-                    $where['co.create_time'] = ['between', [$endTime, $startTime]];
+                    $where['create_time'] = ['between', [$endTime, $startTime]];
                 }else{
-                    $where['co.create_time'] = ['between', [$startTime, $endTime]];
+                    $where['create_time'] = ['between', [$startTime, $endTime]];
                 }
             }
         }
@@ -102,8 +102,8 @@ class ConsumerOrder extends Admin
 
     public function export(){
         $where = [
-            'co.state'   => ['not in', [-1]],
-            'co.is_del'  => 0
+            'state'   => ['not in', [-1]],
+            'is_del'  => 0
         ];
 
         if(isset($this->data['keywords'])&& !empty($this->data['keywords'])){
@@ -121,43 +121,42 @@ class ConsumerOrder extends Admin
             $stockCarIds = array();
             if($stockCar){
                 $stockCarIds = array_column($stockCar, 'order_id');
-
             }
             $orderIds = array_merge($orderUserIds, $stockCarIds);
-            $where['co.id'] = ['in', $orderIds];
+            $where['id'] = ['in', $orderIds];
         }
 
         if(isset($this->data['orgId'])&& !empty($this->data['orgId'])){
             $orgId = $this->data['orgId'] + 0;
-            $where['co.org_id'] = $orgId;
+            $where['org_id'] = $orgId;
         }
 
         if(isset($this->data['state']) && !empty($this->data['state'])){
             $state = $this->data['state'] + 0;
-            $where['co.state'] = $state;
+            $where['state'] = $state;
         }
 
         if(!$this->isAdmin){//如果不是超级管理员，则显示自己及下级的数据
-            $where['co.creator_id'] = ['in', $this->userIds];
+            $where['creator_id'] = ['in', $this->userIds];
         }
 
         $startTime = isset($this->data['startDate']) && !empty($this->data['startDate']) ? $this->data['startDate'] : '';
         $endTime   = isset($this->data['endDate'])   && !empty($this->data['endDate'])   ? $this->data['endDate'] : '';
         if($startTime && !$endTime){
-            $where['co.create_time'] = ['egt', $startTime];
+            $where['create_time'] = ['egt', $startTime];
         }elseif(!$startTime && $endTime){
-            $where['co.create_time'] = ['elt', $endTime];
+            $where['create_time'] = ['elt', $endTime];
         }else{
             $now = date('Y-m-d H:i:s');
             if($startTime == $endTime && $endTime <= $now){
-                $where['co.create_time'] = ['egt', $startTime];
+                $where['create_time'] = ['egt', $startTime];
             }elseif($startTime == $endTime && $endTime >= $now){
-                $where['co.create_time'] = ['elt', $startTime];
+                $where['create_time'] = ['elt', $startTime];
             }else{
                 if($startTime > $endTime){
-                    $where['co.create_time'] = ['between', [$endTime, $startTime]];
+                    $where['create_time'] = ['between', [$endTime, $startTime]];
                 }else{
-                    $where['co.create_time'] = ['between', [$startTime, $endTime]];
+                    $where['create_time'] = ['between', [$startTime, $endTime]];
                 }
             }
         }
@@ -177,8 +176,8 @@ class ConsumerOrder extends Admin
             '50' => '完成',
         ];
 
-        $field = 'co.id as id,co.order_code as orderId,co.state as orderState,org_name as orgName,order_type as orderType,co.freight,creator,co.create_time as createTime,countermand_apply as countermandApply';
-        $data  = Db::name('consumer_order co')->where($where)->field($field)->order('co.create_time desc')->select();
+        $field = 'id as id,order_code as orderId,state as orderState,org_name as orgName,order_type as orderType,freight,creator,create_time as createTime,countermand_apply as countermandApply';
+        $data  = Db::name('consumer_order')->where($where)->field($field)->order('id desc')->select();
         if($data){
             foreach($data as $key => &$value){
                 $orderId = $value['id'];
@@ -200,22 +199,33 @@ class ConsumerOrder extends Admin
 
                 $orderUserField      = 'id,order_id as orderId,user_name as userName,user_phone as userPhone';
                 $value['customers']  = Db::name('consumer_order_user')->where(['order_id' => $orderId, 'type' => 1])->field($orderUserField)->select();
+                $value['frameNumber'] = ['--'];
+                $value['userName']    = ['--'];
+                $value['userPhone']   = ['--'];
                 if($value['customers']){
                     foreach($value['customers'] as $key => &$val){
-                        $val['userName']  = $val['userName'] ?: '--';
-                        $val['userPhone'] = $val['userPhone'] ?: '--';
+//                        $val['userName']  = $val['userName'] ?: '--';
+//                        $val['userPhone'] = $val['userPhone'] ?: '--';
                         $join = [
                             ['consumer_order_car oc', 'oc.info_id=oi.id', 'left'],
                             ['stock_car sc', 'sc.stock_car_id=oc.stock_car_id', 'left'],
                         ];
                         $val['infos'] = Db::name('consumer_order_info oi')->field('oi.id,sc.frame_number')->join($join)->where(['oi.order_id' => $orderId, 'oi.customer_id' => $val['id']])->select();
                         $val['infos'] = $val['infos'] ? array_column($val['infos'], 'frame_number') : '--';
+                        $val['infos'] = array_filter($val['infos']);
                         $val['infos'] = $val['infos'] ? implode("\n", $val['infos']) : '--';
                     }
-                    $value['frameNumber'] = $value['customers'] ? array_column($value['customers'], 'infos') : '--';
-                    $value['userName'] = $value['customers'] ? array_column($value['customers'], 'userName') : '--';
-                    $value['userPhone'] = $value['customers'] ? array_column($value['customers'], 'userPhone') : '--';
+
+                    $frameNumber = array_filter(array_column($value['customers'], 'infos'));
+                    $frameNumber = array_map('trim', $frameNumber);
+                    $userName    = array_filter(array_column($value['customers'], 'userName'));
+                    $userPhone   = array_filter(array_column($value['customers'], 'userPhone'));
+
+                    $value['frameNumber'] = $frameNumber ?: ['--'];
+                    $value['userName']    = $userName    ?: ['--'];
+                    $value['userPhone']   = $userPhone   ?: ['--'];
                 }
+                unset($value['customers']);
             }
         }
 
