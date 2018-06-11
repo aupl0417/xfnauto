@@ -77,7 +77,7 @@ class Organization extends Model
      * */
     public function getOrgData($where, $whereOr = array(), $page = 1, $rows = 50, $order = 'orgId desc', $field = ''){
         if(!$field){
-            $field = 'orgId,shortName,orgLevel,address,status,areaId,cityId,linkMan,provinceId,provinceName,remark as remarks,telephone as telePhone';
+            $field = 'orgId,shortName,orgLevel,address,status,areaId,cityId,linkMan,provinceId,provinceName,remark,telephone as telePhone,provinceName,cityName,areaName';
         }
 
         $count = Db::name($this->table)->where($where)->whereOr($whereOr)->count();

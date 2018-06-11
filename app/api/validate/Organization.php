@@ -30,6 +30,7 @@ class Organization extends Validate{
         'bankName'            => 'require',
         'openingBranch'       => 'require',
         'imageurl'            => 'require|checkUrl',
+        'signet'              => 'require|checkUrl',
     ];
 
     protected $message = [
@@ -58,6 +59,7 @@ class Organization extends Validate{
         'openingBranch.require'   => '请输入开户支行',
         'imageurl.require'        => '请上传图片',
         'imageurl.checkUrl'       => '图片地址非法',
+        'signet.checkUrl'         => '印章地址非法',
     ];
 
     protected $scene = [

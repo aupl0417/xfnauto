@@ -14,15 +14,11 @@ use think\Db;
 class Supplier extends Home
 {
 
-
     /**
-     * 物流单列表
+     * 供应商下拉列表
      * */
     public function index(){
-        (!isset($this->data['orgId']) || empty($this->data['orgId'])) && $this->apiReturn(201, '', '参数非法');
-
-        $orgId = $this->data['orgId'] + 0;
-        $data  = Db::name('car_supplier')->where(['org_id' => $orgId, 'is_delete' => 0])->field('supplier_id as id,supplier_name as supplierName')->select();
+        $data  = Db::name('car_supplier')->where(['org_id' => $this->orgId, 'is_delete' => 0])->field('supplier_id as id,supplier_name as supplierName')->select();
         $this->apiReturn(200, $data ?: []);
     }
 

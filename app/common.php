@@ -582,3 +582,58 @@ function getSmallMoney($number, $numberArr, $size = 3){
     return $string;
 }
 
+/**
+ * 系统邮件发送函数
+ * @param string $mailTo     接收邮件者邮箱
+ * @param string $name       接收邮件者名称
+ * @param string $subject    邮件主题
+ * @param string $body       邮件内容
+ * @param string $attachment 附件列表
+ * @return boolean
+ */
+function sendMail($mailTo, $body, $name = '', $subject = '', $attachment = null){
+    $mail = new \PHPMailer\PHPMailer\PHPMailer();           //实例化PHPMailer对象
+    $mail->CharSet = 'UTF-8';           //设定邮件编码，默认ISO-8859-1，如果发中文此项必须设置，否则乱码
+
+    $mail->setLanguage('zh_cn');
+
+//    $mail->isSMTP();
+//    $mail->Host = 'relay-hosting.secureserver.net';
+//    $mail->Port = 25;
+//    $mail->SMTPAuth = false;
+//    $mail->SMTPSecure = false;
+
+    $mail->isSMTP();
+    $mail->Host     = 'smtp.qq.com';
+    $mail->Port = 25;
+//    $mail->SMTPAuth = false;
+//    $mail->SMTPSecure = false;
+    $mail->SMTPAuth = true;
+    $mail->Username = "770517692@qq.com";    // SMTP服务器用户名
+    $mail->Password = "6485654jjun";     // SMTP服务器密码
+    $mail->From     = "770517692@qq.com";
+    $mail->FromName = '喜蜂鸟';
+
+    if (is_array($mailTo) && !empty($mailTo)) {
+        foreach ($mailTo as $item) {
+            $mail->addAddress($item);
+        }
+    } else {
+        $mail->addAddress($mailTo, $name);
+    }
+
+    if (is_array($attachment) && !empty($attachment)) { // 添加附件
+        foreach ($attachment as $file) {
+            is_file($file) && $mail->AddAttachment($file);
+        }
+    }
+
+    $mail->WordWrap = 50;
+    $mail->isHTML(true);
+    $mail->Subject  = $subject ?: '大唐云商邮件提醒';
+    $mail->Body     = $body;
+    $mail->AltBody  = "这是一封HTML邮件，请用HTML方式浏览!";
+
+    return $mail->Send() ? true : $mail->ErrorInfo;
+}
+

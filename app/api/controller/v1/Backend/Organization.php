@@ -22,12 +22,14 @@ class Organization extends Admin
         $page  = isset($this->data['page']) && !empty($this->data['page']) ? $this->data['page'] + 0 : 1;
         $rows  = isset($this->data['rows']) && !empty($this->data['rows']) ? $this->data['rows'] + 0 : 50;
 
-        $org   = model('Organization')->getOrganizationByOrgId($this->orgId, 'orgLevel');
         $where = ['ao.status' => ['in', [1, 2, 3]]];
         $whereOr = [];
-        if(!$this->isAdmin){
-            $where['ao.orgId'] = $this->orgId;
-        }
+//        if(!$this->isAdmin){
+//            $where['ao.orgId'] = $this->orgId;
+//        }else{
+//            $where['ao.parentId'] = $this->orgId;
+//        }
+        $where['ao.parentId'] = $this->orgId;
 
         if(isset($this->data['keywords']) && !empty($this->data['keywords'])){
             $keywords = htmlspecialchars(trim($this->data['keywords']));
@@ -64,10 +66,12 @@ class Organization extends Admin
             'orgCode'       => getRandomString(6),
             'create_date'   => date('Y-m-d H:i:s'),
             'status'        => 1,
+            'parentId'      => 1,
             'orgLevel'      => 3,
             'provinceName'  => isset($this->data['province']) ? htmlspecialchars(trim($this->data['province'])) : '',
             'cityName'      => isset($this->data['city']) ? htmlspecialchars(trim($this->data['city'])) : '',
             'areaName'      => isset($this->data['area']) ? htmlspecialchars(trim($this->data['area'])) : '',
+            'signet'        => isset($this->data['signet']) ? htmlspecialchars(trim($this->data['signet'])) : '',
         ];
 
         $result = Db::name('system_organization')->insert($data);
@@ -105,6 +109,7 @@ class Organization extends Admin
             'provinceName'  => isset($this->data['province']) ? htmlspecialchars(trim($this->data['province'])) : '',
             'cityName'      => isset($this->data['city']) ? htmlspecialchars(trim($this->data['city'])) : '',
             'areaName'      => isset($this->data['area']) ? htmlspecialchars(trim($this->data['area'])) : '',
+            'signet'        => isset($this->data['signet']) ? htmlspecialchars(trim($this->data['signet'])) : '',
         ];
 
 //        if(Db::name('system_organization')->where(['orgId' => ['neq', $id], 'shortName' => $this->data['shortName']])->count()){
@@ -121,6 +126,8 @@ class Organization extends Admin
         $where = ['status' => 1];
         if(!$this->isAdmin){
             $where['orgId'] = $this->orgId;
+        }else{
+            $where['parentId'] = $this->orgId;
         }
         $data = model('Organization')->getOrgAll($where, 'orgId,shortName as orgName');
         $this->apiReturn(200, $data);
@@ -133,7 +140,7 @@ class Organization extends Admin
         unset($this->data['sessionId'], $this->data['id']);
 
         $field = 'orgId as id,parentId,orgCode,shortName,provinceId,cityId,areaId,address,orgtype as orgType,orgLevel,remark,status,longitude,latitude,imageurl,bankAccount,bankName,
-                 openingBranch,nameOfAccount,telephone,provinceName,cityName,areaName,introduce,create_date as createDate';
+                 openingBranch,nameOfAccount,telephone,provinceName,cityName,areaName,introduce,create_date as createDate,signet';
         $data = model('Organization')->getOrganizationByOrgId($id, $field);
         $this->apiReturn(200, $data);
     }

@@ -229,12 +229,12 @@ class UserCenter extends Home
         (!isset($this->data['id']) || empty($this->data['id'])) && $this->apiReturn(201, '', '参数非法');
 
         $userId = $this->data['id'] + 0;
-        $data   = Db::name('customer_customerusers')->where(['customerUsersId' => $userId])->field('customerUsersId as id,customerUsersName as userName,phoneNumber as phone,headPortrait,agentGender')->find();
+        $data   = Db::name('customer_customerorg org')->where(['customer_users_org_id' => $userId, 'system_user_id' => ['in', $this->userIds]])->join('customer_customerusers users', 'users.customerUsersId=org.customer_users_Id', 'left')->field('customerUsersId as id,customerUsersName as userName,phoneNumber as phone,headPortrait,agentGender')->find();
         if($data){
             $carInfoField    = $this->createField('customer_customerorg');
-            $data['carInfo'] = Db::name('customer_customerorg')->where(['customer_users_Id' => $userId])->field($carInfoField)->select();
+            $data['carInfo'] = Db::name('customer_customerorg')->where(['customer_users_Id' => $userId, 'system_user_id' => ['in', $this->userIds]])->field($carInfoField)->select();
             $remarkField     = $this->createField('customer_remarks', 'org_id,org_code');
-            $data['remarks'] = Db::name('customer_remarks')->where(['customer_id' => $userId])->field($remarkField)->select();
+            $data['remarks'] = Db::name('customer_remarks')->where(['customer_id' => $userId, 'org_id' => ['in', $this->orgIds]])->field($remarkField)->select();
         }
 
         $this->apiReturn(200, $data);

@@ -39,6 +39,8 @@ Route::get('publics_v1/createImage','api/v1.Common/createImage');
 Route::get('ucenter_v1/consumerDetail','api/v1.Common/consumerDetail');
 Route::get('ucenter_v1/stocklist','api/v1.Order/stockList');
 Route::get('ucenter_v1/organizationlist','api/v1.Organization/index');
+Route::post('ucenter_v1/organization/create','api/v1.Organization/create');
+Route::post('ucenter_v1/organization/edit','api/v1.Organization/edit');
 Route::get('ucenter_v1/logistics','api/v1.Logistics/index');
 Route::get('ucenter_v1/logistics/consignment','api/v1.Logistics/consignment');
 Route::get('ucenter_v1/shop','api/v1.Shop/index');
@@ -51,6 +53,13 @@ Route::get('ucenter_v1/supplier','api/v1.Supplier/index');
 //前台文章列表及详情
 Route::get('article_v1/index','api/v1.Article/index');
 Route::get('article_v1/detail','api/v1.Article/detail');
+
+
+
+//前台店铺垫资接口
+Route::post('shop_v1/loan/index','api/v1.Shop.Loan/index');
+Route::get('shop_v1/user/profile','api/v1.Shop.User/profile');
+Route::post('shop_v1/Index/verify','api/v1.Shop.Index/verify');
 
 //后台接口
 //后台文章管理

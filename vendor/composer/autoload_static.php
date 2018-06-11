@@ -50,6 +50,7 @@ class ComposerStaticInit34a41e2841af1a67f3ddef099fc7b348
             'Psr\\Log\\' => 8,
             'Phinx\\' => 6,
             'PhantomInstaller\\Test\\' => 22,
+            'PHPMailer\\PHPMailer\\' => 20,
         ),
         'M' => 
         array (
@@ -127,6 +128,10 @@ class ComposerStaticInit34a41e2841af1a67f3ddef099fc7b348
         'PhantomInstaller\\Test\\' => 
         array (
             0 => __DIR__ . '/..' . '/jakoch/phantomjs-installer/tests',
+        ),
+        'PHPMailer\\PHPMailer\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/phpmailer/phpmailer/src',
         ),
         'Mpdf\\' => 
         array (

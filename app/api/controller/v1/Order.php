@@ -31,8 +31,18 @@ class Order extends Home
 
         if(isset($this->data['keywords'])&& !empty($this->data['keywords'])){
             $keywords= htmlspecialchars(trim($this->data['keywords']));
-            $field = !preg_match('/^DG\d+/', $keywords) ? 'cars_name' : 'order_code';
-            $where[$field] = ['like', '%' . $keywords . '%'];
+//            $field = !preg_match('/^DG\d+/', $keywords) ? 'cars_name' : 'order_code';
+//            $where[$field] = ['like', '%' . $keywords . '%'];
+            $orderIds = Db::name('consumer_order_info')->where(['cars_name' => ['like', '%' . $keywords . '%'], 'is_del' => 0])->field('order_id')->select();
+            if($orderIds){
+                $orderIds = array_column($orderIds, 'order_id');
+            }
+            $ids = Db::name('consumer_order')->where(['order_code' => ['like', '%' . $keywords . '%'], 'is_del' => 0])->field('id')->select();
+            if($ids){
+                $ids = array_column($ids, 'id');
+            }
+            $ids = array_merge($ids, $orderIds);
+            $where['co.id'] = ['in', $ids];
         }
 
         if(isset($this->data['state'])&& !empty($this->data['state'])){
