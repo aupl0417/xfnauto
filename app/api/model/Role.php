@@ -61,10 +61,10 @@ class Role extends Model
         }
 
         if(!$field){
-            $field = 'roleId as id,roleName,sr.remark';
+            $field = 'roleId as id,roleName,remark';
         }
 
-        return Db::name($this->table . ' sr')->where($where)->field($field)->select();
+        return Db::name($this->table)->where($where)->field($field)->select();
     }
 
     public function getRoleDataAll($where = array(), $page = 1, $rows){

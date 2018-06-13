@@ -189,7 +189,7 @@ class ConsumerOrder extends Model
         $data  = Db::name('consumer_order')->where($where)->page($page, $pageSize)
             ->field($field)->order('id desc')
             ->select();
-
+        
         if($data){
             foreach($data as $key => &$value){
                 $orderId = $value['id'];

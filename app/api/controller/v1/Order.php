@@ -78,14 +78,13 @@ class Order extends Home
 
         $data = model('ConsumerOrder')->getOrderList($where, $page, $rows);
         if($data){
-            $field = 'brand_id as brandId,cars_id as carsId,brand_name as brandName,car_num as carNum,cars_name as carsName,change_price as changePrice,color_id as colorId,color_name as colorName,commercial_insurance_price as commercialInsurancePrice,create_time as createTime,customer_id as customerId,deposit_price as depositPrice,family_id as familyId,family_name as familyName,guide_price as guidePrice,id,interior_id as interiorId,interior_name as interiorName,naked_price as nakedPrice,order_id as orderId,remark,state,ticket_pic as ticketPic,traffic_compulsory_insurance_price as trafficCompulsoryInsurancePrice';
+            $field = 'id,brand_id as brandId,cars_id as carsId,brand_name as brandName,car_num as carNum,cars_name as carsName,change_price as changePrice,color_id as colorId,color_name as colorName,commercial_insurance_price as commercialInsurancePrice,create_time as createTime,customer_id as customerId,deposit_price as depositPrice,family_id as familyId,family_name as familyName,guide_price as guidePrice,id,interior_id as interiorId,interior_name as interiorName,naked_price as nakedPrice,order_id as orderId,remark,state,ticket_pic as ticketPic,traffic_compulsory_insurance_price as trafficCompulsoryInsurancePrice';
             $carField = 'oc.vin,oc.audit_remark as auditRemark,oc.audit_state as auditState,oc.brand_id as brandId,oc.brand_name as brandName,oc.cars_id as carsId,oc.cars_name as carsName,oc.certification_pic as certificationPic,oc.check_car_pic as checkCarPic,oc.ci_pic as ciPic,oc.color_id as colorId,oc.color_name as colorName,oc.create_time as createTime,oc.express_pic as expressPic,oc.family_id as familyId,oc.family_name as familyName,oc.id,oc.info_id as infoId,oc.interior_id as interiorId,oc.interior_name as interiorName,oc.is_del as isDel,oc.other_pic as otherPic,oc.stock_car_id as stockCarId,oc.tci_pic as tciPic,oc.ticket_pic as ticketPic,oc.ticket_remark as ticketRemark,sc.frame_number as frameNumber,sc.engine_number';
             foreach($data as $key => &$value){
                 $value['infos'] = Db::name('consumer_order_info')->field($field)->where(['order_id' => $value['id'], 'is_del' => 0])->select();
                 if($value['infos']){
                     foreach($value['infos'] as $k => &$val){
-                        $val['cars'] = Db::name('consumer_order_car oc')->where(['oc.cars_id' => $val['carsId']])->join('stock_car sc', 'sc.stock_car_id=oc.stock_car_id')->field($carField)->select();
-//                        $val['cars'] = $cars ? array_column($cars, 'vin') : [];
+                        $val['cars'] = Db::name('consumer_order_car oc')->where(['oc.cars_id' => $val['carsId'], 'oc.is_del' => 0, 'oc.info_id' => $val['id']])->join('stock_car sc', 'sc.stock_car_id=oc.stock_car_id')->field($carField)->select();
                     }
                 }
             }
@@ -111,19 +110,20 @@ class Order extends Home
             $where['customer_order_state'] = $state;
             if($state == 6){
                 $where['customer_order_state'] = ['in', [7, 9, 11]];
+            }elseif ($state == 12){
+                $where['customer_order_state'] = ['in', [13, 15, 17]];
             }
         }
 
-//        if(!$this->isRole){
-//            $where['system_user_id'] = $this->userId;
-//        }
-//        $group = model('SystemUser')->getUserGroupInfo($this->userId);
-//        if($group['over_manage'] == 1){
-//            $where['org_id']         = $group['orgId'];
-//        }else{
-//            $where['system_user_id'] = $this->userId;
-//        }
-        $where['org_id']         = ['in', $this->orgIds];
+        if(isset($this->data['month']) && !empty($this->data['month'])){
+            $month      = trim($this->data['month']);
+            $monthStart = $month . '-01';
+            !checkDateIsValid($monthStart) && $this->apiReturn(201, '', '输入年月格式非法');
+            $monthEnd   = $month . '-' . date('t') . ' 23:59:59';
+            $where['create_date']    = ['between', [date($monthStart), date($monthEnd)]];
+        }
+
+        $where['system_user_id'] = ['in', $this->userIds];
         $where['create_date']    = ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]];
         $where['is_delete']      = 0;
 
@@ -220,6 +220,71 @@ class Order extends Home
         $this->apiReturn(200, ['list' => $data, 'total' => $count, 'page' => $page, 'rows' => $rows]);
     }
 
-    
+    /**
+     * 等待车辆出库列表
+     * */
+    public function stockCarList(){
+        $page  = isset($this->data['page']) && !empty($this->data['page']) ? $this->data['page'] + 0 : 1;
+        $rows  = isset($this->data['rows']) && !empty($this->data['rows']) ? $this->data['rows'] + 0 : 10;
+
+        $where = ['customer_order_state' => 5, 'is_delete' => 0, 'org_id' => ['in', $this->orgIds]];
+
+        if(isset($this->data['keywords']) && !empty($this->data['keywords'])){
+            $keywords = htmlspecialchars(trim($this->data['keywords']));
+            $where['cars_name'] = ['like', '%' . $keywords . '%'];
+        }
+
+        $field = 'cars_id as carsId,cars_name as carsName,colour_id as colourId,colour_name as colourName,create_date as createDate,customer_name as customerName,customer_order_code as customerOrderCode,
+        customer_order_id as customerOrderId,interior_id as interiorId,interior_name as interiorName,1 as number';
+        $count = Db::name('customer_order')->where($where)->count();
+        $data  = Db::name('customer_order')->where($where)->field($field)->page($page, $rows)->order('customer_order_id desc')->select();
+        if($data){
+            foreach($data as &$value){
+                $value['stockCarNumber'] = Db::name('stock_car')->where(['order_id' => $value['customerOrderId'], 'is_delete' => 0])->sum('stock_car_id');
+            }
+        }
+        $this->apiReturn(200, ['list' => $data, 'page' => $page, 'rows' => $rows, 'total' => $count]);
+    }
+
+    /**
+     * 精品加装/等待上牌/等待贴膜/待交车列表
+     * */
+    public function carsProductList(){
+        $page  = isset($this->data['page']) && !empty($this->data['page']) ? $this->data['page'] + 0 : 1;
+        $rows  = isset($this->data['rows']) && !empty($this->data['rows']) ? $this->data['rows'] + 0 : 10;
+
+        $state = (isset($this->data['state']) && !empty($this->data['state'])) ? $this->data['state'] + 0 : 7;
+        !in_array($state, [7, 9, 11, 12], true) && $this->apiReturn(201, '', '参数非法');
+
+        if($state == 12){
+            $state = ['in', [13, 15, 17]];
+        }
+
+        $where = ['co.customer_order_state' => $state, 'co.is_delete' => 0, 'co.org_id' => ['in', $this->orgIds]];
+
+        if(isset($this->data['keywords']) && !empty($this->data['keywords'])){
+            $keywords = htmlspecialchars(trim($this->data['keywords']));
+            $where['cars_name'] = ['like', '%' . $keywords . '%'];
+        }
+
+        $field = 'co.cars_id as carsId,co.cars_name as carsName,co.colour_id as colourId,co.colour_name as colourName,co.create_date as createDate,co.customer_name as customerName,co.customer_order_code as customerOrderCode,
+        co.customer_order_id as customerOrderId,co.interior_id as interiorId,co.interior_name as interiorName,co.estimate_Date as estimateDate,car.frame_number as frameNumber,co.is_mortgage as isMortgage,over_the_line as overTheLine,
+        co.system_user_id as systemUserId,co.system_user_name as systemUserName,co.system_user_phone as systemUserPhone';
+        $join = [
+            ['customer_car car', 'car.customer_order_id=co.customer_order_id', 'left'],
+        ];
+        $count = Db::name('customer_order co')->where($where)->join($join)->count();
+        $data  = Db::name('customer_order co')->where($where)->field($field)->join($join)->page($page, $rows)->order('co.customer_order_id desc')->select();
+        $this->apiReturn(200, ['list' => $data, 'page' => $page, 'rows' => $rows, 'total' => $count]);
+    }
+
+    /**
+     * 资源单更新
+     * */
+    public function consumerUpdate(){
+        (!isset($this->data['id']) || empty($this->data['id'])) && $this->apiReturn(201, '', '参数非法');
+        $id = $this->data['id'] + 0;
+        unset($this->data['id'], $this->data['sessionId']);
+    }
 
 }

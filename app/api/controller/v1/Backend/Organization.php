@@ -153,7 +153,7 @@ class Organization extends Admin
             $this->apiReturn(201, '', '不能对自身进行此操作');
         }
 
-        $org = model('Organization')->getOrganizationByOrgId($orgId, 'status');
+        $org = Db::name('system_organization')->where(['orgId' => $orgId])->field('status')->find();
         if(!$org){
             $this->apiReturn(201, '', '门店不存在');
         }

@@ -125,8 +125,10 @@ class Base extends Controller {
 
     /**
      * 按驼峰规则动态生成表字段(只支持单表)
-     * @param $table string
+     * @param $table        string
      * @param $ignoreFields string/array  要过滤的字段
+     * @param $returnArray  boolean 是否返回数组
+     * @param $alias        string 表别名
      * @return string
      * */
     public function createField($table, $ignoreFields = '', $returnArray = false, $alias = ''){

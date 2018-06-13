@@ -38,6 +38,7 @@ Route::get('publics_v1/contract','api/v1.Common/contract');
 Route::get('publics_v1/createImage','api/v1.Common/createImage');
 Route::get('ucenter_v1/consumerDetail','api/v1.Common/consumerDetail');
 Route::get('ucenter_v1/stocklist','api/v1.Order/stockList');
+Route::get('ucenter_v1/stockcarlist','api/v1.Order/stockCarList');
 Route::get('ucenter_v1/organizationlist','api/v1.Organization/index');
 Route::post('ucenter_v1/organization/create','api/v1.Organization/create');
 Route::post('ucenter_v1/organization/edit','api/v1.Organization/edit');
@@ -47,7 +48,10 @@ Route::get('ucenter_v1/shop','api/v1.Shop/index');
 Route::get('ucenter_v1/shop/activity','api/v1.Shop/activity');
 Route::get('ucenter_v1/userlist','api/v1.UserCenter/userList');
 Route::get('ucenter_v1/userdetail','api/v1.UserCenter/userDetail');
+Route::get('ucenter_v1/getseller','api/v1.UserCenter/getSeller');
 Route::get('ucenter_v1/supplier','api/v1.Supplier/index');
+Route::get('ucenter_v1/carsproductlist','api/v1.Order/carsProductList');
+Route::post('login_v1/index','api/v1.Login/index');
 //Route::get('publics_v1/test','api/v1.Common/test');
 //Route::get('activity_v1.1/index','api/v1._1.Test/index');
 //前台文章列表及详情
@@ -79,6 +83,8 @@ Route::get('backend_v1/consumer/export','api/v1.Backend.ConsumerOrder/export');
 Route::get('backend_v1/consumer/index','api/v1.Backend.ConsumerOrder/index');
 Route::get('backend_v1/consumer/detail','api/v1.Backend.ConsumerOrder/consumerDetail');
 Route::get('backend_v1/supplier','api/v1.Backend.Supplier/index');
+Route::post('backend_v1/supplier/create','api/v1.Backend.Supplier/create');
+Route::post('backend_v1/supplier/remove','api/v1.Backend.Supplier/remove');
 Route::get('backend_v1/car','api/v1.Backend.Car/index');
 Route::get('backend_v1/car/family','api/v1.Backend.Car/family');
 
@@ -114,6 +120,13 @@ Route::get('backend_v1/brand','api/v1.Backend.Publics/brand');
 Route::get('backend_v1/customer','api/v1.Backend.CustomerOrder/index');
 Route::get('backend_v1/customer/detail','api/v1.Backend.CustomerOrder/detail');
 Route::get('backend_v1/systemuser/info','api/v1.Backend.SystemUser/userInfo');
+Route::post('backend_v1/customer/pay','api/v1.Backend.CustomerOrder/pay');
+Route::get('backend_v1/consumer/getpayinfo','api/v1.Backend.ConsumerOrder/getPayInfo');
+Route::post('backend_v1/consumer/pay','api/v1.Backend.ConsumerOrder/pay');
+Route::get('backend_v1/stocklist','api/v1.Backend.Stock/index');
+Route::post('backend_v1/editstock','api/v1.Backend.Stock/edit');
+Route::post('backend_v1/createstock','api/v1.Backend.Stock/create');
+Route::get('backend_v1/removestock','api/v1.Backend.Stock/remove');
 
 //验证JAVA接口权限
 Route::get('backend_v1/publics/checkauth','api/v1.Backend.Publics/checkJavaApiAuth');

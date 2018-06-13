@@ -24,7 +24,7 @@ class SystemUser extends Model
     }
 
     public function getUserByOrgId($orgId, $field = '*', $order = 'usersId asc'){
-        $where = [];
+        $where = ['isEnable' => 1, 'status' => 1];
         if($orgId){
             $where['orgId'] = $orgId;
         }

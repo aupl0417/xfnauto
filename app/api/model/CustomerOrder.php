@@ -38,6 +38,8 @@ class CustomerOrder extends Model
             $cond = array();
             if($condition == 6){
                 $condition = ['in', [7, 9, 11]];
+            }elseif($condition == 12){
+                $condition = ['in', [13, 15, 17]];
             }
             if(!is_array($condition)){
                 $condition = explode(',', $condition);

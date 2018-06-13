@@ -12,6 +12,8 @@ use Qiniu\Auth;
 use Qiniu\Storage\UploadManager;
 use think\Controller;
 use think\Db;
+use think\Exception;
+
 class ConsumerOrder extends Admin
 {
 
@@ -330,6 +332,79 @@ class ConsumerOrder extends Admin
             }
         }else{
             $this->apiReturn(201, '', '文件不存在');
+        }
+    }
+
+    public function getPayInfo(){
+        (!isset($this->data['orderId']) || empty($this->data['orderId'])) && $this->apiReturn(201, '', '参数非法');
+
+        $orderId = $this->data['orderId'] + 0;
+        $data    = ['orderId' => $orderId];
+        $payInfo = Db::name('consumer_order_payment')->where(['order_id' => $orderId, 'is_del' => 0])->field('id,remark,voucher,type')->find();
+        if(!$payInfo){
+            $payInfo = ['id' => '', 'remark' => '', 'voucher' => '', 'type' => ''];
+            $data    = array_merge($data, $payInfo);
+        }
+        $data['amount'] = Db::name('consumer_order_info')->where(['order_id' => $orderId, 'is_del' => 0])->sum('deposit_price');
+        $this->apiReturn(200, $data);
+    }
+
+    public function pay(){
+        (!isset($this->data['orderId']) || empty($this->data['orderId'])) && $this->apiReturn(201, '', '参数非法');
+
+        $orderId = $this->data['orderId'] + 0;
+        $field   = 'id,state,order_code,freight';
+        $data    = Db::name('consumer_order')->where(['id' => $orderId, 'is_del' => 0])->field($field)->find();
+        !$data && $this->apiReturn(201, '', '订单不存在或已删除');
+        !in_array(intval($data['state']), [5, 35], true) && $this->apiReturn(201, '', '该定单已非待收定金或待收尾款状态');
+
+        unset($this->data['sessionId']);
+        $result = $this->validate($this->data, 'ConsumerOrderPay');
+        $result !== true && $this->apiReturn(201, '', $result);
+
+        $data['totalDepositPrice'] = Db::name('consumer_order_info')->where(['order_id' => $orderId, 'is_del' => 0])->sum('deposit_price');
+        $orderInfo = Db::name('consumer_order_info')->where(['order_id' => $orderId, 'is_del' => 0])->field('naked_price,traffic_compulsory_insurance_price,commercial_insurance_price,car_num')->select();
+        if($orderInfo){
+            $total = 0;
+            foreach($orderInfo as $vo){
+                $total += ($vo['naked_price'] + $vo['traffic_compulsory_insurance_price'] + $vo['commercial_insurance_price']) * $vo['car_num'];
+            }
+            $data['totalFinalPrice']   = $total + $data['freight'];
+            $data['totalRestPrice']    = $data['totalFinalPrice'] - $data['totalDepositPrice'];
+        }
+
+        $amount = $data['state'] == 5 ? $data['totalDepositPrice'] : $data['totalRestPrice'];
+
+        if($this->data['amount'] != $amount){
+            $this->apiReturn(201, '', '支付金额不一致');
+        }
+
+        try{
+            $payInfo = [
+                'order_id' => $orderId,
+                'amount'   => $this->data['amount'],
+                'type'     => $data['state'] == 5 ? 1 : 2,
+                'pay_type' => $this->data['payType'],
+                'voucher'  => (isset($this->data['voucher']) && !empty($this->data['voucher'])) ? htmlspecialchars(trim($this->data['voucher'])) : '',
+                'remark'   => (isset($this->data['remark']) && !empty($this->data['remark'])) ? htmlspecialchars(trim($this->data['remark'])) : '',
+                'create_time' => date('Y-m-d H:i:s')
+            ];
+
+            $result = Db::name('consumer_order_payment')->insert($payInfo);
+            if(!$result){
+                throw new Exception('操作失败');
+            }
+
+            $result = Db::name('consumer_order')->where(['id' => $orderId, 'state' => $data['state'], 'is_del' => 0])->update(['state' => 10]);
+            if($result === false){
+                throw new Exception('更新资源订单表状态失败');
+            }
+
+            Db::commit();
+            $this->apiReturn(200, '', '操作成功');
+        }catch (Exception $e){
+            Db::rollback();
+            $this->apiReturn(201, '', '操作失败' . $e->getMessage());
         }
     }
 

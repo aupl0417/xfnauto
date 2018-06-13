@@ -17,6 +17,9 @@ class Index extends Base
 
     }
 
+    /**
+     * 店铺认证
+     * */
     public function verify(){
         if($this->user['user_type'] == 1){
             $this->apiReturn(201, '', '您不是商家');

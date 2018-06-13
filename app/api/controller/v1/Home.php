@@ -164,11 +164,13 @@ class Home extends Controller {
 
     /**
      * 按驼峰规则动态生成表字段(只支持单表)
-     * @param $table string
+     * @param $table        string
      * @param $ignoreFields string/array  要过滤的字段
+     * @param $returnArray  boolean 是否返回数组
+     * @param $alias        string 表别名
      * @return string
      * */
-    public function createField($table, $ignoreFields = '', $returnArray = false){
+    public function createField($table, $ignoreFields = '', $returnArray = false, $alias = ''){
         if($ignoreFields && is_string($ignoreFields)){
             $ignoreFields = explode(',', $ignoreFields);
         }
@@ -187,6 +189,9 @@ class Home extends Controller {
         }
         unset($value, $val);//删除
         foreach($field as $key => &$value){
+            if($alias){
+                $value = $alias . '.' . $value;
+            }
             $value .= ' AS ' . $fields[$key];
         }
         unset($fields, $value, $key);

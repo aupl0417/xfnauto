@@ -31,8 +31,8 @@ class UserCenter extends Home
             'bankAudit'    => $customerModel->orderCount(3, $this->userIds, $this->orgIds, $this->isRole),
             'undelivery'   => $customerModel->orderCount(5, $this->userIds, $this->orgIds, $this->isRole),
             'others'       => $customerModel->orderCount(6, $this->userIds, $this->orgIds, $this->isRole),
-            'unfinished'   => $customerModel->orderCount(15, $this->userIds, $this->orgIds, $this->isRole),
-            'finished'     => $customerModel->orderCount(17, $this->userIds, $this->orgIds, $this->isRole),
+            'finished'   => $customerModel->orderCount(12, $this->userIds, $this->orgIds, $this->isRole),
+//            'finished'     => $customerModel->orderCount(17, $this->userIds, $this->orgIds, $this->isRole),
             'insurance'    => $customerModel->orderFeeCount('insurance', $this->userIds, $this->orgIds, $this->isRole),
             'mortgage'     => $customerModel->orderFeeCount('mortgage', $this->userIds, $this->orgIds, $this->isRole),
             'boutique'     => $customerModel->orderFeeCount('boutique', $this->userIds, $this->orgIds, $this->isRole),
@@ -69,13 +69,8 @@ class UserCenter extends Home
         $type  = isset($this->data['type']) && !empty($this->data['type']) ? trim($this->data['type']) : 'all';
         !in_array($type, ['all', 'intensity', 'visit']) && $this->apiReturn(201, '', '参数非法');
 
-//        $group = model('SystemUser')->getUserGroupInfo($this->userId);
-//        if($group['over_manage'] == 1){
-//            $where['org_id']         = $group['orgId'];
-//        }else{
-//            $where['system_user_id'] = $this->userId;
-//        }
-        $where['org_id'] = ['in', $this->orgIds];
+        $where['org_id']         = ['in', $this->orgIds];
+        $where['system_user_id'] = ['in', $this->userIds];
 
         if($type == 'intensity'){
             $where['intensity'] = '高';
@@ -93,11 +88,9 @@ class UserCenter extends Home
             $where['time_of_appointment_date'] = ['between', [date('Y-m-01'), date('Y-m-d 23:59:59')]];
         }
 
-        $field = 'customer_users_org_id as id,customer_users_name as username,phone_number as phone,create_date as createTime,org_id as orgId,time_of_appointment_date as timeOfAppointmentDate,system_user_name as systemUsername,carName,expect_way_id as expectWay';
-//        $data = Db::name('customer_customerorg')->where('time_of_appointment_date', ['>=', date('Y-m-01')], ['<=', date('Y-m-t 23:59:59')], 'and')->where($where)->join('car_cars', 'intention_car_id=carId', 'left')->field($field)->select();
+        $field = 'customer_users_org_id as id,customer_users_name as username,phone_number as phone,create_date as createTime,org_id as orgId,time_of_appointment_date as timeOfAppointmentDate,system_user_name as systemUsername,carName,expect_way_id as expectWay,intensity';
         $data = Db::name('customer_customerorg')->where($where)->page($page, $rows)->join('car_cars', 'intention_car_id=carId', 'left')->field($field)->select();
         !$data && $this->apiReturn(200, '', '暂无记录');
-//        echo Db::name('customer_customerorg')->getLastSql();die;
         $this->apiReturn(200, $data);
     }
 
@@ -114,13 +107,6 @@ class UserCenter extends Home
             'org_id'               => ['in', $this->orgIds],
             'is_delete'            => 0,
         ];
-
-//        $group = model('SystemUser')->getUserGroupInfo($this->userId);
-//        if($group['over_manage'] == 1){
-//            $where['org_id']         = $group['orgId'];
-//        }else{
-//            $where['system_user_id'] = $this->userId;
-//        }
 
         if(isset($this->data['keywords']) && !empty($this->data['keywords'])){
             $keywords = htmlspecialchars(trim($this->data['keywords']));
@@ -205,7 +191,6 @@ class UserCenter extends Home
 
         if(isset($this->data['paymentWay']) && !empty($this->data['paymentWay']) && in_array(intval($this->data['paymentWay']), [1, 2], true)){
             $paymentWay = $this->data['paymentWay'] + 0;
-//            $where['co.payment_way'] = $paymentWay;
             $where['cu.expect_way_id'] = $paymentWay;
         }
 
@@ -218,7 +203,9 @@ class UserCenter extends Home
         $join  = [
             ['customer_customerusers cus', 'cus.customerUsersId=cu.customer_users_Id', 'left'],
         ];
-        $field = 'cu.customer_users_org_id as id,cu.intention_car_info as carsName,cu.customer_users_Id as customerUsersId,cu.customer_users_name as customerUsersName,cus.headPortrait,cu.expect_way_id as paymentWay,cu.phone_number as phoneNumber,cu.system_user_name as systemUserName,org_id as customerUsersOrgId';
+        $field = 'cu.customer_users_org_id as id,cu.intention_car_info as carsName,cu.customer_users_Id as customerUsersId,cu.customer_users_name as customerUsersName,
+        cus.headPortrait,cu.expect_way_id as paymentWay,cu.phone_number as phoneNumber,cu.system_user_name as systemUserName,org_id as customerUsersOrgId,time_of_appointment as timeOfAppointment,
+        appointment_date as appointmentDate,intention_car_id as intentionCarId,intensity,the_source as source,cu.remarks,time_of_appointment_date as timeOfAppointmentDate';
         $data  = Db::name('customer_customerorg cu')->where($where)->field($field)->join($join)->page($page, $rows)->order('cu.create_date desc')->select();
         $count = Db::name('customer_customerorg cu')->where($where)->join($join)->count();
 
@@ -229,15 +216,36 @@ class UserCenter extends Home
         (!isset($this->data['id']) || empty($this->data['id'])) && $this->apiReturn(201, '', '参数非法');
 
         $userId = $this->data['id'] + 0;
-        $data   = Db::name('customer_customerorg org')->where(['customer_users_org_id' => $userId, 'system_user_id' => ['in', $this->userIds]])->join('customer_customerusers users', 'users.customerUsersId=org.customer_users_Id', 'left')->field('customerUsersId as id,customerUsersName as userName,phoneNumber as phone,headPortrait,agentGender')->find();
+        $field  = 'customerUsersId as id,customerUsersName as userName,phoneNumber as phone,headPortrait,agentGender';
+        $data   = Db::name('customer_customerorg org')->where(['customer_users_org_id' => $userId, 'system_user_id' => ['in', $this->userIds]])->join('customer_customerusers users', 'users.customerUsersId=org.customer_users_Id', 'left')->field($field)->find();
         if($data){
             $carInfoField    = $this->createField('customer_customerorg');
             $data['carInfo'] = Db::name('customer_customerorg')->where(['customer_users_Id' => $userId, 'system_user_id' => ['in', $this->userIds]])->field($carInfoField)->select();
             $remarkField     = $this->createField('customer_remarks', 'org_id,org_code');
             $data['remarks'] = Db::name('customer_remarks')->where(['customer_id' => $userId, 'org_id' => ['in', $this->orgIds]])->field($remarkField)->select();
+            $fieldInfo       = $this->createField('customer_customerusers', 'sessionId,state,unionId,publicSignOpenId');
+            $data['userInfo']= Db::name('customer_customerusers')->where(['customerUsersId' => $userId])->field($fieldInfo)->find();
         }
 
         $this->apiReturn(200, $data);
+    }
+
+    public function getSeller(){
+        $users = model('SystemUser')->getUserByOrgId($this->orgId, 'realName,roleIds', 'usersId desc');
+        if($users){
+            foreach($users as &$value){
+                $value['roles'] = '';
+                if(!$value['roleIds']){
+                    continue;
+                }
+
+                $roles = model('Role')->getRoleAll(['roleId' => ['in', $value['roleIds']], 'orgId' => $this->orgId, 'isDelete' => 0]);
+                if($roles){
+                    $value['roles'] = implode(',', array_column($roles, 'roleName'));
+                }
+            }
+        }
+        $this->apiReturn(200, $users);
     }
 
 }

@@ -50,10 +50,13 @@ function checkEmail($email){
 /*
  * 生成单号
  * */
-function makeOrder(){
+function makeOrder($header = '', $footerLen = 4){
     $order = date('YmdHis');
-    $array = explode('.', microtime(true));
-    return $order . end($array);
+//    $array = explode('.', microtime(true));
+    $string = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    $string = str_shuffle($string);
+    $string = substr($string, 0, $footerLen);
+    return $header.$order . $string;
 }
 
 function curl_post($url,$data,$param=null){
@@ -344,7 +347,8 @@ function resizeImage($img, $targetWidth = 640){
         $service = new \app\api\service\ImagickService();
         $image   = $service->open($img);
         $result  = $service->resize($targetWidth, $resizeHeight);
-        $path    = 'upload/image/' . md5(microtime(true)) . '.' . $ext;
+//        $path    = 'upload/image/' . md5(microtime(true)) . '.' . $ext;
+        $path    = 'upload/image/' . md5(microtime(true)) . '.png';
         $service->save_to($path);
         if(!file_exists($path)){
             return false;
@@ -636,4 +640,5 @@ function sendMail($mailTo, $body, $name = '', $subject = '', $attachment = null)
 
     return $mail->Send() ? true : $mail->ErrorInfo;
 }
+
 
