@@ -147,8 +147,12 @@ class CustomerOrder extends Model
     }
 
     public function getReturnVisitList($where = '', $page = 1, $pageSize = 10){
-        $field = 'customer_order_id as id,customer_name as customerName,customer_phone_number as customerPhone,system_user_name as sellerName,cars_name as carName,create_date as createTime';
-        $data  = Db::name('customer_order')->where($where)->field($field)->page($page, $pageSize)->order('create_date desc')->select();
+//        $field = 'customer_order_id as id,customer_name as customerName,customer_phone_number as customerPhone,system_user_name as sellerName,cars_name as carName,create_date as createTime';
+        $field = 'customer_users_org_id as id,customer_users_name as username,phone_number as phone,co.create_date as createTime,co.org_id as orgId,time_of_appointment_date as timeOfAppointmentDate,co.system_user_name as systemUsername,cars_name as carName,expect_way_id as expectWay,intensity';
+        $join  = [
+            ['customer_customerorg org', 'org.customer_users_org_id=co.customer_id', 'left'],
+        ];
+        $data  = Db::name('customer_order co')->where($where)->field($field)->join($join)->page($page, $pageSize)->order('co.create_date desc')->select();
         return $data;
     }
 

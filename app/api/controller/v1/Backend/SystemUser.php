@@ -6,7 +6,7 @@
  * Time: 9:28
  */
 
-namespace app\api\controller\v2\Backend;
+namespace app\api\controller\v1\Backend;
 
 use think\Controller;
 use think\Db;
@@ -44,12 +44,8 @@ class SystemUser extends Admin
         }else{
             if(!$this->isAdmin){
                 $where['orgId'] = $this->orgId;
-            }else{
-                $condition = ['status' => ['in', [1, 2, 3]], 'parentId' => $this->orgId];
-                $whereOr   = ['orgId' => $this->orgId];
-                $org = model('Organization')->getOrgs($condition, $whereOr, 'orgId');
-                $where['orgId'] = ['in', array_column($org, 'orgId')];
             }
+
         }
 
         $field = 'usersId as id,realName,phoneNumber as phone,parentIds,roleIds,orgName,status,isEnable,orgId';
@@ -58,11 +54,8 @@ class SystemUser extends Admin
             foreach($data['list'] as $key => &$value){
                 $higherUps = model('SystemUser')->getDataAll(['usersId' => ['in', $value['parentIds']]], 'realName');
                 $value['higherUps'] = $higherUps ? implode(',', array_column($higherUps, 'realName')) : '';
-                $roleIds = model('RoleUser')->getRoleByUserId($value['id'], $value['orgId']);
-                if($roleIds){
-                    $roleIds = array_unique(array_column($roleIds, 'roleId'));
-                }
-                $roles = model('Role')->getRoleAll(['roleId' => ['in', $roleIds], 'orgId' => $value['orgId'], 'isDelete' => 0], 'roleName');
+
+                $roles = model('Role')->getRoleAll(['roleId' => ['in', $value['roleIds']], 'orgId' => $value['orgId'], 'isDelete' => 0], 'roleName');
                 $value['roles'] = $roles ? implode(',', array_column($roles, 'roleName')) : '';
             }
         }
@@ -80,12 +73,11 @@ class SystemUser extends Admin
             $this->apiReturn(201, '', $result);
         }
 
+        $orgInfo = Db::name('system_organization')->where(['orgId' => $this->data['orgId']])->field('shortName,orgCode')->find();
+
         Db::startTrans();
         try{
-            $orgInfo  = model('Organization')->getOrganizationByOrgId($this->data['orgId'], 'shortName,orgCode');
-            if(!$orgInfo){
-                throw new Exception('门店不存在');
-            }
+
             $time = date('Y-m-d H:i:s');
             $data = [
                 'phoneNumber'   => $this->data['phoneNumber'],
@@ -145,10 +137,7 @@ class SystemUser extends Admin
             $this->apiReturn(201, '', $result);
         }
 
-        $orgInfo  = model('Organization')->getOrganizationByOrgId($this->data['orgId'], 'shortName,orgCode');
-        if(!$orgInfo){
-            $this->apiReturn(201, '', '门店不存在');
-        }
+        $orgInfo  = Db::name('system_organization')->where(['orgId' => $this->data['orgId']])->field('shortName,orgCode')->find();
         $userInfo = model('SystemUser')->getUserById($userId, 'usersId,parentIds,roleIds');
         if(!$userInfo){
             $this->apiReturn(201, '', '用户不存在');
@@ -195,9 +184,9 @@ class SystemUser extends Admin
             }
 
             $newRole = explode(',', $data['roleIds']);
-            $oldRole = model('RoleUser')->getByUserId($userId);
-            $oldRole = $oldRole ? array_column($oldRole, 'roleId') : [];
+            $oldRole = explode(',', $userInfo['roleIds']);
             //如果角色换了，就更新
+
             if($oldRole != $newRole){
                 $roleIntersect = array_intersect($oldRole, $newRole);
                 if($roleIntersect){//如果有交集，则oldRole中去掉交集，并删除oldRole中剩余的数据，newRole中也去掉交集，并插入剩余的数据
@@ -216,13 +205,12 @@ class SystemUser extends Admin
                     $role[$key]['roleId'] = $value;
                 }
 
-                if($role){
-                    $result = Db::name('system_role_user')->insertAll($role);
-                    if(!$result){
-                        throw new Exception('添加到用户角色表失败');
-                    }
+                $result = Db::name('system_role_user')->insertAll($role);
+                if(!$result){
+                    throw new Exception('添加到用户角色表失败');
                 }
             }
+
 
             Db::commit();
             $this->apiReturn(200, '', '编辑成功');
@@ -239,11 +227,10 @@ class SystemUser extends Admin
         $field  = 'usersId as id,headPortrait,realName,phoneNumber as phone,orgId,orgName,status,isEnable,agentGender as gender,birthday,cardNo,entryTime,basePay,parentIds,roleIds';
         $data   = model('SystemUser')->getUserById($userId, $field);
         !$data  && $this->apiReturn(201, '', '用户信息不存在');
-        $data['birthday']   = checkTimeIsValid($data['birthday']) ? date('Y-m-d', strtotime($data['birthday'])) : '';
-        $data['entryTime']  = checkTimeIsValid($data['entryTime']) ? date('Y-m-d', strtotime($data['entryTime'])) : '';
+        $data['birthday'] = date('Y-m-d', strtotime($data['birthday']));
+        $data['entryTime'] = date('Y-m-d', strtotime($data['entryTime']));
         $data['parentUser'] = Db::name('system_user')->where(['usersId' => ['in', $data['parentIds']]])->field('usersId as id,realName')->select();
-        $data['roles']      = Db::name('system_role')->where(['roleId' => ['in', $data['roleIds']], 'orgId' => $data['orgId'], 'isDelete' => 0])->field('roleId as id,roleName')->select();
-
+        $data['roles'] = Db::name('system_role')->where(['roleId' => ['in', $data['roleIds']], 'orgId' => $this->orgId, 'isDelete' => 0])->field('roleId as id,roleName')->select();
         unset($data['parentIds'], $data['roleIds']);
         $this->apiReturn(200, $data);
     }
@@ -253,25 +240,7 @@ class SystemUser extends Admin
      * */
     public function higherUps(){
         $orgId = isset($this->data['orgId']) && !empty($this->data['orgId']) ? $this->data['orgId'] + 0 : 0;
-        $id    = isset($this->data['id']) && !empty($this->data['id']) ? $this->data['id'] + 0 : 0;
         $data = model('SystemUser')->getUserByOrgId($orgId, 'usersId as id,realName');
-        $userIds = [$id];
-        if($id){
-            $lowerLevel = [];
-            model('SystemUser')->getAllLowerLevel($id, $lowerLevel);
-            $userIds = array_merge($userIds, array_column($lowerLevel, 'userId'));
-        }
-
-        if($data){
-            foreach($data as $key => &$value){
-                if(in_array($value['id'], $userIds)){
-                    unset($data[$key]);
-                }else{
-                    continue;
-                }
-            }
-            $data = array_values($data);
-        }
         $this->apiReturn(200, $data);
     }
 
@@ -300,25 +269,6 @@ class SystemUser extends Admin
         $result = Db::name('system_user')->where($where)->update(['isEnable' => $isEnable]);
         $result === false && $this->apiReturn(201, '', $msg . '失败');
         $this->apiReturn(200, ['isEnable' => $isEnable], $msg . '成功');
-    }
-
-    public function userInfo(){
-
-        $data = [
-            'headPortrait' => $this->user['headPortrait'],
-            'phoneNumber'  => $this->user['phoneNumber'],
-            'orgName'      => $this->user['orgName'],
-            'realName'     => $this->user['realName'],
-        ];
-        $roleIds = model('RoleUser')->getRoleByUserId($this->userId, $this->orgId);
-        $role = '';
-        if($roleIds){
-            $roleIds = array_unique(array_column($roleIds, 'roleId'));
-            $role = model('Role')->getRoleAll(['isDelete' => 0, 'roleId' => ['in', $roleIds], 'orgId' => $this->orgId]);
-            $role = implode(',', array_column($role, 'roleName'));
-        }
-        $data['roles'] = $role;
-        $this->apiReturn(200, $data);
     }
 
 }

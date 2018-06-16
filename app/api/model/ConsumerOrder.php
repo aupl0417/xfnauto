@@ -39,14 +39,14 @@ class ConsumerOrder extends Model
     }
 
     public function getOrderList($where = '', $page = 1, $pageSize = 10){
-        $field = 'co.id as id,co.order_code as orderId,co.state as orderState';
+        $field = 'co.id as id,co.order_code as orderId,co.state as orderState,countermand_apply as countermandApply,countermand_reason as countermandReason,countermand_pic as countermandPic';
         $data  = Db::name('consumer_order co')->where($where)->page($page, $pageSize)
                ->field($field)->order('create_time desc')
                ->select();//->join('consumer_order_info oi', 'co.id=oi.order_id', 'left')
         if($data){
             $field = 'id,cars_name as carName,color_name as colorName,interior_name as interiorName,state as orderInfoState,car_num as carNum';
             foreach($data as $key => &$value){
-                $value['orderStateName'] = $this->state[$value['orderState']];
+                $value['orderStateName'] = $value['countermandApply'] ? ($value['countermandApply'] == 1 ? '申请退款中' : '已退款') : $this->state[$value['orderState']];
                 $value['infos'] = Db::name('consumer_order_info')->where(['order_id' => $value['id'], 'is_del' => 0])->field($field)->select();
             }
         }
@@ -59,7 +59,7 @@ class ConsumerOrder extends Model
      * */
     public function orderCount($condition = '', $userId, $orgId, $isRole = false){
         $where['creator_id']  = ['in', $userId];
-        $where['org_id']      = ['in', $orgId];
+//        $where['org_id']      = ['in', $orgId];
         $where['create_time'] = ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]];
         $obj  = Db::name($this->table)->where($where);
         $cond = array('is_del' => 0);
@@ -88,7 +88,7 @@ class ConsumerOrder extends Model
             'co.is_del'      => 0,
             'co.creator_id'  => ['in', $userId],
             'co.create_time' => ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]],
-            'co.org_id'      => ['in', $orgId]
+//            'co.org_id'      => ['in', $orgId]
         ];
 
         $obj = Db::name('consumer_order co')->where($where)->join('consumer_order_info oi', 'co.id=oi.order_id', 'left');
@@ -145,7 +145,7 @@ class ConsumerOrder extends Model
         if($data){
             $data['bankBranch'] = $data['bankName'] . ' ' . $data['bankBranch'];
             $field = 'id,cars_name as carName,color_name as colorName,interior_name as interiorName,state as orderInfoState,car_num as carNum';
-            $data['orderStateName']    = $this->state[$data['state']];
+            $data['orderStateName']    = $data['countermandApply'] ? ($data['countermandApply'] == 1 ? '申请退款中' : '已退款') : $this->state[$data['state']];
             $data['totalDepositPrice'] = Db::name('consumer_order_info')->where(['order_id' => $orderId, 'is_del' => 0])->sum('deposit_price');
             $data['totalFinalPrice']   = 0;
             $data['totalRestPrice']    = 0;

@@ -97,6 +97,21 @@ class Organization extends Model
         }
         return $data;
     }
+
+    /**
+     * 获取所有组织列表，不分页
+     * @param $where string/array
+     * @param $whereOr string/array
+     * @param $field string
+     * @return Array
+     * */
+    public function getOrgs($where, $whereOr = array(), $field = '*'){
+        $data = Db::name($this->table)->where($where)->whereOr($whereOr)->field($field)->select();
+        if(!$data){
+            return false;
+        }
+        return $data;
+    }
     
     
 
