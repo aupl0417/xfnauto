@@ -63,13 +63,16 @@ class UserCenter extends Home
         $this->apiReturn(200, $data);
     }
 
+    /**
+     * 重点客户、新增预约客户列表
+     * */
     public function customers(){
         $page  = isset($this->data['page']) && !empty($this->data['page']) ? $this->data['page'] + 0 : 1;
         $rows  = isset($this->data['rows']) && !empty($this->data['rows']) ? $this->data['rows'] + 0 : 10;
         $type  = isset($this->data['type']) && !empty($this->data['type']) ? trim($this->data['type']) : 'all';
         !in_array($type, ['all', 'intensity', 'visit']) && $this->apiReturn(201, '', '参数非法');
 
-        $where['org_id']         = ['in', $this->orgIds];
+//        $where['org_id']         = ['in', $this->orgIds];
         $where['system_user_id'] = ['in', $this->userIds];
 
         if($type == 'intensity'){
@@ -102,10 +105,11 @@ class UserCenter extends Home
         $page  = isset($this->data['page']) && !empty($this->data['page']) ? $this->data['page'] + 0 : 1;
         $rows  = isset($this->data['rows']) && !empty($this->data['rows']) ? $this->data['rows'] + 0 : 10;
         $where = [
-            'create_date'          => ['between', [date('Y-m-d', strtotime('-7 day')), date('Y-m-d H:i:s')]],
-            'customer_order_state' => 17,
-            'org_id'               => ['in', $this->orgIds],
-            'is_delete'            => 0,
+            'co.create_date'          => ['between', [date('Y-m-d', strtotime('-7 day')), date('Y-m-d H:i:s')]],
+            'customer_order_state'    => 17,
+//            'org_id'               => ['in', $this->orgIds],
+            'co.system_user_id'       => ['in', $this->userIds],
+            'co.is_delete'            => 0,
         ];
 
         if(isset($this->data['keywords']) && !empty($this->data['keywords'])){

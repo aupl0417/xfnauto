@@ -55,9 +55,8 @@ class Login extends Base
         }
 
         $org = model('Organization')->getOrganizationByOrgId($user['orgId'], 'orgtype as orgType,orgLevel');
-
         $data = [
-            'headPortrait'  => $info['headPortrait'],
+            'headPortrait'  => (isset($this->data['headPortrait']) && !empty($this->data['headPortrait'])) ? $info['headPortrait'] : $user['headPortrait'],
             'nikeName'      => $user['nikeName'],
             'orgCode'       => $user['orgCode'],
             'orgLevel'      => $org['orgLevel'],

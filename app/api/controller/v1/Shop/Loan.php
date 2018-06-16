@@ -18,7 +18,12 @@ class Loan extends Base
      * 垫资申请列表
      * */
     public function index(){
-        $result = sendMail('770517692@qq.com', '这是测试内容', 'jiangjun', '测试');
+//        $fp = fsockopen("smtp.163.com",25,$errno,$errstr,60);
+//        if(! $fp)
+//            echo '$errstr ($errno) <br> \n ';
+//        else
+//            echo 'ok <br> \n ';die;
+        $result = sendEmail('770517692@qq.com', '这是测试内容', 'jiangjun', '测试');
         dump($result);
     }
 

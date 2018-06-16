@@ -31,8 +31,6 @@ class Order extends Home
 
         if(isset($this->data['keywords'])&& !empty($this->data['keywords'])){
             $keywords= htmlspecialchars(trim($this->data['keywords']));
-//            $field = !preg_match('/^DG\d+/', $keywords) ? 'cars_name' : 'order_code';
-//            $where[$field] = ['like', '%' . $keywords . '%'];
             $orderIds = Db::name('consumer_order_info')->where(['cars_name' => ['like', '%' . $keywords . '%'], 'is_del' => 0])->field('order_id')->select();
             if($orderIds){
                 $orderIds = array_column($orderIds, 'order_id');
@@ -115,16 +113,22 @@ class Order extends Home
             }
         }
 
+        if(isset($this->data['customerId']) && !empty($this->data['customerId'])){
+            $customerId = $this->data['customerId'] + 0;
+            $where['customer_id'] = $customerId;
+        }
+
         if(isset($this->data['month']) && !empty($this->data['month'])){
             $month      = trim($this->data['month']);
             $monthStart = $month . '-01';
             !checkDateIsValid($monthStart) && $this->apiReturn(201, '', '输入年月格式非法');
             $monthEnd   = $month . '-' . date('t') . ' 23:59:59';
             $where['create_date']    = ['between', [date($monthStart), date($monthEnd)]];
+        }else{
+            $where['create_date']    = ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]];
         }
 
         $where['system_user_id'] = ['in', $this->userIds];
-        $where['create_date']    = ['between', [date('Y-m-01'), date('Y-m-t 23:59:59')]];
         $where['is_delete']      = 0;
 
         $data = model('CustomerOrder')->getOrderList($where, $page, $rows);

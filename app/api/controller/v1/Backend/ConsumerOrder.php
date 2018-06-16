@@ -339,13 +339,36 @@ class ConsumerOrder extends Admin
         (!isset($this->data['orderId']) || empty($this->data['orderId'])) && $this->apiReturn(201, '', '参数非法');
 
         $orderId = $this->data['orderId'] + 0;
+        $orderInfo = Db::name('consumer_order')->where(['id' => $orderId, 'is_del' => 0, 'creator_id' => ['in', $this->userIds]])->field('id,state,freight')->find();
+        if(!$orderInfo){
+            $this->apiReturn(201, '', '订单不存在或已删除');
+        }
+        if(!in_array(intval($orderInfo['state']), [5, 35], true)){
+            $this->apiReturn(201, '', '该订单非法待收定金或待收尾款状态');
+        }
         $data    = ['orderId' => $orderId];
         $payInfo = Db::name('consumer_order_payment')->where(['order_id' => $orderId, 'is_del' => 0])->field('id,remark,voucher,type')->find();
         if(!$payInfo){
             $payInfo = ['id' => '', 'remark' => '', 'voucher' => '', 'type' => ''];
             $data    = array_merge($data, $payInfo);
         }
-        $data['amount'] = Db::name('consumer_order_info')->where(['order_id' => $orderId, 'is_del' => 0])->sum('deposit_price');
+        $depositPrice = Db::name('consumer_order_info')->where(['order_id' => $orderId, 'is_del' => 0])->sum('deposit_price');
+        if($orderInfo['state'] == 35){
+            $dataInfo['totalDepositPrice'] = $depositPrice;
+            $order = Db::name('consumer_order_info')->where(['order_id' => $orderId, 'is_del' => 0])->field('naked_price,traffic_compulsory_insurance_price,commercial_insurance_price,car_num')->select();
+            if($order){
+                $total = 0;
+                foreach($order as $vo){
+                    $total += ($vo['naked_price'] + $vo['traffic_compulsory_insurance_price'] + $vo['commercial_insurance_price']) * $vo['car_num'];
+                }
+                $dataInfo['totalFinalPrice']   = $total + $orderInfo['freight'];
+                $dataInfo['totalRestPrice']    = $dataInfo['totalFinalPrice'] - $dataInfo['totalDepositPrice'];
+            }
+            $data['amount'] = Db::name('consumer_order_info')->where(['order_id' => $orderId, 'is_del' => 0])->sum('deposit_price');
+        }
+
+        $data['amount'] = $orderInfo['state'] == 5 ? $depositPrice : $dataInfo['totalRestPrice'];
+
         $this->apiReturn(200, $data);
     }
 
@@ -376,7 +399,7 @@ class ConsumerOrder extends Admin
         $amount = $data['state'] == 5 ? $data['totalDepositPrice'] : $data['totalRestPrice'];
 
         if($this->data['amount'] != $amount){
-            $this->apiReturn(201, '', '支付金额不一致');
+            $this->apiReturn(201, '', '支付金额不一致' . $amount);
         }
 
         try{
@@ -394,8 +417,8 @@ class ConsumerOrder extends Admin
             if(!$result){
                 throw new Exception('操作失败');
             }
-
-            $result = Db::name('consumer_order')->where(['id' => $orderId, 'state' => $data['state'], 'is_del' => 0])->update(['state' => 10]);
+            $state = $data['state'] == 5 ? 10 : 40;
+            $result = Db::name('consumer_order')->where(['id' => $orderId, 'state' => $data['state'], 'is_del' => 0])->update(['state' => $state]);
             if($result === false){
                 throw new Exception('更新资源订单表状态失败');
             }
