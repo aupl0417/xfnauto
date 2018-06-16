@@ -30,7 +30,7 @@ class Organization extends Validate{
         'bankName'            => 'require',
         'openingBranch'       => 'require',
         'imageurl'            => 'require|checkUrl',
-        'signet'              => 'require|checkUrl',
+        'signet'              => 'checkUrl',
     ];
 
     protected $message = [

@@ -45,9 +45,8 @@ class SystemUser extends Admin
             if(!$this->isAdmin){
                 $where['orgId'] = $this->orgId;
             }else{
-                $condition = ['status' => ['in', [1, 2, 3]], 'parentId' => $this->orgId];
-                $whereOr   = ['orgId' => $this->orgId];
-                $org = model('Organization')->getOrgs($condition, $whereOr, 'orgId');
+                $sql = 'SELECT orgId,shortName as orgName,orgLevel FROM system_organization WHERE  status = 1  AND (orgId = ' . $this->orgId .' OR parentId = ' . $this->orgId . ')  AND orgLevel < 3 ';
+                $org = Db::name('system_organization')->query($sql);
                 $where['orgId'] = ['in', array_column($org, 'orgId')];
             }
         }
@@ -280,7 +279,9 @@ class SystemUser extends Admin
      * */
     public function remove(){
         (!isset($this->data['id']) || empty($this->data['id'])) && $this->apiReturn(201, '', '参数非法');
+        (!isset($this->data['act']) || empty($this->data['act'])) && $this->apiReturn(201, '', '参数非法');
         $userId = $this->data['id'] + 0;
+        $act    = trim($this->data['act']);
 
         if($userId == $this->userId){
             $this->apiReturn(201, '', '不能对自身进行此操作');

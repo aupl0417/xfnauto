@@ -175,7 +175,9 @@ Route::get('ucenter_v2/userdetail','api/v2.UserCenter/userDetail');
 Route::get('ucenter_v2/getseller','api/v2.UserCenter/getSeller');
 Route::get('ucenter_v2/supplier','api/v2.Supplier/index');
 Route::get('ucenter_v2/carsproductlist','api/v2.Order/carsProductList');
+Route::get('ucenter_v2/carsproductlist','api/v2.Order/carsProductList');
 Route::post('login_v2/index','api/v2.Login/index');
+Route::post('user_v2/create','api/v2.User/create');
 //Route::get('publics_v2/test','api/v2.Common/test');
 //Route::get('activity_v2.1/index','api/v2._1.Test/index');
 //前台文章列表及详情

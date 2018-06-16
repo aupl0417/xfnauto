@@ -106,7 +106,7 @@ class Organization extends Model
      * @return Array
      * */
     public function getOrgs($where, $whereOr = array(), $field = '*'){
-        $data = Db::name($this->table)->where($where)->whereOr($whereOr)->field($field)->select();
+        $data = Db::name($this->table)->where($where)->whereOr($wh)->field($field)->select();
         if(!$data){
             return false;
         }

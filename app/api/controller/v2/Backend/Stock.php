@@ -24,6 +24,10 @@ class Stock extends Admin
         $where = array('is_delete' => 0);
         if(!$this->isAdmin){
             $where['org_id'] = ['in', $this->orgIds];
+        }else{
+            $sql = 'SELECT orgId,shortName as orgName,orgLevel FROM system_organization WHERE  status = 1  AND (orgId = ' . $this->orgId .' OR parentId = ' . $this->orgId . ')  AND orgLevel < 3 ';
+            $org = Db::name('system_organization')->query($sql);
+            $where['orgId'] = ['in', array_column($org, 'orgId')];
         }
 
         if(isset($this->data['orgName']) && !empty($this->data['orgName'])){

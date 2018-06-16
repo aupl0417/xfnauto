@@ -22,7 +22,7 @@ class Organization extends Admin
         $page  = isset($this->data['page']) && !empty($this->data['page']) ? $this->data['page'] + 0 : 1;
         $rows  = isset($this->data['rows']) && !empty($this->data['rows']) ? $this->data['rows'] + 0 : 50;
 
-        $where = ['ao.status' => ['in', [1, 2, 3]]];
+        $where = ['ao.status' => ['in', [1, 2, 3]], 'orgLevel' => ['lt', 3]];
         $whereOr = [];
 //        if(!$this->isAdmin){
 //            $where['ao.orgId'] = $this->orgId;
@@ -67,7 +67,7 @@ class Organization extends Admin
             'create_date'   => date('Y-m-d H:i:s'),
             'status'        => 1,
             'parentId'      => 1,
-            'orgLevel'      => 3,
+            'orgLevel'      => 2,
             'provinceName'  => isset($this->data['province']) ? htmlspecialchars(trim($this->data['province'])) : '',
             'cityName'      => isset($this->data['city']) ? htmlspecialchars(trim($this->data['city'])) : '',
             'areaName'      => isset($this->data['area']) ? htmlspecialchars(trim($this->data['area'])) : '',
@@ -124,15 +124,21 @@ class Organization extends Admin
 
     public function getOrg(){
         $where = ['status' => 1];
-        if(!$this->isAdmin){
-            $where['orgId']      = $this->orgId;
-            $whereOr['parentId'] = $this->orgId;
-        }else{
-            $where['parentId'] = $this->orgId;
-            $whereOr['orgId']  = $this->orgId;
-        }
+//        if(!$this->isAdmin){
+//            $where['orgId']      = $this->orgId;
+//            $whereOr['parentId'] = $this->orgId;
+//            $sql = 'SELECT orgId,shortName as orgName,orgLevel FROM system_organization WHERE  status = 1  AND (orgId` = ' . $this->orgId .' OR parentId` = ' . $this->orgIds . '  AND orgLevel < 3 ';
+//        }else{
+//            $where['parentId'] = $this->orgId;
+//            $whereOr['orgId']  = $this->orgId;
+//            $sql = 'SELECT orgId,shortName as orgName,orgLevel FROM system_organization WHERE  status = 1  AND (orgId` = ' . $this->orgId .' OR parentId` = ' . $this->orgIds . '  AND orgLevel < 3 ';
+//        }
+        $sql = 'SELECT orgId,shortName as orgName,orgLevel FROM system_organization WHERE  status = 1  AND (orgId = ' . $this->orgId .' OR parentId = ' . $this->orgId . ')  AND orgLevel < 3 ';
 
-        $data = model('Organization')->getOrgs($where, $whereOr, 'orgId,shortName as orgName');
+//        $where['orgLevel'] = ['lt', 3];
+
+//        $data = model('Organization')->getOrgs($where, $whereOr, 'orgId,shortName as orgName,orgLevel');
+        $data = Db::name('system_organization')->query($sql);
         $this->apiReturn(200, $data);
     }
 
