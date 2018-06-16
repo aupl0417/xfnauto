@@ -6,7 +6,7 @@
  * Time: 9:28
  */
 
-namespace app\api\controller\v1;
+namespace app\api\controller\v2;
 
 use think\Controller;
 use think\Db;

@@ -6,7 +6,7 @@
  * Time: 15:03
  */
 
-namespace app\api\controller\v1\Backend;
+namespace app\api\controller\v2\Backend;
 
 use Qiniu\Auth;
 use Qiniu\Storage\UploadManager;
