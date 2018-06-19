@@ -178,6 +178,9 @@ Route::get('ucenter_v2/carsproductlist','api/v2.Order/carsProductList');
 Route::get('ucenter_v2/carsproductlist','api/v2.Order/carsProductList');
 Route::post('login_v2/index','api/v2.Login/index');
 Route::post('user_v2/create','api/v2.User/create');
+Route::get('shop_v2/loan/index','api/v2.Shop.Loan/index');
+Route::get('shop_v2/loan/detail','api/v2.Shop.Loan/detail');
+Route::post('shop_v2/loan/create','api/v2.Shop.Loan/create');
 //Route::get('publics_v2/test','api/v2.Common/test');
 //Route::get('activity_v2.1/index','api/v2._1.Test/index');
 //前台文章列表及详情
@@ -210,7 +213,7 @@ Route::get('backend_v2/consumer/index','api/v2.Backend.ConsumerOrder/index');
 Route::get('backend_v2/consumer/detail','api/v2.Backend.ConsumerOrder/consumerDetail');
 Route::get('backend_v2/supplier','api/v2.Backend.Supplier/index');
 Route::post('backend_v2/supplier/create','api/v2.Backend.Supplier/create');
-Route::post('backend_v2/supplier/remove','api/v2.Backend.Supplier/remove');
+Route::get('backend_v2/supplier/remove','api/v2.Backend.Supplier/remove');
 Route::get('backend_v2/car','api/v2.Backend.Car/index');
 Route::get('backend_v2/car/family','api/v2.Backend.Car/family');
 
