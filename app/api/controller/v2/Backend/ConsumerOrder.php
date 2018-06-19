@@ -174,6 +174,7 @@ class ConsumerOrder extends Admin
             '35' => '待收尾款',
             '37' => '已退款',
             '40' => '待出库',
+            '41' => '待上传车架号',
             '45' => '待上传票证',
             '50' => '完成',
         ];
@@ -339,7 +340,7 @@ class ConsumerOrder extends Admin
         (!isset($this->data['orderId']) || empty($this->data['orderId'])) && $this->apiReturn(201, '', '参数非法');
 
         $orderId = $this->data['orderId'] + 0;
-        $orderInfo = Db::name('consumer_order')->where(['id' => $orderId, 'is_del' => 0, 'creator_id' => ['in', $this->userIds]])->field('id,state,freight')->find();
+        $orderInfo = Db::name('consumer_order')->where(['id' => $orderId, 'is_del' => 0])->field('id,state,freight')->find();
         if(!$orderInfo){
             $this->apiReturn(201, '', '订单不存在或已删除');
         }
@@ -376,7 +377,7 @@ class ConsumerOrder extends Admin
         (!isset($this->data['orderId']) || empty($this->data['orderId'])) && $this->apiReturn(201, '', '参数非法');
 
         $orderId = $this->data['orderId'] + 0;
-        $field   = 'id,state,order_code,freight';
+        $field   = 'id,state,order_code,freight,order_type';
         $data    = Db::name('consumer_order')->where(['id' => $orderId, 'is_del' => 0])->field($field)->find();
         !$data && $this->apiReturn(201, '', '订单不存在或已删除');
         !in_array(intval($data['state']), [5, 35], true) && $this->apiReturn(201, '', '该定单已非待收定金或待收尾款状态');
@@ -417,7 +418,7 @@ class ConsumerOrder extends Admin
             if(!$result){
                 throw new Exception('操作失败');
             }
-            $state = $data['state'] == 5 ? 10 : 40;
+            $state = $data['state'] == 5 ? 10 : ($data['order_type'] == 1 ? 40 : 41);
             $result = Db::name('consumer_order')->where(['id' => $orderId, 'state' => $data['state'], 'is_del' => 0])->update(['state' => $state]);
             if($result === false){
                 throw new Exception('更新资源订单表状态失败');

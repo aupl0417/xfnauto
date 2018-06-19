@@ -180,6 +180,9 @@ Route::post('login_v2/index','api_v2/v2.Login/index');
 Route::post('user_v2/create','api_v2/v2.User/create');
 //Route::get('publics_v2/test','api_v2/v2.Common/test');
 //Route::get('activity_v2.1/index','api_v2/v2._1.Test/index');
+
+
+
 //前台文章列表及详情
 Route::get('article_v2/index','api_v2/v2.Article/index');
 Route::get('article_v2/detail','api_v2/v2.Article/detail');
