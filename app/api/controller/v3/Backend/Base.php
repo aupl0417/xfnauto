@@ -6,36 +6,34 @@
  * Time: 9:28
  */
 
-namespace app\api\controller\v3\Frontend;
+namespace app\api\controller\v3\Backend;
 
 use think\Controller;
 use think\Db;
+use think\Request;
 class Base extends Controller {
     protected $data = array();
-    protected $userId;
-    protected $orgIds  = array();
-    protected $userIds = array();
-    protected $roleIds = array();
-    protected $user;
-    protected $isRole;
-    protected $orgId;
     protected $app  = array(
         '1' => 'D8OZLSE2NEDC0FR4XTGBKHY67UJZ8IK9', //ios
         '2' => 'DFHGKZLSE2NFDEHGFHHR4XTGBKHY67EJZ8IK9', //安卓
     );
 
-    public function __construct(){
-        $params = input('', '', 'htmlspecialchars,trim');
-        if(in_array(strtolower(request()->action()), ['contract', 'createimage'])){
-            (!isset($params['sessionId']) || empty($params['sessionId'])) && $this->apiReturn(201, 'SESSIONID不能为空');
-            $sessionId  = trim($params['sessionId']);
-            $user       = model('SystemUser')->getUserBySessionId($sessionId);
-            !$user && $this->apiReturn(4002, '', '请重新登录');
-            $this->userId = $user['usersId'];
-            $this->orgId  = $user['orgId'];
-            $this->user   = $user;
+    public function __construct(Request $request = null){
+        $domain = [
+            'https://admin.xfnauto.com',
+            'http://admin.mifengqiche.com',
+        ];
+
+        $url = (is_https() ? 'https://' : 'http://') . input('server.HTTP_HOST');
+        if(!in_array($url, $domain, true)){
+            $url = '*';
         }
-        $this->data = $params;
+
+        header("Access-Control-Allow-Origin: {$url}" );
+        $params = input('', '', 'htmlspecialchars,trim');
+        //验证签名串是否存在或是否为空
+
+        $this->data   = $params;
     }
 
     public function tokenValidate($data, $token){
@@ -46,7 +44,6 @@ class Base extends Controller {
         $secretKey = $this->app[$data['appId']];
         ksort($data);
         $queryString = $this->http_build_string($data);
-//        dump(md5("{$queryString}&{$secretKey}"));die;
 
         if(md5($queryString.$secretKey) != $token){
             $this->newSign = md5($queryString.$secretKey);
@@ -119,4 +116,46 @@ class Base extends Controller {
         }
     }
 
+    protected function checkAuth($userId, $orgId){
+        $user = model('SystemUser')->getUserById($userId, 'usersId,orgId');
+        !$user && $this->apiReturn(201, '', '系统用户不存在');
+        $user['orgId'] != $orgId && $this->apiReturn(201, '', '组织ID不正确');
+        return true;
+    }
+
+    /**
+     * 按驼峰规则动态生成表字段(只支持单表)
+     * @param $table        string
+     * @param $ignoreFields string/array  要过滤的字段
+     * @param $returnArray  boolean 是否返回数组
+     * @param $alias        string 表别名
+     * @return string
+     * */
+    public function createField($table, $ignoreFields = '', $returnArray = false, $alias = ''){
+        if($ignoreFields && is_string($ignoreFields)){
+            $ignoreFields = explode(',', $ignoreFields);
+        }
+        $field = Db::name($table)->getTableFields();
+        $field = array_diff($field, $ignoreFields ?: []);//删除$field中与$ignoreFields中重复的元素
+        $field = array_values($field);//重排key
+        foreach($field as $key => $value){
+            $value = explode('_', $value);
+            foreach($value as $k => &$val){
+                if($k == 0){
+                    continue;
+                }
+                $val = ucfirst($val);
+            }
+            $fields[] = implode('', $value);
+        }
+        unset($value, $val);//删除
+        foreach($field as $key => &$value){
+            if($alias){
+                $value = $alias . '.' . $value;
+            }
+            $value .= ' AS ' . $fields[$key];
+        }
+        unset($fields, $value, $key);
+        return !$returnArray ? implode(',', $field) : $field;
+    }
 }
