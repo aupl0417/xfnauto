@@ -62,7 +62,7 @@ class CustomerOrder extends Admin
         (!isset($this->data['customerOrderId']) || empty($this->data['customerOrderId'])) && $this->apiReturn(201, '', '参数非法');
 
         $orderId = $this->data['customerOrderId'] + 0;
-        $field   = 'customer_order_id as id,customer_order_state as state,customer_order_code,amount,loan,deposit_price as depositPrice';
+        $field   = 'customer_order_id as id,customer_order_state as state,customer_order_code,amount,loan,deposit_price as depositPrice,payment_way';
         $data    = Db::name('customer_order')->where(['customer_order_id' => $orderId, 'is_delete' => 0])->field($field)->find();
         !$data && $this->apiReturn(201, '', '订单不存在或已删除');
         !in_array(intval($data['state']), [1, 5, 7, 9, 11, 13, 15], true) && $this->apiReturn(201, '', '非待收订金或待收尾款状态');
@@ -84,6 +84,7 @@ class CustomerOrder extends Admin
 
         try{
             Db::startTrans();
+            $state = $data['state'] == 1 ? ($data['payment_way'] == 1 ? 5 : 3) : $data['state'];
             $dataInfo   = [
                 'amount' => floatval($this->data['amount']),
                 'create_date' => date('Y-m-d H:i:s'),
@@ -91,7 +92,7 @@ class CustomerOrder extends Admin
                 'customer_order_code' => $data['customer_order_code'],
                 'pay_method' => $this->data['payMethod'],
                 'remarks'    => (isset($this->data['remarks']) && !empty($this->data['remarks'])) ? htmlspecialchars(trim($this->data['remarks'])) : '',
-                'customer_order_state' => $data['state'] == 1 ? 3 : $data['state'],
+                'customer_order_state' => $state,
                 'order_in_pay_state'   => 1,
                 'pay_date' => date('Y-m-d H:i:s'),
                 'order_in_pay_code' => makeOrder('PD', 4),
@@ -103,7 +104,7 @@ class CustomerOrder extends Admin
             if(!$result){
                 throw new Exception('提交失败');
             }
-            $result = Db::name('customer_order')->where(['customer_order_id' => $orderId, 'is_delete' => 0, 'customer_order_state' => 1])->update(['customer_order_state' => ($data['state'] == 1 ? 3 : $data['state'])]);
+            $result = Db::name('customer_order')->where(['customer_order_id' => $orderId, 'is_delete' => 0, 'customer_order_state' => 1])->update(['customer_order_state' => $state]);
             if($result === false){
                 throw new Exception('更新订单状态失败');
             }

@@ -45,7 +45,7 @@ class SystemUser extends Admin
             if(!$this->isAdmin){
                 $where['orgId'] = $this->orgId;
             }else{
-                $sql = 'SELECT orgId,shortName as orgName,orgLevel FROM system_organization WHERE  status = 1  AND (orgId = ' . $this->orgId .' OR parentId = ' . $this->orgId . ')  AND orgLevel < 3 ';
+                $sql = 'SELECT orgId,shortName as orgName,orgLevel FROM system_organization WHERE  status = 1  AND (orgId = ' . $this->orgId .' OR parentId = ' . $this->orgId . ')  AND orgtype <> 3 ';
                 $org = Db::name('system_organization')->query($sql);
                 $where['orgId'] = ['in', array_column($org, 'orgId')];
             }
@@ -282,6 +282,7 @@ class SystemUser extends Admin
         (!isset($this->data['act']) || empty($this->data['act'])) && $this->apiReturn(201, '', '参数非法');
         $userId = $this->data['id'] + 0;
         $act    = trim($this->data['act']);
+        !in_array($act, ['forbid', 'enable']) && $this->apiReturn(201, '', '参数非法');
 
         if($userId == $this->userId){
             $this->apiReturn(201, '', '不能对自身进行此操作');
@@ -290,7 +291,7 @@ class SystemUser extends Admin
         $where = ['usersId' => $userId];
         $user = Db::name('system_user')->where($where)->field('isEnable')->find();
         !$user && $this->apiReturn(201, '', '用户不存在');
-        if($user['isEnable'] == 0){//已禁用
+        if($act == 'enable'){//已禁用
             $isEnable = 1;//启用
             $msg      = '启用';
         }else{

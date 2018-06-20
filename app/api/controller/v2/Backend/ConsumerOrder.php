@@ -418,7 +418,7 @@ class ConsumerOrder extends Admin
             if(!$result){
                 throw new Exception('操作失败');
             }
-            $state = $data['state'] == 5 ? 10 : ($data['order_type'] == 1 ? 40 : 41);
+            $state = $data['state'] == 5 ? ($data['order_type'] == 1 ? 10 : 35) : ($data['order_type'] == 1 ? 40 : 41);
             $result = Db::name('consumer_order')->where(['id' => $orderId, 'state' => $data['state'], 'is_del' => 0])->update(['state' => $state]);
             if($result === false){
                 throw new Exception('更新资源订单表状态失败');

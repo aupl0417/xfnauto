@@ -133,7 +133,7 @@ class Organization extends Admin
 //            $whereOr['orgId']  = $this->orgId;
 //            $sql = 'SELECT orgId,shortName as orgName,orgLevel FROM system_organization WHERE  status = 1  AND (orgId` = ' . $this->orgId .' OR parentId` = ' . $this->orgIds . '  AND orgLevel < 3 ';
 //        }
-        $sql = 'SELECT orgId,shortName as orgName,orgLevel FROM system_organization WHERE  status = 1  AND (orgId = ' . $this->orgId .' OR parentId = ' . $this->orgId . ')  AND orgLevel < 3 ';
+        $sql = 'SELECT orgId,shortName as orgName,orgLevel FROM system_organization WHERE  status = 1  AND (orgId = ' . $this->orgId .' OR parentId = ' . $this->orgId . ')  AND orgtype <> 3 ';
 
 //        $where['orgLevel'] = ['lt', 3];
 

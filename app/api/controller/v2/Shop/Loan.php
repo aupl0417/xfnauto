@@ -57,11 +57,6 @@ class Loan extends Base
         if($data){
             $field = $this->getField('shop_info', '', false, '', true);
             $data['info'] = model('ShopInfo')->getShopInfoByUserId($data['userId'], $field);
-            foreach($data['list'] as $key => $value){
-                if($value['state'] == 1){
-                    $data['unpayAmount'] = $data['amount'] - $value['amount'];
-                }
-            }
         }
 
         $this->apiReturn(200, $data);
@@ -98,7 +93,9 @@ class Loan extends Base
         $result = $this->validate($this->data, 'LoanAdd');
         $result !== true && $this->apiReturn(201, '', $result);
         $totalAmount = 0;
-        $orderId = makeOrder('DZ', 4);
+        $period      = $this->data['period'] + 0;
+        $orderId     = makeOrder('DZ', 4);
+        $rate        = floatval($this->data['rate']);
         foreach($this->data['carsInfo'] as $key => $value){
             $result = $this->validate($value, 'LoanAddCar');
             if($result !== true){
@@ -110,10 +107,12 @@ class Loan extends Base
             foreach($value as $k => $val){
                 $info[$key]['sai_' . $k] = $value[$k];
             }
-            $info[$key]['sai_carName'] = isset($this->data['carName']) ? htmlspecialchars(trim($this->data['carName'])) : Db::name('car_cars')->where(['carId' => $value['carId']])->field('carName')->find()['carName'];
-            $info[$key]['sai_colorName'] = isset($this->data['colorName']) ? htmlspecialchars(trim($this->data['colorName'])) : Db::name('car_carcolour')->where(['carColourId' => $value['colorId']])->field('carColourName')->find()['carColourName'];
+            $info[$key]['sai_carName']    = isset($this->data['carName']) ? htmlspecialchars(trim($this->data['carName'])) : Db::name('car_cars')->where(['carId' => $value['carId']])->field('carName')->find()['carName'];
+            $info[$key]['sai_colorName']  = isset($this->data['colorName']) ? htmlspecialchars(trim($this->data['colorName'])) : Db::name('car_carcolour')->where(['carColourId' => $value['colorId']])->field('carColourName')->find()['carColourName'];
             $info[$key]['sai_createTime'] = time();
             $info[$key]['sai_orderId']    = $orderId;
+            $info[$key]['sai_fee']        = $value['price'] * $value['number'] * (100 - $value['downPayments']) / 100 * $rate / 100 * $period;
+
             if($amount != $value['amount']){
                 $this->apiReturn(201, '', '车型：' . $value['carName'] . '的垫资总额不一致');
             }
@@ -126,7 +125,7 @@ class Loan extends Base
         if($this->data['amount'] != $totalAmount){
             $this->apiReturn(201, '', '垫资总额不一致' . $totalAmount);
         }
-        $rate   = floatval($this->data['rate']);
+
         $fee    = $totalAmount * $rate / 100 * $this->data['period'];
         if($this->data['fee'] != $fee){
             $this->apiReturn(201, '', '手续费不一致' . $fee);
@@ -147,7 +146,7 @@ class Loan extends Base
                 'sa_rate'       => $rate,
                 'sa_fee'        => $fee,
                 'sa_feeTotal'   => $fee,
-                'sa_period'     => $this->data['period'] + 0,
+                'sa_period'     => $period,
                 'sa_createTime' => time()
             ];
 

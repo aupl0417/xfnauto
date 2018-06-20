@@ -288,34 +288,78 @@ class Order extends Home
     public function consumerUpdate(){
         (!isset($this->data['id']) || empty($this->data['id'])) && $this->apiReturn(201, '', '参数非法');
         $id = $this->data['id'] + 0;
-        unset($this->data['id'], $this->data['sessionId']);
+
+        $order = model('ConsumerOrder')->getOrderById($id, 'id,state');
+        !$order && $this->apiReturn(201, '', '资源订单不存在');
+        !in_array($order['state'], [1, 5], true) && $this->apiReturn(201, '', '付订金后不允许修改');
+
+        $result = $this->validate($this->data, 'ConsumerOrderUpdate');
+        $result !== true && $this->apiReturn(201, '', $result);
+
+        $data = [
+            'org_id'         => $this->data['orgId'] + 0,
+            'org_name'       => htmlspecialchars(trim($this->data['orgName'])),
+            'org_linker'     => htmlspecialchars(trim($this->data['orgLinker'])),
+            'org_phone'      => $this->data['orgPhone'],
+            'order_type'     => $this->data['orderType'],
+            'logistics_type' => $this->data['logisticsType'],
+            'freight'        => $this->data['freight'],
+            'pick_car_date'  => htmlspecialchars(trim($this->data['pickCarDate'])),
+            'pick_car_addr'  => htmlspecialchars(trim($this->data['pickCarAddr'])),
+        ];
+
+        $result = Db::name('consumer_order')->where(['id' => $id])->update($data);
+        $result === false && $this->apiReturn(201, '', '操作失败');
+        $this->apiReturn(200, '', '保存成功');
     }
 
-    public function createFrameNumber(){
+    public function setFrame(){
         (!isset($this->data['orderId']) || empty($this->data['orderId'])) && $this->apiReturn(201, '', '参数非法');
         (!isset($this->data['cars']) || empty($this->data['cars']))       && $this->apiReturn(201, '', '参数非法');
 
         $orderId  = $this->data['orderId'] + 0;
-        $carsInfo = htmlspecialchars(trim($this->data['orderId']));
+        $carsInfo = htmlspecialchars(trim($this->data['cars']));
         $data     = Db::name('consumer_order')->where(['id' => $orderId, 'creator_id' => ['in', $this->userIds], 'is_del' => 0])->field('id, state')->find();
         !$data && $this->apiReturn(201, '', '订单不存在');
-        $data['state'] != 35 && $this->apiReturn(201, '', '非法操作');
+        $data['state'] != 41 && $this->apiReturn(201, '', '非法操作');
         $carsInfo = explode(',', $carsInfo);
+
         $info = [];
-        $ids  = [];
-        $sql = 'UPDATE consumer_order_car SET vin = CASE id ';
-        foreach($carsInfo as $key => $value){
-            $value = explode('|', $value);
-            $info[$key] = ['id' => $value[0], 'vin' => $value[1]];
-            $sql .= sprintf("WHEN %d THEN %d ", $value[0], $value[1]);
-            $ids[] = $value[0];
+        Db::startTrans();
+        try{
+
+            foreach($carsInfo as $key => $value){
+                $value = explode('|', $value);
+                $info[$key] = ['id' => $value[0], 'vin' => $value[1]];
+                if(Db::name('consumer_order_car')->where(['id' => ['neq', $value[0]], 'vin' => $value[1]])->count()){
+                    $this->apiReturn(201, '', '车架号：' . $value[1] . '已存在');
+                }
+                $result = Db::name('consumer_order_car')->where(['id' => $value[0]])->update(['vin' => $value[1]]);
+                $results[] = $result === false ? 1 : 0;
+            }
+            if(array_sum($results) != 0){
+                throw new Exception('添加车架号失败');
+            }
+
+            $result = Db::name('consumer_order')->where(['id' => $orderId, 'state' => 41])->update(['state' => 45]);
+            if($result === false){
+                throw new Exception('更新资源订单状态失败');
+            }
+
+            Db::commit();
+            $this->apiReturn(200, '', '添加车架号成功');
+        }catch (Exception $e){
+            Db::rollback();
+            $this->apiReturn(201, '', '添加车架号失败');
         }
+    }
 
-        $sql .= "END WHERE id IN ($ids)";
+    public function getConsumerCars(){
+        (!isset($this->data['infoId']) || empty($this->data['infoId'])) && $this->apiReturn(201, '', '参数非法');
 
-        $result = Db::execute($sql);
-        $result === false && $this->apiReturn(201, '', '添加车架号失败');
-        $this->apiReturn(200, '', '添加车架号成功');
+        $infoId = $this->data['infoId'] + 0;
+        $data   = Db::name('consumer_order_car')->where(['info_id' => $infoId, 'is_del' => 0])->field('id,vin,check_car_pic as checkCarPic')->select();
+        $this->apiReturn(200, $data);
     }
 
 }

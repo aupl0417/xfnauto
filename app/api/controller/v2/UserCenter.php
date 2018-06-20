@@ -91,7 +91,7 @@ class UserCenter extends Home
             $where['time_of_appointment_date'] = ['between', [date('Y-m-01'), date('Y-m-d 23:59:59')]];
         }
 
-        $field = 'customer_users_org_id as id,customer_users_name as username,phone_number as phone,create_date as createTime,org_id as orgId,time_of_appointment_date as timeOfAppointmentDate,system_user_name as systemUsername,carName,expect_way_id as expectWay,intensity';
+        $field = 'customer_users_Id as id,customer_users_name as username,phone_number as phone,create_date as createTime,org_id as orgId,time_of_appointment_date as timeOfAppointmentDate,system_user_name as systemUsername,carName,expect_way_id as expectWay,intensity';
         $data = Db::name('customer_customerorg')->where($where)->page($page, $rows)->join('car_cars', 'intention_car_id=carId', 'left')->field($field)->select();
         !$data && $this->apiReturn(200, '', '暂无记录');
         $this->apiReturn(200, $data);
@@ -207,7 +207,7 @@ class UserCenter extends Home
         $join  = [
             ['customer_customerusers cus', 'cus.customerUsersId=cu.customer_users_Id', 'left'],
         ];
-        $field = 'cu.customer_users_org_id as id,cu.intention_car_info as carsName,cu.customer_users_Id as customerUsersId,cu.customer_users_name as customerUsersName,
+        $field = 'cus.customerUsersId as id,cu.intention_car_info as carsName,cu.customer_users_Id as customerUsersId,cu.customer_users_name as customerUsersName,
         cus.headPortrait,cu.expect_way_id as paymentWay,cu.phone_number as phoneNumber,cu.system_user_name as systemUserName,org_id as customerUsersOrgId,time_of_appointment as timeOfAppointment,
         appointment_date as appointmentDate,intention_car_id as intentionCarId,intensity,the_source as source,cu.remarks,time_of_appointment_date as timeOfAppointmentDate';
         $data  = Db::name('customer_customerorg cu')->where($where)->field($field)->join($join)->page($page, $rows)->order('cu.create_date desc')->select();
@@ -221,7 +221,7 @@ class UserCenter extends Home
 
         $userId = $this->data['id'] + 0;
         $field  = 'customerUsersId as id,customerUsersName as userName,phoneNumber as phone,headPortrait,agentGender';
-        $data   = Db::name('customer_customerorg org')->where(['customer_users_org_id' => $userId, 'system_user_id' => ['in', $this->userIds]])->join('customer_customerusers users', 'users.customerUsersId=org.customer_users_Id', 'left')->field($field)->find();
+        $data   = Db::name('customer_customerusers users')->where(['customerUsersId' => $userId])->join('customer_customerorg org', 'users.customerUsersId=org.customer_users_Id', 'left')->field($field)->find();
         if($data){
             $carInfoField    = $this->createField('customer_customerorg');
             $data['carInfo'] = Db::name('customer_customerorg')->where(['customer_users_Id' => $userId, 'system_user_id' => ['in', $this->userIds]])->field($carInfoField)->select();

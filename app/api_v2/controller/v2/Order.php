@@ -291,4 +291,48 @@ class Order extends Home
         unset($this->data['id'], $this->data['sessionId']);
     }
 
+    /**
+     * 上传车架号
+     * */
+    public function setFrame(){
+        (!isset($this->data['orderId']) || empty($this->data['orderId'])) && $this->apiReturn(201, '', '参数非法');
+        (!isset($this->data['cars']) || empty($this->data['cars']))       && $this->apiReturn(201, '', '参数非法');
+
+        $orderId  = $this->data['orderId'] + 0;
+        $carsInfo = htmlspecialchars(trim($this->data['cars']));
+        $data     = Db::name('consumer_order')->where(['id' => $orderId, 'creator_id' => ['in', $this->userIds], 'is_del' => 0])->field('id, state')->find();
+        !$data && $this->apiReturn(201, '', '订单不存在');
+        $data['state'] != 41 && $this->apiReturn(201, '', '非法操作');
+        $carsInfo = explode(',', $carsInfo);
+
+        $info = [];
+        Db::startTrans();
+        try{
+
+            foreach($carsInfo as $key => $value){
+                $value = explode('|', $value);
+                $info[$key] = ['id' => $value[0], 'vin' => $value[1]];
+                if(Db::name('consumer_order_car')->where(['id' => ['neq', $value[0]], 'vin' => $value[1]])->count()){
+                    $this->apiReturn(201, '', '车架号：' . $value[1] . '已存在');
+                }
+                $result = Db::name('consumer_order_car')->where(['id' => $value[0]])->update(['vin' => $value[1]]);
+                $results[] = $result === false ? 1 : 0;
+            }
+            if(array_sum($results) != 0){
+                throw new Exception('添加车架号失败');
+            }
+
+            $result = Db::name('consumer_order')->where(['id' => $orderId, 'state' => 41])->update(['state' => 45]);
+            if($result === false){
+                throw new Exception('更新资源订单状态失败');
+            }
+
+            Db::commit();
+            $this->apiReturn(200, '', '添加车架号成功');
+        }catch (Exception $e){
+            Db::rollback();
+            $this->apiReturn(201, '', '添加车架号失败');
+        }
+    }
+
 }
