@@ -50,11 +50,13 @@ class ShopLoanApply extends Model
 
     public function getShopLoanApplyByIdAll($id){
         $field = 'sa_id as id,sa_orderId as orderId,sa_state as state,sa_userId as userId,sa_userName as userName,sa_phone as phone,sa_orgId as orgId,sa_orgName as orgName,
-                 sa_amount as amount,sa_rate as rate,sa_fee as fee,sa_period as period,sa_image as image,sa_annualIncome as annualIncome,sa_incomeImage as incomeImage,
+                 sa_amount as amount,sa_totalAmount as totalAmount,sa_feeTotal as feeTotal,sa_rate as rate,sa_fee as fee,sa_period as period,sa_image as image,sa_annualIncome as annualIncome,sa_incomeImage as incomeImage,
                  sa_idCardOn as idCardOn,sa_idCardOff as idCardOff,sa_operatorName as operatorName,sa_reason as reason,sa_voucher as voucher,sa_createTime as createTime';
         $where = ['sa_id' => $id, 'sa_type' => 1, 'sa_isDel' => 0];
         $data  = Db::name($this->table)->where($where)->field($field)->find();
         if($data){
+            $data['createTime']  = date('Y-m-d H:i:s', $data['createTime']);
+            $data['unpayAmount'] = $data['amount'];
             $shopLoanApply = ShopLoanApply::get($data['id']);
             $shopLoanApply = $shopLoanApply->ShopLoanApplyInfo()->select();
             for($i=0;$i<count($shopLoanApply);$i++){

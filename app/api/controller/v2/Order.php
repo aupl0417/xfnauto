@@ -291,4 +291,31 @@ class Order extends Home
         unset($this->data['id'], $this->data['sessionId']);
     }
 
+    public function createFrameNumber(){
+        (!isset($this->data['orderId']) || empty($this->data['orderId'])) && $this->apiReturn(201, '', '参数非法');
+        (!isset($this->data['cars']) || empty($this->data['cars']))       && $this->apiReturn(201, '', '参数非法');
+
+        $orderId  = $this->data['orderId'] + 0;
+        $carsInfo = htmlspecialchars(trim($this->data['orderId']));
+        $data     = Db::name('consumer_order')->where(['id' => $orderId, 'creator_id' => ['in', $this->userIds], 'is_del' => 0])->field('id, state')->find();
+        !$data && $this->apiReturn(201, '', '订单不存在');
+        $data['state'] != 35 && $this->apiReturn(201, '', '非法操作');
+        $carsInfo = explode(',', $carsInfo);
+        $info = [];
+        $ids  = [];
+        $sql = 'UPDATE consumer_order_car SET vin = CASE id ';
+        foreach($carsInfo as $key => $value){
+            $value = explode('|', $value);
+            $info[$key] = ['id' => $value[0], 'vin' => $value[1]];
+            $sql .= sprintf("WHEN %d THEN %d ", $value[0], $value[1]);
+            $ids[] = $value[0];
+        }
+
+        $sql .= "END WHERE id IN ($ids)";
+
+        $result = Db::execute($sql);
+        $result === false && $this->apiReturn(201, '', '添加车架号失败');
+        $this->apiReturn(200, '', '添加车架号成功');
+    }
+
 }

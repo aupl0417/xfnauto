@@ -57,7 +57,13 @@ class Loan extends Base
         if($data){
             $field = $this->getField('shop_info', '', false, '', true);
             $data['info'] = model('ShopInfo')->getShopInfoByUserId($data['userId'], $field);
+            foreach($data['list'] as $key => $value){
+                if($value['state'] == 1){
+                    $data['unpayAmount'] = $data['amount'] - $value['amount'];
+                }
+            }
         }
+
         $this->apiReturn(200, $data);
     }
     
@@ -128,18 +134,20 @@ class Loan extends Base
         try{
             Db::startTrans();
             $data = [
-                'sa_orderId' => $orderId,
-                'sa_userId'  => $this->userId,
-                'sa_userName' => $user['realName'],
-                'sa_phone' => $user['phoneNumber'],
-                'sa_type' => 1,
-                'sa_orgId' => $orgId,
-                'sa_orgName' => $org['shortName'],
-                'sa_orgCode' => $org['orgCode'],
-                'sa_amount' => $totalAmount,
-                'sa_rate'   => $rate,
-                'sa_fee'    => $fee,
-                'sa_period' => $this->data['period'] + 0,
+                'sa_orderId'    => $orderId,
+                'sa_userId'     => $this->userId,
+                'sa_userName'   => $user['realName'],
+                'sa_phone'      => $user['phoneNumber'],
+                'sa_type'       => 1,
+                'sa_orgId'      => $orgId,
+                'sa_orgName'    => $org['shortName'],
+                'sa_orgCode'    => $org['orgCode'],
+                'sa_amount'     => $totalAmount,
+                'sa_totalAmount'=> $totalAmount + $fee,
+                'sa_rate'       => $rate,
+                'sa_fee'        => $fee,
+                'sa_feeTotal'   => $fee,
+                'sa_period'     => $this->data['period'] + 0,
                 'sa_createTime' => time()
             ];
 
