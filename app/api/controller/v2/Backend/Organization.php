@@ -22,14 +22,8 @@ class Organization extends Admin
         $page  = isset($this->data['page']) && !empty($this->data['page']) ? $this->data['page'] + 0 : 1;
         $rows  = isset($this->data['rows']) && !empty($this->data['rows']) ? $this->data['rows'] + 0 : 50;
 
-        $where = ['ao.status' => ['in', [1, 2, 3]], 'orgtype' => ['neq', 3]];
-        $whereOr = [];
-//        if(!$this->isAdmin){
-//            $where['ao.orgId'] = $this->orgId;
-//        }else{
-//            $where['ao.parentId'] = $this->orgId;
-//        }
-        $where['ao.parentId'] = $this->orgId;
+        $where = ['ao.status' => ['in', [1, 2, 3]], 'orgtype' => ['neq', 3], 'ao.parentId' => $this->orgId];
+        $whereOr = ['ao.orgId' => $this->orgId];
 
         if(isset($this->data['keywords']) && !empty($this->data['keywords'])){
             $keywords = htmlspecialchars(trim($this->data['keywords']));

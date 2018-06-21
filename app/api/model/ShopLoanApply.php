@@ -62,7 +62,7 @@ class ShopLoanApply extends Model
     public function getShopLoanApplyByIdAll($id){
         $field = 'sa_id as id,sa_orderId as orderId,sa_state as state,sa_userId as userId,sa_userName as userName,sa_phone as phone,sa_orgId as orgId,sa_orgName as orgName,
                  sa_amount as amount,sa_totalAmount as totalAmount,sa_feeTotal as feeTotal,sa_rate as rate,sa_fee as fee,sa_period as period,sa_image as image,sa_annualIncome as annualIncome,sa_incomeImage as incomeImage,
-                 sa_idCardOn as idCardOn,sa_idCardOff as idCardOff,sa_operatorName as operatorName,sa_reason as reason,sa_voucher as voucher,sa_createTime as createTime,sa_updateTime as updateTime';
+                 sa_idCardOn as idCardOn,sa_idCardOff as idCardOff,sa_operatorName as operatorName,sa_reason as reason,sa_voucher as voucher,sa_voucherPersonName as voucherPerson,sa_voucherTime as voucherTime,sa_createTime as createTime,sa_updateTime as updateTime';
         $where = ['sa_id' => $id, 'sa_type' => 1, 'sa_isDel' => 0];
         $data  = Db::name($this->table)->where($where)->field($field)->find();
         if($data){
@@ -71,8 +71,11 @@ class ShopLoanApply extends Model
             $data['days'] = $data['state'] == 4 ? $data['period'] - ceil($days) : '';
             $data['deadline']    = $data['state'] == 3 ? date('Y-m-d', $data['updateTime'] + $data['period'] * 3600 * 24) : '';
             $data['createTime']  = $createDate;
+            $data['updateTime']  = $data['updateTime']  ? date('Y-m-d H:i:s', $data['updateTime']) : '';
+            $data['voucherTime'] = $data['voucherTime'] ? date('Y-m-d H:i:s', $data['voucherTime']) : '';
             $data['unpayAmount'] = $data['amount'];//待还本金
             $data['unpayFee']    = $data['feeTotal'];//待还手续费
+            $data['stateName']   = $this->state[$data['state']];
             $shopLoanApply = ShopLoanApply::get($data['id']);
             $shopLoanApply = $shopLoanApply->ShopLoanApplyInfo()->select();
             for($i=0; $i < count($shopLoanApply); $i++){
@@ -91,7 +94,7 @@ class ShopLoanApply extends Model
     public function ShopLoanApplyInfo(){
         $field = 'sai_id as id,sai_orderId as orderId,sai_carId as carId,sai_carName as carName,sai_colorId as colorId,sai_colorName as colorName,
                   sai_guidancePrice as guidancePrice,sai_price as price,sai_downPayments as downPayments,sai_amount as amount,sai_number as number,
-                  sai_state as state,sai_voucher as voucher,sai_createTime as createTime,sai_fee as fee';
+                  sai_state as state,sai_voucher as voucher,sai_createTime as createTime,sai_fee as fee,sai_carImage as carImage';
         return $this->hasMany('shop_loan_apply_info', 'sai_orderId', 'sa_orderId')->field($field);
     }
 

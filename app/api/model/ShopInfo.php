@@ -30,9 +30,7 @@ class ShopInfo extends Model
         if($shopId){
             $where['si_shopId'] = $shopId;
         }
-//        dump($userId);
-//        dump($field);
-//        dump($where);die;
+        
         return Db::name($this->table)->field($field)->where($where)->find();
     }
 

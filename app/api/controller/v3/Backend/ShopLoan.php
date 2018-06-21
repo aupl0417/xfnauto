@@ -10,6 +10,8 @@ namespace app\api\controller\v3\Backend;
 
 use think\Controller;
 use think\Db;
+use think\Exception;
+
 class ShopLoan extends Admin
 {
 
@@ -62,25 +64,28 @@ class ShopLoan extends Admin
      * 审核
      * */
     public function verify(){
-        (!isset($this->data['id']) || empty($this->data['id'])) && $this->apiReturn(201, '', '参数非法');
-        (!isset($this->data['state']) || empty($this->data['state'])) && $this->apiReturn(201, '', '参数非法');
+        (!isset($this->data['id'])    || empty($this->data['id']))    && $this->apiReturn(201, '', '参数非法');
+        (!isset($this->data['state']) || empty($this->data['state'])) && $this->apiReturn(201, '', '状态参数非法');
 
         $id     = $this->data['id'] + 0;
         $state  = $this->data['state'] + 0;
         $reason = '';
         if($state == 1){
-            (!isset($this->data['reason']) || empty($this->data['reason'])) && $this->apiReturn(201, '', '参数非法');
+            (!isset($this->data['reason']) || empty($this->data['reason'])) && $this->apiReturn(201, '', '请输入拒绝原因');
 
             $reason = htmlspecialchars(trim($this->data['reason']));
         }
 
-        $info = model('ShopInfo')->getById($id, 'sa_state');
+        $info = model('ShopLoanApply')->getById($id, 'sa_state as state');
         !$info && $this->apiReturn(201, '', '数据不存在');
         $info['state'] != 0 && $this->apiReturn(201, '', '订单已处理');
 
         $data = [
-            'sa_state' => $state,
-            'reason'   => $reason
+            'sa_state'  => $state,
+            'sa_reason' => $reason,
+            'sa_operatorId' => $this->userId,
+            'sa_operatorName' => $this->user['realName'],
+            'sa_updateTime'   => time()
         ];
 
         $result = Db::name('shop_loan_apply')->where(['sa_id' => $id])->update($data);
@@ -97,6 +102,153 @@ class ShopLoan extends Admin
         $rate = floatval($this->data['rate']);
         cache($cacheKey, $rate);
         $this->apiReturn(200, ['rate' => cache($cacheKey)]);
+    }
+
+    public function loanVoucher(){
+        (!isset($this->data['id'])    || empty($this->data['id']))    && $this->apiReturn(201, '', '参数非法');
+        (!isset($this->data['voucher'])    || empty($this->data['voucher']))    && $this->apiReturn(201, '', '请上传放款凭证');
+
+        $id      = $this->data['id'] + 0;
+        $voucher = htmlspecialchars(trim($this->data['voucher']));
+        !filter_var($voucher, FILTER_VALIDATE_URL) && $this->apiReturn(201, '', '放款凭证地址非法');
+
+        $loanInfo  = model('ShopLoanApply')->getById($id, 'sa_state as state');
+        !$loanInfo && $this->apiReturn(201, '', '该垫资数据不存在');
+        $loanInfo['state'] != 2 && $this->apiReturn(201, '', '非待放款状态不能上传');
+
+        $data = [
+            'sa_state'             => 3,
+            'sa_voucher'           => $voucher,
+            'sa_voucherPersonId'   => $this->userId,
+            'sa_voucherPersonName' => $this->user['realName'],
+            'sa_voucherTime'       => time()
+        ];
+
+        $result = Db::name('shop_loan_apply')->where(['sa_id' => $id])->update($data);
+        $result === false && $this->apiReturn(201, '', '上传放款凭证失败');
+        $this->apiReturn(200, '', '上传放款凭证成功');
+    }
+
+    public function payVoucher(){
+        (!isset($this->data['orderId'])  || empty($this->data['orderId']))  && $this->apiReturn(201, '', '参数非法');
+        (!isset($this->data['voucher'])  || empty($this->data['voucher']))  && $this->apiReturn(201, '', '请上传还款凭证');
+        (!isset($this->data['infoIds'])  || empty($this->data['infoIds']))  && $this->apiReturn(201, '', '请选择还款车辆');
+
+        $orderId  = $this->data['orderId'] + 0;
+        $voucher  = htmlspecialchars(trim($this->data['voucher']));
+        $vouchers = explode(',', $voucher);
+        foreach($vouchers as $value){
+            !filter_var($value, FILTER_VALIDATE_URL) && $this->apiReturn(201, '', '还款凭证地址非法');
+        }
+
+        $applyInfo = model('ShopLoanApply')->getById($orderId, 'sa_id as id,sa_state as state,sa_orderId as orderId');
+        !$applyInfo && $this->apiReturn(201, '', '数据不存在');
+        !in_array(intval($applyInfo['state']), [3, 4]) && $this->apiReturn(201, '', '未到还款状态');
+
+        $infoIds       = htmlspecialchars(trim($this->data['infoIds']));
+        $infoIds       = explode(',', $infoIds);
+
+        try{
+
+            Db::startTrans();
+            $result = Db::name('shop_loan_apply_info')->where(['sai_id' => ['in', $infoIds], 'sai_isDel' => 0, 'sai_state' => 0])->update(['sai_state' => 1]);
+            if($result === false){
+                throw new Exception('更新车型垫资状态失败');
+            }
+
+            $applyInfoCount= model('ShopLoanApplyInfo')->getCountById($applyInfo['orderId']);
+            $data = [
+                'sa_payVoucher'     => $voucher,
+                'sa_payVoucherTime' => time()
+            ];
+            if(count($infoIds) == $applyInfoCount){
+                $data['sa_state']  = 7;
+            }
+            
+            $result = Db::name('shop_loan_apply')->where(['sa_id' => $orderId])->update($data);
+            if($result === false){
+                throw new Exception('更新垫资表状态失败');
+            }
+            Db::commit();
+            $this->apiReturn(200, '', '操作成功');
+        }catch (Exception $e){
+            Db::rollback();
+            $this->apiReturn(201, '', '操作失败');
+        }
+    }
+
+    /**
+     * 待还款列表
+     * */
+    public function unpayList(){
+        (!isset($this->data['orderId'])  || empty($this->data['orderId']))  && $this->apiReturn(201, '', '参数非法');
+
+        $orderId = $this->data['orderId'] + 0;
+
+        $applyInfo = model('ShopLoanApply')->getById($orderId, 'sa_id as id,sa_state as state');
+        !$applyInfo && $this->apiReturn(201, '', '数据不存在');
+        $state = ['0' => '待审核', '1' => '拒绝',  '2 ' => '待放款',  '3' => '已放款',  '4' => '请还款',  '5' => '已逾期',  '6' => '移交处理', '7' => '已还清'];
+        !in_array(intval($applyInfo['state']), [3, 4]) && $this->apiReturn(201, '', '该订单状态为' . $state[$applyInfo['state']]);
+
+        $data    = model('ShopLoanApplyInfo')->getUnpaidDataBySaId($orderId);
+        $this->apiReturn(200, $data);
+    }
+
+    public function overdue(){
+        if(isset($this->data['id']) && !empty($this->data['id'])){
+            $overDueId = $this->data['id'] + 0;
+            $result = $this->validate($this->data, 'OverDue');
+        }else{
+            $result = $this->validate($this->data, 'OverDue.add');
+        }
+
+        $result !== true && $this->apiReturn(201, '', $result);
+
+        $orderId = $this->data['orderId'] + 0;
+        $applyInfo = model('ShopLoanApply')->getById($orderId, 'sa_id as id,sa_state as state,sa_amount as amount');
+        !$applyInfo && $this->apiReturn(201, '', '数据不存在');
+        !in_array(intval($applyInfo['state']), [4, 5], true) && $this->apiReturn(201, '', '只有在请还款和已逾期状态才能延期');
+
+        $unpayTotal = Db::name('shop_loan_apply_info')->where(['sai_saId' => $orderId, 'sai_isDel' => 0, 'sai_state' => 0])->sum('sai_amount');
+
+        $data = [
+            'sao_orderId'        => $orderId,
+            'sao_downpayment'    => floatval($this->data['downpayment']),
+            'sao_downpaymentFee' => $unpayTotal * floatval($this->data['downpayment']) / 100,
+            'sao_rate'           => floatval($this->data['rate']),
+            'sao_period'         => floatval($this->data['period']),
+            'sao_fee'            => ceil($applyInfo['amount'] * floatval($this->data['rate'])) / 100,
+            'sao_state'          => 0,
+            'sao_updateTime'     => time(),
+            'sao_operatorId'     => $this->userId,
+            'sao_operatorName'   => $this->user['realName']
+        ];
+
+        if(isset($overDueId)){
+            $data['sao_voucher']     = $this->data['voucher'];
+            $data['sao_updateTime']  = time();
+            $data['sao_state']       = 1;
+            $result = Db::name('shop_loan_apply_overdue')->where(['sao_id' => $overDueId, 'sao_orderId' => $orderId])->update($data);
+            $result === false && $this->apiReturn(201, '', '延期失败');
+        }else{
+            if(Db::name('shop_loan_apply_overdue')->where(['sao_orderId' => $orderId])->count()){
+                $this->apiReturn(201, '', '已添加过延期，不能重复添加');
+            }
+            $data['sao_createTime'] = time();
+            $data['sao_state']      = 0;
+            $result = Db::name('shop_loan_apply_overdue')->insert($data);
+            !$result && $this->apiReturn(201, '', '保存成功');
+        }
+        $this->apiReturn(200, '', '操作成功');
+    }
+
+    public function overdueDetail(){
+        (!isset($this->data['orderId'])  || empty($this->data['orderId']))  && $this->apiReturn(201, '', '参数非法');
+
+        $orderId = $this->data['orderId'] + 0;
+        $field   = 'sao_id as id,sao_orderId as orderId,sao_downpayment as downpayment,sao_downpaymentFee as downpaymentFee,sao_rate as rate,sao_period as period,sao_voucher as voucher';
+        $data    = Db::name('shop_loan_apply_overdue')->where(['sao_orderId' => $orderId])->field($field)->find();
+        $this->apiReturn(200, $data);
     }
 
 
