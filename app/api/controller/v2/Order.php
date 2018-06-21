@@ -341,10 +341,10 @@ class Order extends Home
                 throw new Exception('添加车架号失败');
             }
 
-            $result = Db::name('consumer_order')->where(['id' => $orderId, 'state' => 41])->update(['state' => 45]);
-            if($result === false){
-                throw new Exception('更新资源订单状态失败');
-            }
+//            $result = Db::name('consumer_order')->where(['id' => $orderId, 'state' => 41])->update(['state' => 45]);
+//            if($result === false){
+//                throw new Exception('更新资源订单状态失败');
+//            }
 
             Db::commit();
             $this->apiReturn(200, '', '添加车架号成功');
@@ -360,6 +360,30 @@ class Order extends Home
         $infoId = $this->data['infoId'] + 0;
         $data   = Db::name('consumer_order_car')->where(['info_id' => $infoId, 'is_del' => 0])->field('id,vin,check_car_pic as checkCarPic')->select();
         $this->apiReturn(200, $data);
+    }
+
+    public function updateState(){
+        (!isset($this->data['orderId']) || empty($this->data['orderId'])) && $this->apiReturn(201, '', '参数非法');
+        $orderId  = $this->data['orderId'] + 0;
+
+        $data   = model('ConsumerOrder')->getOrderById($orderId, 'state');
+        !$data && $this->apiReturn(201, '', '订单不存在');
+        $data['state'] != 41 && $this->apiReturn(201, '', '非待上传车架号状态不能操作');
+
+        $result = model('ConsumerOrder')->checkFrameNumber($orderId);
+        !$result && $this->apiReturn(201, '', '该订单的车尚有车架号未上传');
+
+        $result = Db::name('consumer_order')->where(['id' => $orderId, 'state' => 41])->update(['state' => 45]);
+        $result === false && $this->apiReturn(201, '', '更新资源订单状态失败');
+        $this->apiReturn(200);
+    }
+
+    public function getFrameState(){
+        (!isset($this->data['orderId']) || empty($this->data['orderId'])) && $this->apiReturn(201, '', '参数非法');
+        $orderId  = $this->data['orderId'] + 0;
+        $result = model('ConsumerOrder')->checkFrameNumber($orderId);
+        !$result && $this->apiReturn(201, '', '该订单的车尚有车架号未上传');
+        $this->apiReturn(200);
     }
 
 }

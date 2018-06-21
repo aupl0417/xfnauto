@@ -285,4 +285,10 @@ class ConsumerOrder extends Model
 
         return $data;
     }
+
+    public function checkFrameNumber($orderId){
+        $where = ['infos.order_id' => $orderId, 'infos.is_del' => 0, 'car.vin' => ['eq', '']];
+        $count = Db::name('consumer_order_info infos')->where($where)->join('consumer_order_car car', 'infos.id=car.info_id', 'left')->count();
+        return $count == 0 ? true : false;
+    }
 }

@@ -180,6 +180,8 @@ Route::post('login_v2/index','api/v2.Login/index');
 Route::post('user_v2/create','api/v2.User/create');
 Route::post('ucenter_v2/setframe','api/v2.Order/setFrame');
 Route::get('ucenter_v2/consumer/getConsumerCars','api/v2.Order/getConsumerCars');
+Route::get('ucenter_v2/consumer/updateState','api/v2.Order/updateState');
+Route::get('ucenter_v2/consumer/getFrameState','api/v2.Order/getFrameState');
 //Route::post('ucenter_v2/setframe','api/v2.Order/setFrame');
 //Route::get('publics_v2/test','api/v2.Common/test');
 //Route::get('activity_v2.1/index','api/v2._1.Test/index');
