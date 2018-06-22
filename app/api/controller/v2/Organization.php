@@ -62,7 +62,7 @@ class Organization extends Home
             $this->apiReturn(201, '', '门店名称已存在');
         }
 
-        if(Db::name('system_organization')->where(['telephone' => $this->data['telePhone'], 'status' => 1])->count()){
+        if(Db::name('system_organization')->where(['telephone' => $this->data['telePhone'], 'status' => 1, 'parentId' => $this->orgId])->count()){
             $this->apiReturn(201, '', '联系电话已存在');
         }
 
