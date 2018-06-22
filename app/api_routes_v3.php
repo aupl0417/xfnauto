@@ -20,9 +20,26 @@ Route::get('shop_v3/loan/index','api/v3.Shop.Loan/index');
 Route::get('shop_v3/user/profile','api/v3.Shop.User/profile');
 Route::post('shop_v3/Index/verify','api/v3.Shop.Index/verify');
 Route::post('shop_v3/loan/create','api/v3.Shop.Loan/create');
+Route::post('shop_v3/loan/apply','api/v3.Shop.Loan/apply');
 Route::get('shop_v3/loan/detail','api/v3.Shop.Loan/detail');
+Route::get('shop_v3/loan/cancel','api/v3.Shop.Loan/cancel');
+Route::get('shop_v3/loan/carcolor','api/v3.Shop.Loan/carcolor');
+
+//小程序端垫资接口
+Route::get('frontend_v3/loan/index','api/v3.Frontend.Loan/index');
+Route::get('frontend_v3/user/profile','api/v3.Frontend.User/profile');
+Route::post('frontend_v3/Index/verify','api/v3.Frontend.Index/verify');
+Route::post('frontend_v3/loan/create','api/v3.Frontend.Loan/create');
+Route::post('frontend_v3/loan/apply','api/v3.Frontend.Loan/apply');
+Route::get('frontend_v3/loan/detail','api/v3.Frontend.Loan/detail');
+Route::get('frontend_v3/loan/cancel','api/v3.Frontend.Loan/cancel');
 
 //后台接口
+//垫资资格认证列表
+Route::get('backend_v3/shoploanverify/index','api/v3.Backend.ShopLoanVerify/index');
+Route::get('backend_v3/shoploanverify/detail','api/v3.Backend.ShopLoanVerify/detail');
+Route::post('backend_v3/shoploanverify/verify','api/v3.Backend.ShopLoanVerify/verify');
+
 //后台垫资管理
 Route::get('backend_v3/shoploan/index','api/v3.Backend.ShopLoan/index');
 Route::post('backend_v3/shoploan/create','api/v3.Backend.ShopLoan/create');
@@ -34,3 +51,9 @@ Route::post('backend_v3/shoploan/payVoucher','api/v3.Backend.ShopLoan/payVoucher
 Route::get('backend_v3/shoploan/unpayList','api/v3.Backend.ShopLoan/unpayList');
 Route::get('backend_v3/shoploan/overdue','api/v3.Backend.ShopLoan/overdue');
 Route::get('backend_v3/shoploan/overdueDetail','api/v3.Backend.ShopLoan/overdueDetail');
+Route::get('backend_v3/shoploan/payRecord','api/v3.Backend.ShopLoan/payRecord');
+
+//后台店铺认证管理
+Route::get('backend_v3/shop/index','api/v3.Backend.Shop/index');
+Route::get('backend_v3/shop/detail','api/v3.Backend.Shop/detail');
+Route::post('backend_v3/shop/verify','api/v3.Backend.Shop/verify');
