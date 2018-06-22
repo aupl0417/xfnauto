@@ -25,7 +25,7 @@ class Car extends Admin
 
         if(isset($this->data['carsName']) && !empty($this->data['carsName'])){
             $carsName = htmlspecialchars(trim($this->data['carsName']));
-            $where['carName'] = ['like', '%' . $carsName];
+            $where['carName'] = ['like', '%' . $carsName . '%'];
         }
 
         $field = $this->createField('car_cars', 'isDelete,sort,indexImage,brandInitial,driveStyle,carName') . ',carId as carsId,carName as carsName';

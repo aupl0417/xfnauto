@@ -93,6 +93,9 @@ class ShopLoan extends Admin
         $this->apiReturn(200, '', '操作成功');
     }
 
+    /**
+     * 设置手续费率
+     * */
     public function setRate(){
         $cacheKey = md5('set_loan_rate');
         (!isset($this->data['rate']) || empty($this->data['rate'])) && $this->apiReturn(201, '', '费率不能为空');
@@ -104,6 +107,9 @@ class ShopLoan extends Admin
         $this->apiReturn(200, ['rate' => cache($cacheKey)]);
     }
 
+    /**
+     * 上传放款凭证
+     * */
     public function loanVoucher(){
         (!isset($this->data['id'])    || empty($this->data['id']))    && $this->apiReturn(201, '', '参数非法');
         (!isset($this->data['voucher'])    || empty($this->data['voucher']))    && $this->apiReturn(201, '', '请上传放款凭证');
@@ -129,6 +135,9 @@ class ShopLoan extends Admin
         $this->apiReturn(200, '', '上传放款凭证成功');
     }
 
+    /**
+     * 还款
+     * */
     public function payVoucher(){
         (!isset($this->data['orderId'])  || empty($this->data['orderId']))  && $this->apiReturn(201, '', '参数非法');
         (!isset($this->data['voucher'])  || empty($this->data['voucher']))  && $this->apiReturn(201, '', '请上传还款凭证');
@@ -141,13 +150,13 @@ class ShopLoan extends Admin
             !filter_var($value, FILTER_VALIDATE_URL) && $this->apiReturn(201, '', '还款凭证地址非法');
         }
 
-        $applyInfo = model('ShopLoanApply')->getById($orderId, 'sa_id as id,sa_state as state,sa_orderId as orderId');
+        $applyInfo = model('ShopLoanApply')->getById($orderId, 'sa_id as id,sa_state as state,sa_orderId as orderId,sa_voucherTime as voucherTime,sa_period as period,sa_rate as rate');
         !$applyInfo && $this->apiReturn(201, '', '数据不存在');
         !in_array(intval($applyInfo['state']), [3, 4]) && $this->apiReturn(201, '', '未到还款状态');
 
         $infoIds       = htmlspecialchars(trim($this->data['infoIds']));
         $infoIds       = explode(',', $infoIds);
-
+        $loanApplyInfo = Db::name('shop_loan_apply_info')->where(['sai_id' => ['in', $infoIds], 'sai_isDel' => 0, 'sai_state' => 0])->field('sai_id,sai_amount as amount,sai_downPayments as downPayments,sai_fee as fee')->select();
         try{
 
             Db::startTrans();
@@ -156,14 +165,30 @@ class ShopLoan extends Admin
                 throw new Exception('更新车型垫资状态失败');
             }
 
-            $applyInfoCount= model('ShopLoanApplyInfo')->getCountById($applyInfo['orderId']);
-            $data = [
-                'sa_payVoucher'     => $voucher,
-                'sa_payVoucherTime' => time()
-            ];
-            if(count($infoIds) == $applyInfoCount){
-                $data['sa_state']  = 7;
+            $amount   = 0;
+            if($loanApplyInfo){
+                foreach($loanApplyInfo as $info){
+                    $amount += $info['amount'] + $info['fee'];
+                }
             }
+            $records = [
+                'spr_orderId' => $orderId,
+                'spr_infoIds' => implode(',', $infoIds),
+                'spr_period'  => ceil((time() - $applyInfo['voucherTime']) / 24 / 3600),
+                'spr_amount'  => $amount,
+                'spr_voucher' => $voucher,
+                'spr_createTime' => time()
+            ];
+
+            $result = Db::name('shop_loan_pay_records')->insert($records);
+            if(!$result){
+                throw new Exception('插入还款记录表失败');
+            }
+
+            $applyInfoCount = model('ShopLoanApplyInfo')->getCountById($applyInfo['orderId']);
+            $data = [
+                'sa_state'  => count($infoIds) == $applyInfoCount ? 7 : 4
+            ];
             
             $result = Db::name('shop_loan_apply')->where(['sa_id' => $orderId])->update($data);
             if($result === false){
@@ -194,6 +219,9 @@ class ShopLoan extends Admin
         $this->apiReturn(200, $data);
     }
 
+    /**
+     * 延期操作
+     * */
     public function overdue(){
         if(isset($this->data['id']) && !empty($this->data['id'])){
             $overDueId = $this->data['id'] + 0;
@@ -242,12 +270,29 @@ class ShopLoan extends Admin
         $this->apiReturn(200, '', '操作成功');
     }
 
+    /**
+     * 延期详情
+     * */
     public function overdueDetail(){
         (!isset($this->data['orderId'])  || empty($this->data['orderId']))  && $this->apiReturn(201, '', '参数非法');
 
         $orderId = $this->data['orderId'] + 0;
         $field   = 'sao_id as id,sao_orderId as orderId,sao_downpayment as downpayment,sao_downpaymentFee as downpaymentFee,sao_rate as rate,sao_period as period,sao_voucher as voucher';
         $data    = Db::name('shop_loan_apply_overdue')->where(['sao_orderId' => $orderId])->field($field)->find();
+        $this->apiReturn(200, $data);
+    }
+
+    public function payRecord(){
+        (!isset($this->data['orderId'])  || empty($this->data['orderId']))  && $this->apiReturn(201, '', '参数非法');
+
+        $orderId = $this->data['orderId'] + 0;
+        $data  = Db::name('shop_loan_pay_records')->where(['spr_orderId' => $orderId])->field('spr_id as id,spr_orderId as orderId,spr_infoIds as infoIds,spr_period as period,spr_voucher as voucher,spr_createTime as createTime')->select();
+        if($data){
+            foreach($data as &$record){
+                $record['cars'] = model('ShopLoanApplyInfo')->getDataByIds($record['infoIds']);
+                $record['createTime'] = date('Y-m-d H:i:s', $record['createTime']);
+            }
+        }
         $this->apiReturn(200, $data);
     }
 

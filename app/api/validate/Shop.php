@@ -21,9 +21,9 @@ class Shop extends Validate{
         'address'         => 'require',
         'corporation'     => 'require',
         'phone'           => 'require|checkPhone',
-        'idCard'          => 'require|url',
-        'license'         => 'require|url',
-        'image'           => 'require|url',
+        'idCard'          => 'require|checkUrl',
+        'license'         => 'require|checkUrl',
+        'image'           => 'require|checkUrl',
     ];
 
     protected $message = [
@@ -41,17 +41,27 @@ class Shop extends Validate{
         'phone.require'       => '请输入法人联系电话',
         'phone.checkPhone'    => '法人联系电话格式非法',
         'idCard.require'      => '请上传法人身份证照片',
-        'idCard.url'          => '法人身份证照片地址非法',
+        'idCard.checkUrl'     => '法人身份证照片地址非法',
         'license.require'     => '请上传营业执照',
-        'license.url'         => '营业执照地址非法',
+        'license.checkUrl'    => '营业执照地址非法',
         'image.require'       => '请上传店铺照片',
-        'image.url'           => '店铺照片地址非法',
+        'image.checkUrl'      => '店铺照片地址非法',
     ];
 
     public function checkPhone($phone){
         return true;
         if(!checkPhone($phone)) {
             return false;
+        }
+        return true;
+    }
+
+    public function checkUrl($value){
+        $value = explode(',', $value);
+        foreach($value as $val){
+            if(!filter_var($val, FILTER_VALIDATE_URL)){
+                return false;
+            }
         }
         return true;
     }

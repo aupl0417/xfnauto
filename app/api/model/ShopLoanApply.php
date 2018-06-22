@@ -16,6 +16,7 @@ class ShopLoanApply extends Model
 
     protected $table = 'shop_loan_apply';
     protected $state = [
+        '-1' => '取消',
         '0' => '待审核',
         '1' => '拒绝',
         '2' => '待放款',
@@ -30,6 +31,7 @@ class ShopLoanApply extends Model
     public function getUserLoanApplyByIdAll($id, $field = '*'){
         $where = [
             'sa_id' => $id,
+            'sa_state' => ['neq', -1]
         ];
 
         $join = [
@@ -76,16 +78,21 @@ class ShopLoanApply extends Model
             $data['unpayAmount'] = $data['amount'];//待还本金
             $data['unpayFee']    = $data['feeTotal'];//待还手续费
             $data['stateName']   = $this->state[$data['state']];
-            $shopLoanApply = ShopLoanApply::get($data['id']);
-            $shopLoanApply = $shopLoanApply->ShopLoanApplyInfo()->select();
-            for($i=0; $i < count($shopLoanApply); $i++){
-                $value = $shopLoanApply[$i]->toArray();
-                if($value['state'] == 1){
-                    $data['unpayAmount'] = $data['amount'] - $value['amount'];
-                    $data['unpayFee']    = $data['feeTotal'] - $value['fee'];
+            $data['payRecords']  = Db::name('shop_loan_pay_records')->where(['spr_orderId' => $id])->field('spr_id as id,spr_orderId as orderId,spr_infoIds as infoIds,spr_voucher as voucher,spr_createTime as createTime')->select();
+            if($data['payRecords']){
+                foreach($data['payRecords'] as &$record){
+                    $record['createTime'] = date('Y-m-d H:i:s', $record['createTime']);
                 }
-                $value['stateName'] = $value['state'] == 0 ? '待还款' : ($value['state'] == 1 ? '已还清' : '移交处理');
-                $data['list'][] = $value;
+            }
+            $data['list']        = model('ShopLoanApplyInfo')->getDataBySaId($data['id']);
+            if($data['list']){
+               foreach($data['list'] as &$value){
+                   if($value['state'] == 1){
+                       $data['unpayAmount'] = $data['amount'] - $value['amount'];
+                       $data['unpayFee']    = $data['feeTotal'] - $value['fee'];
+                   }
+                   $value['stateName'] = $value['state'] == 0 ? '待还款' : ($value['state'] == 1 ? '已还清' : '移交处理');
+               }
             }
         }
         return $data;
@@ -99,7 +106,7 @@ class ShopLoanApply extends Model
     }
 
     public function getById($id, $field = '*'){
-        return Db::name($this->table)->where(['sa_id' => $id, 'sa_isDel' => 0])->field($field)->find();
+        return Db::name($this->table)->where(['sa_id' => $id, 'sa_isDel' => 0, 'sa_state' => ['neq', -1]])->field($field)->find();
     }
     
     
