@@ -103,6 +103,8 @@ class ShopLoan extends Admin
         !is_numeric($this->data['rate']) && $this->apiReturn(201, '', '参数非法');
 
         $rate = floatval($this->data['rate']);
+        $result = Db::name('dictionary')->where(['d_typeid' => 1, 'd_key' => 0])->update(['d_value' => $rate]);
+        $result === false && $this->apiReturn(201, '', '设置手续费率失败');
         cache($cacheKey, $rate);
         $this->apiReturn(200, ['rate' => cache($cacheKey)]);
     }

@@ -43,9 +43,8 @@ class ShopLoanApply extends Model
     }
 
     public function getDataByPage($where, $page = 1, $rows = 10){
-        $field = 'sa_id as id,sa_orderId as orderId,sa_state as state,sa_userName as userName,sa_phone as phone,sa_orgId as orgId,sa_orgName as orgName,
-                 sa_amount as amount,sa_rate as rate,sa_fee as fee,sa_period as period,sa_image as image,sa_annualIncome as annualIncome,sa_incomeImage as incomeImage,
-                 sa_idCardOn as idCardOn,sa_idCardOff as idCardOff,sa_operatorName as operatorName,sa_reason as reason,sa_voucher as voucher,sa_createTime as createTime';
+        $ignoreFields = 'sa_isDel,sa_payVoucher,sa_payVoucherTime,sa_annualIncome,sa_institutionId,sa_institutionName,sa_platType,sa_loanPersonName,sa_loanPersonPhone,sa_operatorId,sa_operatorName,sa_incomeImage,sa_orgCode,sa_voucherPersonId,sa_voucherPersonName';
+        $field = getField($this->table, $ignoreFields, false, '', true);
         $count = Db::name($this->table)->where($where)->count();
         $data  = Db::name($this->table)->where($where)->field($field)->page($page, $rows)->order('sa_id desc')->select();
         if($data){
@@ -53,8 +52,22 @@ class ShopLoanApply extends Model
                 $value['stateName'] = $this->state[$value['state']];
                 $shopLoanApply = ShopLoanApply::get($value['id']);
                 $shopLoanApply = $shopLoanApply->ShopLoanApplyInfo()->select();
+                $value['unpayAmount'] = $value['amount'];//待还本金
+                $value['unpayFee']    = $value['feeTotal'];//待还手续费
+                $value['createTime']  = date('Y-m-d H:i:s', $value['createTime']);
+                $value['updateTime']  = $value['updateTime'] ? date('Y-m-d H:i:s', $value['updateTime']) : '';
+                $value['image']       = $value['image'] ?: '';
+                $value['idCardOn']    = $value['idCardOn'] ?: '';
+                $value['idCardOff']   = $value['idCardOff'] ?: '';
+                $value['reason']      = $value['reason'] ?: '';
+                $value['voucher']     = $value['voucher'] ?: '';
                 for($i = 0; $i < count($shopLoanApply); $i++){
-                    $value['info'][] = $shopLoanApply[$i]->toArray();
+                    $info = $shopLoanApply[$i]->toArray();
+                    if($info['state'] == 1){
+                        $value['unpayAmount'] = $value['amount'] - $info['amount'];
+                        $value['unpayFee']    = $value['feeTotal'] - $info['fee'];
+                    }
+                    $value['info'][] = $info;
                 }
             }
         }

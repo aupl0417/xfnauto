@@ -13,7 +13,7 @@ use think\Validate;
 class LoanAdd extends Validate{
 
     protected $rule = [
-        'orgId'           => 'require|number',
+//        'orgId'           => 'require|number',
         'period'          => 'require|number',
         'amount'          => 'require|number',
         'fee'             => 'require|number',
@@ -22,8 +22,8 @@ class LoanAdd extends Validate{
     ];
 
     protected $message = [
-        'orgId.require'       => '请选择垫资商铺',
-        'orgId.number'        => '垫资商铺参数非法',
+//        'orgId.require'       => '请选择垫资商铺',
+//        'orgId.number'        => '垫资商铺参数非法',
         'period.require'      => '垫资期限不能为空',
         'period.number'       => '垫资期限参数非法',
         'amount.require'      => '垫资总额不能为空',

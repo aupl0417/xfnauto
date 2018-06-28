@@ -24,7 +24,7 @@ class Loan extends Base
         $page = (isset($this->data['page']) && !empty($this->data['page'])) ? $this->data['page'] + 0 : 1;
         $rows = (isset($this->data['rows']) && !empty($this->data['rows'])) ? $this->data['rows'] + 0 : 10;
 
-        $where = ['sa_shopId' => $this->orgId, 'sa_isDel' => 0, 'sa_type' => 1];
+        $where = ['sa_userId' => $this->orgId, 'sa_isDel' => 0, 'sa_type' => 1];
 
         if(isset($this->data['keywords']) && !empty($this->data['keywords'])){
             $keywords = htmlspecialchars(trim($this->data['keywords']));
@@ -66,13 +66,19 @@ class Loan extends Base
      * 垫资资格申请
      * */
     public function apply(){
-        if(Db::name('shop_loan')->where(['s_shopId' => $this->orgId, 's_userId' => $this->userId, 's_state' => ['neq', 2]])->count()){
+        $field = 's_state as loanState,si_state as shopState';
+        $user  = model('ShopUser')->getUserByIdAll($this->userId, $field);
+        !$user && $this->apiReturn(201, '', '用户不存在');
+
+        (is_null($user['shopState']) || $user['shopState'] != 1) && $this->apiReturn(201, '', '店铺认证未认证');
+
+        if(Db::name('shop_loan')->where(['s_userId' => $this->userId, 's_state' => ['neq', 2]])->count()){
             $this->apiReturn(201, '', '您已提交申请，请勿重复提交');
         }
         $data = [
             's_shopId' => $this->orgId,
-            's_userId' => $this->userId,
-            's_state'  => 0,
+            's_userId'     => $this->userId,
+            's_state'      => 0,
             's_createTime' => time()
         ];
 
@@ -104,7 +110,7 @@ class Loan extends Base
                 $this->apiReturn(201, '', $result);
             }
 
-            $amount = $value['price'] * (100 - $value['downPayments']) * $value['number'] / 100;
+            $amount = $value['price'] * $value['number'] * (100 - $value['downPayments'])  / 100;
             $totalAmount += $amount;
             foreach($value as $k => $val){
                 $info[$key]['sai_' . $k] = $value[$k];
@@ -113,22 +119,20 @@ class Loan extends Base
             $info[$key]['sai_colorName']  = isset($this->data['colorName']) ? htmlspecialchars(trim($this->data['colorName'])) : Db::name('car_carcolour')->where(['carColourId' => $value['colorId']])->field('carColourName')->find()['carColourName'];
             $info[$key]['sai_createTime'] = time();
             $info[$key]['sai_orderId']    = $orderId;
-            $info[$key]['sai_fee']        = $value['price'] * $value['number'] * (100 - $value['downPayments']) / 100 * $rate / 100 * $period;
+//            $info[$key]['sai_fee']        = $value['price'] * $value['number'] * (100 - $value['downPayments']) / 100 * $rate / 100 * $period;
+            $info[$key]['sai_fee']        = 0;
             $info[$key]['sai_carImage']   = Db::name('car_cars')->where(['carId' => $value['carId']])->field('indexImage')->find()['indexImage'];
 
             if($amount != $value['amount']){
-                $this->apiReturn(201, '', '车型：' . $value['carName'] . '的垫资总额不一致');
+                $this->apiReturn(201, '', '车型：' . $value['carName'] . '的垫资总额不一致' . $amount);
             }
         }
 
-        $orgId = $this->data['orgId'] + 0;
-        $org   = model('Organization')->getOrganizationByOrgId($orgId, 'shortName,orgCode');
-
-        if($this->data['amount'] != $totalAmount){
-            $this->apiReturn(201, '', '垫资总额不一致' . $totalAmount);
+        if(floatval($this->data['amount']) != $totalAmount){
+            $this->apiReturn(201, '', '垫资总额不一致' . $totalAmount . '---' . $this->data['amount']);
         }
 
-        $fee    = $totalAmount * $rate / 100;
+        $fee    = ceil($totalAmount * $rate) / 100;
         if($this->data['fee'] != $fee){
             $this->apiReturn(201, '', '手续费不一致' . $fee);
         }
@@ -140,9 +144,9 @@ class Loan extends Base
                 'sa_userName'   => $user['realName'],
                 'sa_phone'      => $user['phoneNumber'],
                 'sa_type'       => 1,
-                'sa_orgId'      => $orgId,
-                'sa_orgName'    => $org['shortName'],
-                'sa_orgCode'    => $org['orgCode'],
+                'sa_orgId'      => $this->orgId,
+                'sa_orgName'    => $this->user['org_name'],
+//                'sa_orgCode'    => $org['orgCode'],
                 'sa_amount'     => $totalAmount,
                 'sa_totalAmount'=> $totalAmount,
                 'sa_rate'       => $rate,
@@ -202,14 +206,40 @@ class Loan extends Base
         $this->apiReturn(200, $data);
     }
 
-    public function test(){
-//        $fp = fsockopen("smtp.163.com",25,$errno,$errstr,60);
-//        if(! $fp)
-//            echo '$errstr ($errno) <br> \n ';
-//        else
-//            echo 'ok <br> \n ';die;
-        $result = sendEmail('770517692@qq.com', '这是测试内容', 'jiangjun', '测试');
-        dump($result);
+    public function send(){
+        (!isset($this->data['email']) || empty($this->data['email'])) && $this->apiReturn(201, '', '请输入邮箱地址');
+
+        $email  = htmlspecialchars(trim($this->data['email']));
+        if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
+            $this->apiReturn(201, '', '邮箱地址格式非法');
+        }
+        $attach = [
+            './static/zhang.png' //必须是相对地址才可以，试过七牛地址，不行
+        ];
+
+        $body  = '这是测试内容';
+        $result = sendMail($email, $body, '', '喜蜂鸟平台', $attach);
+
+        $userLoan = Db::name('shop_loan')->where(['s_userId' => $this->userId])->order('s_id desc')->field('s_id as id,s_state as state')->find();
+        if(!$userLoan){
+            $field = 's_state as loanState,si_state as shopState';
+            $user  = model('ShopUser')->getUserByIdAll($this->userId, $field);
+            !$user && $this->apiReturn(201, '', '用户不存在');
+
+            (is_null($user['shopState']) || $user['shopState'] != 1) && $this->apiReturn(201, '', '店铺认证未认证');
+
+            $data = [
+                's_shopId' => $this->orgId,
+                's_userId'     => $this->userId,
+                's_state'      => 0,
+                's_createTime' => time()
+            ];
+
+            Db::name('shop_loan')->insert($data);
+        }
+
+        !$result && $this->apiReturn(201, '', '发送失败');
+        $this->apiReturn(200, ['state' => $userLoan['state'], 'stateName' => $userLoan['state'] == 0 ? '认证中' : ($userLoan['state'] == 1 ? '已通过' : '已拒绝')], '发送成功');
     }
 
 }

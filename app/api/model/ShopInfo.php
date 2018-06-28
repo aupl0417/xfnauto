@@ -42,6 +42,7 @@ class ShopInfo extends Model
         $state = ['认证中', '已通过', '已拒绝'];
         foreach($data as $key => &$value){
             $value['createTime'] = date('Y-m-d H:i:s', $value['createTime']);
+            $value['updateTime'] = $value['updateTime'] ? date('Y-m-d H:i:s', $value['updateTime']) : '';
             $value['type']       = $type[$value['type']];
             $value['stateName']  = $state[$value['state']];
         }
@@ -53,7 +54,7 @@ class ShopInfo extends Model
         if(!$where){
             return false;
         }
-        $field = getField($this->table, 'si_operatorId,updateTime', false, '', true);
+        $field = getField($this->table, 'si_operatorId', false, '', true);
         $data = Db::name($this->table)->field($field)->where($where)->find();
         if(!$data){
             return false;
@@ -64,6 +65,8 @@ class ShopInfo extends Model
         $state = ['认证中', '已通过', '已拒绝'];
         $data['stateName']  = $state[$data['state']];
         $data['reason']     = $data['reason'] ?: '';
+        $data['updateTime'] = $data['updateTime'] ? date('Y-m-d H:i:s', $data['updateTime']) : '';
+        $data['createTime'] = $data['createTime'] ? date('Y-m-d H:i:s', $data['createTime']) : '';
         return $data;
     }
 

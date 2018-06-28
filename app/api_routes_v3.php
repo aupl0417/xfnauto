@@ -24,6 +24,12 @@ Route::post('shop_v3/loan/apply','api/v3.Shop.Loan/apply');
 Route::get('shop_v3/loan/detail','api/v3.Shop.Loan/detail');
 Route::get('shop_v3/loan/cancel','api/v3.Shop.Loan/cancel');
 Route::get('shop_v3/loan/carcolor','api/v3.Shop.Loan/carcolor');
+Route::get('shop_v3/user/shopInfo','api/v3.Shop.User/shopInfo');
+Route::get('shop_v3/user/loanInfo','api/v3.Shop.User/loanInfo');
+Route::get('shop_v3/index/updatefee','api/v3.Shop.Index/updatefee');
+Route::get('task_v3/updatefee','api/v3.Task/updatefee');
+
+Route::post('shop_v3/loan/send','api/v3.Shop.Loan/send');
 
 //小程序端垫资接口
 Route::get('frontend_v3/loan/index','api/v3.Frontend.Loan/index');

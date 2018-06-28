@@ -595,31 +595,20 @@ function getSmallMoney($number, $numberArr, $size = 3){
  * @param string $attachment 附件列表
  * @return boolean
  */
-function sendMail1($mailTo, $body, $name = '', $subject = '', $attachment = null){
-//    $mail = new \PHPMailer\PHPMailer\PHPMailer();           //实例化PHPMailer对象
-    require_once '../extend/phpmailer/phpmailer/class.phpmailer.php';
-    $mail = new PHPMailer();
+function sendMail($mailTo, $body, $name = '', $subject = '', $attachment = null){
+    $mail = new \PHPMailer\PHPMailer\PHPMailer();//实例化PHPMailer对象
     $mail->CharSet = 'UTF-8';           //设定邮件编码，默认ISO-8859-1，如果发中文此项必须设置，否则乱码
 
     $mail->setLanguage('zh_cn');
-
-//    $mail->isSMTP();
-//    $mail->Host = 'relay-hosting.secureserver.net';
-//    $mail->Port = 25;
-//    $mail->SMTPAuth = false;
-//    $mail->SMTPSecure = false;
-
     $mail->isSMTP();
-    $mail->Host     = 'smtp.qq.com';
-    $mail->Port = 25;
-//    $mail->SMTPAuth = false;
-//    $mail->SMTPSecure = false;
-    $mail->SMTPAuth = true;
+    $mail->Host       = 'smtp.exmail.qq.com';
+    $mail->Port       = 465;
+    $mail->SMTPAuth   = true;
     $mail->SMTPSecure = "ssl";   // 设置安全验证方式为ssl
-    $mail->Username = "770517692@qq.com";    // SMTP服务器用户名
-    $mail->Password = "6485654jjun";     // SMTP服务器密码
-    $mail->From     = "770517692@qq.com";
-    $mail->FromName = '喜蜂鸟';
+    $mail->Username   = "finance@tauto.wang";    // SMTP服务器用户名
+    $mail->Password   = "Taochewang2017";     // SMTP服务器密码
+    $mail->From       = "finance@tauto.wang";
+    $mail->FromName   = '喜蜂鸟';
 
     if (is_array($mailTo) && !empty($mailTo)) {
         foreach ($mailTo as $item) {
@@ -637,89 +626,11 @@ function sendMail1($mailTo, $body, $name = '', $subject = '', $attachment = null
 
     $mail->WordWrap = 50;
     $mail->isHTML(true);
-    $mail->Subject  = $subject ?: '大唐云商邮件提醒';
+    $mail->Subject  = $subject ?: '喜蜂鸟邮件提醒';
     $mail->Body     = $body;
     $mail->AltBody  = "这是一封HTML邮件，请用HTML方式浏览!";
 
     return $mail->Send() ? true : $mail->ErrorInfo;
-}
-
-function sendMail2($mailTo, $body, $name = '', $subject = '', $attachment = null){
-    require_once '../extend/phpmailer/class.phpmailer.php';
-    $mail = new PHPMailer();
-    $mail->CharSet = 'UTF-8';           //设定邮件编码，默认ISO-8859-1，如果发中文此项必须设置，否则乱码
-
-    $mail->setLanguage('zh_cn');
-    $mail->isSMTP();
-    $mail->Host     = 'smtp.163.com';
-    $mail->Port     = 994;
-    $mail->SMTPSecure = "ssl";   // 设置安全验证方式为ssl
-    $mail->SMTPAuth = true;
-    $mail->Username = "jjunjerry0417@163.com";    // SMTP服务器用户名
-    $mail->Password = "6485654jjun";     // SMTP服务器密码
-    $mail->From     = "jjunjerry0417@163.com";
-    $mail->FromName = '喜蜂鸟';
-
-    if (is_array($mailTo) && !empty($mailTo)) {
-        foreach ($mailTo as $item) {
-            $mail->addAddress($item);
-        }
-    } else {
-        $mail->addAddress($mailTo, $name);
-    }
-
-    if (is_array($attachment) && !empty($attachment)) { // 添加附件
-        foreach ($attachment as $file) {
-            is_file($file) && $mail->AddAttachment($file);
-        }
-    }
-
-    $mail->WordWrap = 50;
-    $mail->isHTML(true);
-    $mail->Subject  = $subject ?: '大唐云商邮件提醒';
-    $mail->Body     = $body;
-    $mail->AltBody  = "这是一封HTML邮件，请用HTML方式浏览!";
-
-    return $mail->Send() ? true : $mail->ErrorInfo;
-}
-
-/*
- * $mailTo, $body, $name = '', $subject = '', $attachment = null*/
-function sendEmail($toemail, $desc_content,  $desc_url){
-    require_once '../extend/phpmailer/class.phpmailer.php';
-    $mail = new PHPMailer();
-    $mail->isSMTP();// 使用SMTP服务
-    $mail->CharSet = "utf8";// 编码格式为utf8，不设置编码的话，中文会出现乱码
-    $mail->Host    = "smtp.163.com";// 发送方的SMTP服务器地址
-    $mail->SMTPAuth = true;// 是否使用身份验证
-    $mail->Username = "jjunjerry0417@163.com";// 发送方的163邮箱用户名，就是你申请163的SMTP服务使用的163邮箱</span><span style="color:#333333;">
-    $mail->Password = "6485654jjun";// 发送方的邮箱密码，注意用163邮箱这里填写的是“客户端授权密码”而不是邮箱的登录密码！</span><span style="color:#333333;">
-    $mail->SMTPSecure = "ssl";// 使用ssl协议方式</span><span style="color:#333333;">
-    $mail->Port = 994;// 163邮箱的ssl协议方式端口号是465/994
-    $mail->setFrom("jjunjerry0417@163.com","Mailer");// 设置发件人信息，如邮件格式说明中的发件人，这里会显示为Mailer(xxxx@163.com），Mailer是当做名字显示
-    $mail->addAddress($toemail,'小Q资源网博客回复消息');// 设置收件人信息，如邮件格式说明中的收件人，这里会显示为Liang(yyyy@163.com)
-    $mail->addReplyTo("","Reply");// 设置回复人信息，指的是收件人收到邮件后，如果要回复，回复邮件将发送到的邮箱地址
-    //$mail->addCC("xxx@163.com");// 设置邮件抄送人，可以只写地址，上述的设置也可以只写地址(这个人也能收到邮件)
-    //$mail->addBCC("xxx@163.com");// 设置秘密抄送人(这个人也能收到邮件)
-    //$mail->addAttachment("bug0.jpg");// 添加附件
-    $mail->SMTPOptions = array(
-        'ssl' => array(
-            'verify_peer' => false,
-            'verify_peer_name' => false,
-            'allow_self_signed' => true
-        )
-    );
-    $mail->Subject = "小Q资源网邮件回复!";// 邮件标题
-    $mail->Body = "以下是小Q网络资源博客博主回复你的内容:".$desc_content."点击可以查看文章地址:".$desc_url;// 邮件正文
-    //$mail->AltBody = "This is the plain text纯文本";// 这个是设置纯文本方式显示的正文内容，如果不支持Html方式，就会用到这个，基本无用
-
-    if(!$mail->send()){// 发送邮件
-        return $mail->ErrorInfo;
-        // echo "Message could not be sent.";
-        // echo "Mailer Error: ".$mail->ErrorInfo;// 输出错误信息
-    }else{
-        return 1;
-    }
 }
 
 /**
@@ -760,6 +671,42 @@ function getField($table, $ignoreFields = '', $returnArray = false, $alias = '',
     }
     unset($fields, $value, $key);
     return !$returnArray ? implode(',', $field) : $field;
+}
+
+
+function is_file_exists($file)
+{
+    if(preg_match('/^http:\/\//',$file)){
+        //远程文件
+        if(ini_get('allow_url_fopen')){
+            if(@fopen($file,'r')) return true;
+        }
+        else{
+            $parseurl=parse_url($file);
+            $host=$parseurl['host'];
+            $path=$parseurl['path'];
+            $fp=fsockopen($host,80, $errno, $errstr, 10);
+            if(!$fp)return false;
+            fputs($fp,"GET {$path} HTTP/1.1 \r\nhost:{$host}\r\n\r\n");
+            if(preg_match('/HTTP\/1.1 200/',fgets($fp,1024))) return true;
+        }
+        return false;
+    }
+    return file_exists($file);
+}
+
+/**
+ * 格式化时间戳为日期格式
+ * @param  $unixTime int 时间戳
+ * @param  $format   string 时间格式
+ * @return string
+ * */
+function formatTime($unixTime, $format = 'Y-m-d H:i:s'){
+    if(!$unixTime){
+        return '';
+    }
+
+    return date($format, $unixTime);
 }
 
 

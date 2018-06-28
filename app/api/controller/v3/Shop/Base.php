@@ -21,6 +21,19 @@ class Base extends Controller {
     protected $orgId;
 
     public function __construct(){
+
+        $domain = [
+            'https://admin.xfnauto.com',
+            'http://admin.mifengqiche.com',
+        ];
+
+        $url = (is_https() ? 'https://' : 'http://') . input('server.HTTP_HOST');
+        if(!in_array($url, $domain, true)){
+            $url = '*';
+        }
+
+        header("Access-Control-Allow-Origin: {$url}" );
+
         $params = input('', '', 'htmlspecialchars,trim');
 
         (!isset($params['sessionId']) || empty($params['sessionId'])) && $this->apiReturn(201, 'SESSIONID不能为空');
@@ -95,6 +108,7 @@ class Base extends Controller {
      * @param $ignoreFields string/array  要过滤的字段
      * @param $returnArray  boolean 是否返回数组
      * @param $alias        string 表别名
+     * @pa'   $haoPrefix    bool   是否有字段前缀
      * @return string
      * */
     public function getField($table, $ignoreFields = '', $returnArray = false, $alias = '', $hasPrefix = false){

@@ -9,6 +9,7 @@
 namespace app\api\controller\v3\Shop;
 
 use app\api\model\CustomerOrder;
+use Symfony\Component\Config\Definition\Exception\Exception;
 use think\Controller;
 use think\Db;
 class Index extends Base
@@ -21,41 +22,60 @@ class Index extends Base
      * 店铺认证
      * */
     public function verify(){
-        if($this->user['user_type'] == 1){
-            $this->apiReturn(201, '', '您不是商家');
+        if(Db::name('shop_info')->where(['si_userId' => $this->userId, 'si_state' => ['neq', 2]])->count()){
+            $this->apiReturn(201, '', '您已提交申请，请勿重复提交');
         }
 
-        if(Db::name('shop_info')->where(['si_shopName' => $this->data['shopName'], 'si_userId' => $this->userId, 'si_state' => ['neq', 2]])->count()){
-            $this->apiReturn(201, '', '您已提交申请，请勿重复提交');
+        if(Db::name('shop_info')->where(['si_shopName' => $this->data['shopName'], 'si_state' => ['neq', 2]])->count()){
+            $this->apiReturn(201, '', '店铺名称已存在');
         }
 
         if(Db::name('shop_info')->where(['si_phone' => $this->data['phone'], 'si_state' => ['neq', 2]])->count()){
             $this->apiReturn(201, '', '手机号码已存在');
         }
 
-        if(Db::name('shop_info')->where(['si_shopId' => $this->orgId, 'si_state' => ['neq', 2]])->count()){
-            $this->apiReturn(201, '', '该店铺已提交过认证，请耐心等待！');
-        }
-
         $result = $this->validate($this->data, 'Shop');
         $result !== true && $this->apiReturn(201, '', $result);
 
-//        if($this->data['shopName'] !== $this->user['org_name']){
-//            $this->apiReturn(201, '', '您输入的店铺名称有误');
-//        }
-
         $data = [];
+        $fields = ['shopName', 'type', 'provinceId', 'provinceName', 'cityId', 'cityName', 'areaId', 'areaName', 'address', 'describes', 'corporation', 'phone', 'idCard', 'idCardPicOn', 'idCardPicOff', 'license', 'image'];
         foreach($this->data as $key => $value){
-            $data['si_' . $key] = $value;
+            if(in_array($key, $fields)){
+                $data['si_' . $key] = $value;
+            }
         }
 
         $data['si_createTime'] = time();
-        $data['si_shopId']     = $this->user['org_id'];
         $data['si_userId']     = $this->userId;
-        $result = Db::name('shop_info')->insert($data);
-        !$result && $this->apiReturn(201, '', '提交失败');
 
-        $this->apiReturn(200, '', '提交成功');
+        try{
+
+            Db::startTrans();
+
+            $result = Db::name('shop_info')->insert($data);
+            if(!$result){
+                throw new Exception('提交失败');
+            }
+
+            $orgId = Db::name('shop_info')->getLastInsID();
+
+            $user = [
+                'org_id'   => $orgId,
+                'org_name' => $data['si_shopName']
+            ];
+
+            $result = Db::name('shop_user')->where(['shop_user_id' => $this->userId])->update($user);
+            if($result === false){
+                throw new Exception('更新用户信息失败');
+            }
+            Db::commit();
+
+            $this->apiReturn(200, '', '提交成功');
+
+        }catch (Exception $e){
+            Db::rollback();
+            $this->apiReturn(201, '', '提交失败');
+        }
     }
 
 }

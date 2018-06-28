@@ -33,7 +33,7 @@ class ShopUser extends Model
             ['shop_loan', 's_userId=shop_user_id', 'left'],
         ];
 
-        return Db::name('shop_user')->where($where)->field($field)->join($join)->find();
+        return Db::name('shop_user')->where($where)->field($field)->join($join)->order('si_createTime desc')->group('si_createTime')->find();
     }
     
     

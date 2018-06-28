@@ -8,6 +8,7 @@
 
 namespace app\api\controller\v3\Backend;
 
+use Symfony\Component\Config\Definition\Exception\Exception;
 use think\Controller;
 use think\Db;
 class Shop extends Admin
@@ -68,16 +69,35 @@ class Shop extends Admin
         $data['state'] == 1 && $this->apiReturn(201, '', '审核已经通过，不能重复操作');
         $data['state'] == 2 && $this->apiReturn(201, '', '已拒绝该店铺通过审核');
 
-        $data = [
-            'si_operatorId' => $this->userId,
-            'si_updateTime' => time(),
-            'si_reason'     => $reason,
-            'si_state'      => $state
-        ];
+        try{
+            Db::startTrans();
 
-        $result = Db::name('shop_info')->where(['si_id' => $id])->update($data);
-        $result === false && $this->apiReturn(201, '', '操作失败');
-        $this->apiReturn(200);
+            $infoData = [
+                'si_operatorId' => $this->userId,
+                'si_updateTime' => time(),
+                'si_reason'     => $reason,
+                'si_state'      => $state
+            ];
+
+            $result = Db::name('shop_info')->where(['si_id' => $id])->update($infoData);
+            if($result === false){
+                throw new Exception('更新状态失败');
+            }
+
+            $user = [
+                'user_type' => 2,
+            ];
+
+            $result = Db::name('shop_user')->where(['shop_user_id' => $data['userId']])->update($user);
+            if($result === false){
+                throw new Exception('更新用户信息失败');
+            }
+            Db::commit();
+            $this->apiReturn(200);
+        }catch (Exception $e){
+            Db::rollback();
+            $this->apiReturn(201);
+        }
     }
 
 
