@@ -57,8 +57,8 @@ class ShopLoanApply extends Model
                 $value['createTime']  = date('Y-m-d H:i:s', $value['createTime']);
                 $value['updateTime']  = $value['updateTime'] ? date('Y-m-d H:i:s', $value['updateTime']) : '';
                 $value['image']       = $value['image'] ?: '';
-                $value['idCardOn']    = $value['idCardOn'] ?: '';
-                $value['idCardOff']   = $value['idCardOff'] ?: '';
+//                $value['idCardOn']    = $value['idCardOn'] ?: '';
+//                $value['idCardOff']   = $value['idCardOff'] ?: '';
                 $value['reason']      = $value['reason'] ?: '';
                 $value['voucher']     = $value['voucher'] ?: '';
                 for($i = 0; $i < count($shopLoanApply); $i++){

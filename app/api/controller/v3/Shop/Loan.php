@@ -104,7 +104,9 @@ class Loan extends Base
         $period      = $this->data['period'] + 0;
         $orderId     = makeOrder('DZ', 4);
         $rate        = floatval($this->data['rate']);
-        foreach($this->data['carsInfo'] as $key => $value){
+        $carsInfo    = json_decode($this->data['carsInfo'], true);
+        !is_array($carsInfo) && $this->apiReturn(201, '', '车型数据格式非法');
+        foreach($carsInfo as $key => $value){
             $result = $this->validate($value, 'LoanAddCar');
             if($result !== true){
                 $this->apiReturn(201, '', $result);

@@ -702,7 +702,7 @@ function is_file_exists($file)
  * @return string
  * */
 function formatTime($unixTime, $format = 'Y-m-d H:i:s'){
-    if(!$unixTime){
+    if(!$unixTime || strlen($unixTime) < 10){
         return '';
     }
 
