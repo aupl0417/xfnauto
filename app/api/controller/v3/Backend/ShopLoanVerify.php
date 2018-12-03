@@ -29,9 +29,9 @@ class ShopLoanVerify extends Admin
             $where['s_state'] = $state;
         }
 
-        if(isset($this->data['orgName']) && !empty($this->data['orgName'])){
-            $orgName = htmlspecialchars(trim($this->data['orgName']));
-            $where['si_shopName'] = ['like', '%' . $orgName . '%'];
+        if(isset($this->data['keywords']) && !empty($this->data['keywords'])){
+            $keywords = htmlspecialchars(trim($this->data['keywords']));
+            $where['si_shopName'] = ['like', '%' . $keywords . '%'];
         }
 
         $data = model('ShopLoan')->getShopLoanListForPage($where, $page, $rows);
@@ -73,10 +73,10 @@ class ShopLoanVerify extends Admin
             }
         }
 
-        $info = model('ShopLoan')->getShopLoanByIdAll($id);;
+        $info = model('ShopLoan')->getShopLoanByIdAll($id);
         !$info && $this->apiReturn(201, '', '数据不存在');
-        $info['state'] == 1 && $this->apiReturn(201, '', '订单已处理，审核已通过');
-        $info['state'] == 2 && $this->apiReturn(201, '', '订单已处理，审核已拒绝');
+//        $info['state'] == 1 && $this->apiReturn(201, '', '订单已处理，审核已通过');
+//        $info['state'] == 2 && $this->apiReturn(201, '', '订单已处理，审核已拒绝');
 
         $data = [
             's_state'            => $state,

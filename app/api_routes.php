@@ -57,7 +57,9 @@ Route::post('login_v1/index','api/v1.Login/index');
 //前台文章列表及详情
 Route::get('article_v1/index','api/v1.Article/index');
 Route::get('article_v1/detail','api/v1.Article/detail');
-
+Route::get('car/saveFamilyCars','api/v2.HtmlContent/saveFamilyCars');
+Route::get('car/saveFamily','api/v2.HtmlContent/saveFamily');
+Route::get('car/getCarData','api/v2.HtmlContent/getCarData');
 
 
 //前台店铺垫资接口

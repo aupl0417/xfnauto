@@ -28,9 +28,9 @@ class Shop extends Admin
             $where['si_state'] = $state;
         }
 
-        if(isset($this->data['orgName']) && !empty($this->data['orgName'])){
-            $orgName = htmlspecialchars(trim($this->data['orgName']));
-            $where['si_shopName'] = ['like', '%' . $orgName . '%'];
+        if(isset($this->data['keywords']) && !empty($this->data['keywords'])){
+            $keywords = htmlspecialchars(trim($this->data['keywords']));
+            $where['si_shopName'] = ['like', '%' . $keywords . '%'];
         }
         
         $data = model('ShopInfo')->getShopInfoForPage($where, $page, $rows);
@@ -84,14 +84,50 @@ class Shop extends Admin
                 throw new Exception('更新状态失败');
             }
 
+            $code = getRandomString(6);
+            $orgData = [
+                'parentId' => 1,
+                'seq'      => 0,
+                'orgCode'  => $code,
+                'orgCodeLevel'   => 'XFN_0MHM37_' . $code,
+                'shortName'      => $data['shopName'],
+                'provinceId'     => $data['provinceId'],
+                'provinceName'   => $data['provinceName'],
+                'cityId'         => $data['cityId'],
+                'cityName'       => $data['cityName'],
+                'areaId'         => $data['areaId'],
+                'areaName'       => $data['areaName'],
+                'address'        => $data['address'],
+                'linkman'        => $data['corporation'],
+                'telephone'      => $data['phone'],
+                'orgtype'        => 1,
+                'orgLevel'       => 3,
+                'status'         => 1,
+                'imageurl'       => implode(',', $data['image']),
+                'id_card_pic_on' => $data['idCardPicOn'],
+                'id_card_pic_off'  => $data['idCardPicOff'],
+                'nature_type'      => $data['type'],
+                'business_license' => implode(',', $data['license']),
+                'create_date'      => date('Y-m-d H:i:s'),
+            ];
+
+            $result = Db::name('system_organization')->insert($orgData);
+            if(!$result){
+                throw new Exception('新增门店失败');
+            }
+
+            $orgId = Db::name('system_organization')->getLastInsID();
             $user = [
                 'user_type' => 2,
+                'org_id'    => $orgId,
+                'org_name'  => $data['shopName']
             ];
 
             $result = Db::name('shop_user')->where(['shop_user_id' => $data['userId']])->update($user);
             if($result === false){
                 throw new Exception('更新用户信息失败');
             }
+
             Db::commit();
             $this->apiReturn(200);
         }catch (Exception $e){

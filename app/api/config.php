@@ -14,4 +14,8 @@ return [
         'appID'     => 'wxd13f45a284fbb228',
         'appsecret' => '3c67c9fa21ad2c96a17bd334603889ea',
     ),
+    'v2_xfnauto_com' => array(
+        'appID'     => 'wxd13f45a284fbb228',
+        'appsecret' => '3c67c9fa21ad2c96a17bd334603889ea',
+    ),
 ];

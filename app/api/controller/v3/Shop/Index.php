@@ -49,7 +49,6 @@ class Index extends Base
         $data['si_userId']     = $this->userId;
 
         try{
-
             Db::startTrans();
 
             $result = Db::name('shop_info')->insert($data);
@@ -60,21 +59,30 @@ class Index extends Base
             $orgId = Db::name('shop_info')->getLastInsID();
 
             $user = [
-                'org_id'   => $orgId,
-                'org_name' => $data['si_shopName']
+                'shopId'   => $orgId,
             ];
 
             $result = Db::name('shop_user')->where(['shop_user_id' => $this->userId])->update($user);
             if($result === false){
                 throw new Exception('更新用户信息失败');
             }
+
             Db::commit();
-
             $this->apiReturn(200, '', '提交成功');
-
         }catch (Exception $e){
             Db::rollback();
             $this->apiReturn(201, '', '提交失败');
+        }
+    }
+
+    public function advanceOrder(){
+        $page = (isset($this->data['page']) && !empty($this->data['page'])) ? $this->data['page'] + 0 : 1;
+        $rows = (isset($this->data['rows']) && !empty($this->data['rows'])) ? $this->data['rows'] + 0 : 10;
+
+        $where = ['shop_user_id' => $this->userId];
+        if(isset($this->data['keywords']) && !empty($this->data['keywords'])){
+            $keywords = htmlspecialchars($this->data['keywords']);
+            
         }
     }
 

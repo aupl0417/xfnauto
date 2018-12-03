@@ -15,9 +15,10 @@ class OverDue extends Validate{
     protected $rule = [
         'orderId'        => 'require|number',
         'downpayment'    => 'require|number|gt:0',
-        'rate'           => 'require|number|gt:0',
+        'rate'           => 'number|gt:0',
         'period'         => 'require|number|gt:0',
-        'voucher'        => 'require|url'
+        'amount'         => 'require|number|gt:0',
+        'voucher'        => 'url'
     ];
 
     protected $message = [
@@ -26,17 +27,20 @@ class OverDue extends Validate{
         'downpayment.require'    => '首付比例不能为空',
         'downpayment.number'     => '首付比例格式非法',
         'downpayment.gt'         => '首付比例格式非法',
-        'rate.require'           => '手续费率不能为空',
+//        'rate.require'           => '手续费率不能为空',
         'rate.number'            => '手续费率格式非法',
         'rate.gt'                => '手续费率格式非法',
         'period.require'         => '延长天数不能为空',
         'period.number'          => '延长天数格式非法',
         'period.gt'              => '延长天数格式非法',
-        'voucher.require'        => '请上传还款凭证',
+        'amount.require'         => '延期费用不能为空',
+        'amount.number'          => '延期费用格式非法',
+        'amount.gt'              => '延期费用格式非法',
+//        'voucher.require'        => '请上传还款凭证',
         'voucher.url'            => '还款凭证非法',
     ];
 
     protected $scene = [
-        'add'   =>  ['orderId','downpayment', 'rate', 'period'],
+        'add'   =>  ['orderId','downpayment', 'rate', 'period', 'amount'],
     ];
 }

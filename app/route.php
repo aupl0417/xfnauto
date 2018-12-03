@@ -22,4 +22,6 @@ return [
         'api'   => 'api',
         'v2'    => 'api_v2',
     ],
+
+    '__miss__' => 'v2.Publics/_404'
 ];

@@ -18,7 +18,7 @@ class LoanAdd extends Validate{
         'amount'          => 'require|number',
         'fee'             => 'require|number',
         'rate'            => 'require|number',
-        'carsInfo'        => 'require|checkData'
+        'carsInfo'        => 'require'
     ];
 
     protected $message = [
@@ -33,7 +33,7 @@ class LoanAdd extends Validate{
         'rate.require'        => '手续费率不能为空',
         'rate.number'         => '手续费率格式非法',
         'carsInfo.require'    => '请添加车型',
-        'carsInfo.checkData'  => '添加车型数据格式非法',
+//        'carsInfo.checkData'  => '添加车型数据格式非法',
     ];
 
     public function checkData($value){

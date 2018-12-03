@@ -244,14 +244,6 @@ return [
     'md5_crc'       => '&98&kU&D(7%$^aldLAIRld-f$3<>21%~!W@lQ#`',
     'md5_pwd'       => 'lzero&%*%$#()(*&`iLonG?><^%$#@!~+_:JuLkGJuC',
 
-
-    /*'qiniu'    => [
-        'accesskey' => 'kHuoywSGq_16RchDS9bXQgWXTlHNCG5XnOF3tJba',
-        'secretkey' => 'KqovkLXhX1-NyqQCKVBmJgOj0dfsYHoJ7hRtn1hM',
-        'bucket'    => 'aupl0401',//上传的空间
-        'domain'    =>'oimslmq8z.bkt.clouddn.com',//空间绑定的域名
-        'pipeline'  =>'avvod-pipeline'//空间绑定的域名
-    ],*/
     'qiniu'    => [
         'accesskey' => '540c9PMHKRytUmSi0879CAVu17gaDSFdOtz29vWI',
         'secretkey' => 'YYTu6sfB95H3EYnxIIuDsoxJcxRRCppkY-FqFSpD',

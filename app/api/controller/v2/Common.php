@@ -47,7 +47,6 @@ class Common extends Base
 
         $model = model('Brand');
         $data  = $model->getCarFamilyByBrandId($brandId);
-        !$data && $this->apiReturn(201);
         $this->apiReturn(200, $data);
     }
 
@@ -62,8 +61,7 @@ class Common extends Base
         $field = 'carId as id,carName as name,indexImage as image,price,pl as output,styleName';
         $model = model('Car');
         $data  = $model->getCarByFamilyId($familyId, $field, $page);
-        !$data && $this->apiReturn(201);
-        $this->apiReturn(200, $data);
+        $this->apiReturn(200, $data ?: []);
     }
 
     public function share(){

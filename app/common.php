@@ -195,14 +195,22 @@ function pdf2png($pdf, $path, $page=-1){
  * @param $data       数据 type : mixed
  * @param $controller 所在控制器
  * @param $action     方法
- * @param $params     参数 type : mixed
+ * @param $defaultDir  string  默认log地址
+ * @param $params   type : mixed  参数
  * */
-function logs_write($data, $controller, $action, $params){
-    $fp = @fopen(ROOT_PATH . 'debug_' . date('Y-m-d') . ".txt", "a+");
-    fwrite($fp, "运行：" . "----" . date('Y-m-d H:i:s') . "\n");
-    fwrite($fp, "Data:" . (is_array($data) ? json_encode($data) : $data) . "\n");
-    fwrite($fp, "Controller:" . $controller . " Action:" . $action . "\n");
-    fwrite($fp, "Params:" . (is_array($params) ? json_encode($params) : $params) . "\n");
+function logs_write($data, $controller, $action, $params = [], $defaultDir = 'runtime/api/'){
+    $dir = ROOT_PATH . $defaultDir . date('Ym');
+    if(!is_dir(ROOT_PATH . $defaultDir)){
+        @mkdir(ROOT_PATH . $defaultDir, 0777);
+    }
+    if(!is_dir($dir)){
+        @mkdir($dir, 0777);
+    }
+    $fp = @fopen($dir . '/debug_' . date('d') . '.txt', 'a+');
+    fwrite($fp, '运行：' . "----" . date('Y-m-d H:i:s') . "------------------------------------------\n");
+    fwrite($fp, 'Data:' . (is_array($data) ? var_export($data, true) : $data) . "\n");
+    fwrite($fp, 'Controller：' . $controller . " Action：" . $action . "\n");
+    fwrite($fp, 'Params:' . (is_array($params) ? var_export($params, true) : $params) . "\n");
     fwrite($fp, "------------------------------------------------------------------------\n\n");
     fclose($fp);
 }
@@ -707,6 +715,23 @@ function formatTime($unixTime, $format = 'Y-m-d H:i:s'){
     }
 
     return date($format, $unixTime);
+}
+
+/**
+ * 发送短信接口
+ * @param $phone string 手机号码
+ * @param $templateId string 模板ID  1：放款 2：还款
+ * @param $data array 内容
+ * @return bool/string
+ * */
+function sendSms($phone, $templateId, $data){
+    require_once('../extend/SMS/sms.php');
+    $sms    = new SMS();
+    $result = $sms->sendTemplateSMS($phone ,$data, $templateId);
+    if(!$result){
+        return $sms->errorMsg;
+    }
+    return true;
 }
 
 

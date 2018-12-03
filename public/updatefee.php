@@ -1,155 +1,142 @@
 <?php
+    require '../extend/TaskBase.php';
+    $orderId = isset($_GET['id']) && !empty($_GET['id']) ? $_GET['id'] + 0 : 0;
+    $map = $orderId ? ' and sa_id=' . $orderId : '';
     $field = 'sa_id,sa_state,sa_amount,sa_totalAmount,sa_rate,sa_fee,sa_feeTotal,sa_period,sa_voucherTime';
-    $where = ['sa_state' => ['in', [3, 4]], 'sa_isDel' => 0, 'sa_type' => 1];
-    $where = ' WHERE sa_state in(3,4) and sa_isDel=0 and sa_type=1';
+    $where = ' WHERE sa_state in(3,4,5) and sa_isDel=0 and sa_type=1' . $map;
     $sql   = 'Select ' . $field . ' FROM shop_loan_apply ' . $where . ' ORDER BY sa_id desc';
-    require '../extend/mysql.php';
-    $config = [
-        'type'            => 'mysql',
-        // 服务器地址
-        'hostname'        => 'gz-cdb-b1xeazxc.sql.tencentcdb.com',
-//        'hostname'        => '127.0.0.1',
-        // 数据库名
-        'database'        => 'tautotest',
-//        'database'        => 'xfnauto',
-        // 用户名
-        'username'        => 'root',
-        // 密码
-        'password'        => 'ivystudio2018',
-//        'password'        => '',
-        // 端口
-        'hostport'        => '63840',
-//        'hostport'        => '3306',
-        // 连接dsn
-        'dsn'             => '',
-        // 数据库连接参数
-        'params'          => [],
-        // 数据库编码默认采用utf8
-        'charset'         => 'utf8',
-        // 数据库表前缀
-        'prefix'          => '',
-    ];
-
-    $mysql = new mysql($config);
     $data  = $mysql->getAll($sql);
+    !$data && apiReturn(200, '', '数据不存在');
+//dump($data);die;
+//    echo '<pre>';
+//    print_r($data);die;
+    $field = 'sai_id,sai_saId,sai_price,sai_downPayments,sai_amount,sai_number,sai_fee,sai_state';
+    $infoData  = [];
+    $applyData = [];
+    $time      = isset($_GET['time']) && !empty($_GET['time']) ? strtotime($_GET['time']) : time();
+    $time < time() && apiReturn(201, '', '时间不能小于当前时间');
+//        echo $time;die;
+//        $time      = 1532756800;
+    foreach($data as $key => $value){
+        $where = ' WHERE sai_isDel = 0 and sai_saId = ' . $value['sa_id'];
+        $sql = 'SELECT ' . $field . ' FROM shop_loan_apply_info ' . $where ;
+        $infoList = $mysql->getAll($sql);//shop_loan_apply_info表中的记录
+//            print_r($infoList);die;
+        $applyData[$value['sa_id']] = ['sa_id' => $value['sa_id']];
+        if($infoList){
+            $applyData[$value['sa_id']]['sa_feeTotal'] = 0;
+            $voucherDate = date('Y-m-d', $value['sa_voucherTime']);//放款日期
 
-    if($data){
-        $field = 'sai_id,sai_saId,sai_price,sai_downPayments,sai_amount,sai_number,sai_fee,sai_state';
-        $infoData  = [];
-        $applyData = [];
-        foreach($data as $key => $value){
-            $where = ' WHERE sai_isDel = 0 and sai_saId = ' . $value['sa_id'];
-            $sql = 'SELECT ' . $field . ' FROM shop_loan_apply_info ' . $where ;
-            $infoList = $mysql->getAll($sql);
-            $applyData[$value['sa_id']] = ['sa_id' => $value['sa_id']];
-            if($infoList){
-                $applyData[$value['sa_id']]['sa_feeTotal'] = 0;
-                $days = ceil((time() - $value['sa_voucherTime']) / 3600 / 24);
-                if($value['sa_state'] == 3 && ($value['sa_period'] - $days <= 7)){
-                    $applyData[$value['sa_id']]['sa_state'] = 4;
-                }elseif($value['sa_state'] == 4 && ($value['sa_period'] - $days <= 0) ){
-                    $applyData[$value['sa_id']]['sa_state'] = 5;
-                }
-                foreach($infoList as $k => $val){
-                    if($val['sai_state'] == 0){//如果是未支付状态（0），则计算手续费，否则直接统计总手续费
-                        $fee = ceil($val['sai_price'] * $val['sai_number'] * (100 - $val['sai_downPayments']) / 100 * $value['sa_rate']  * $days) / 100;//同定单下的车型的总手续费
-                        $infoData[] = [
-                            'sai_id'  => $val['sai_id'],
-                            'sai_fee' => $fee
-                        ];
-                    }else{
-                        $fee = $val['sai_fee'];
+            //计算延期手续费
+            $overdueField = 'sao_rate,sao_fee,sao_period,sao_updateTime,sao_beginTime,sao_unpayAmount';
+            $where        = ' WHERE sao_orderId = ' . $value['sa_id'] . ' and sao_state = 1';
+            $sql = 'SELECT ' . $overdueField . ' FROM shop_loan_apply_overdue ' . $where . ' order by sao_beginTime asc';
+            $overDue = $mysql->getAll($sql);
+            //计算并加上每天的逾期手续费
+            $totalOverDueDays = 0;//总延期天数
+            $hasOverDue   = 0;//是否有延期 0：没有延期
+            //在还还清之前，会每天按正常垫资费率计算手续费，并累加，直到垫资期限时间用完
+            foreach($infoList as $k => $val){
+                $fee = $val['sai_fee'];
+                $days = ceil(($time - strtotime($voucherDate)) / 3600 / 24);
+                $loanDeadLine = strtotime($voucherDate) + $value['sa_period'] * 24 * 3600;//垫资截止日期
+                $nextTime     = $loanDeadLine;
+                $nextRate     = $value['sa_rate'];//下次循环的费率
+                if($val['sai_state'] == 0){//如果是未支付状态（0），则计算手续费，否则直接统计总手续费
+                    $overDueFee = 0;
+                    if($overDue){
+                        $days     = $days <= $value['sa_period'] ? $days : $value['sa_period'];
+                        $loanDays = (strtotime(date('Y-m-d', time())) - strtotime(date('Y-m-d', $value['sa_voucherTime']))) / 24 / 3600 + 1;//已垫资天数（不包含延期）
+                        $totalOverDueDays = array_sum(array_column($overDue, 'sao_period'));
+                        $overDueDays  = 0;
+                        $nextFee      = 0;
+                        $hasOverDue   = 1;
+                        $overDueSave  = [];
+                        $nextFeeTotal = 0;
+                        $totalOverDueTime = 0;
+
+                        $overDueFee = 0;
+                        foreach($overDue as $overKey => $due){
+                            $beginTime    = $due['sao_beginTime'];//延期开始时间
+                            $deadLine     = $beginTime + $due['sao_period'] * 24 * 3600;//延期截止时间
+                            $overDueTime  = ($beginTime - $nextTime) / 24 / 3600;//延期前的天数间隔
+                            $totalOverDueTime += $overDueTime;//总的延期间隔天数
+                            $nextFee      = $val['sai_price'] * $val['sai_number'] * (100 - $val['sai_downPayments']) / 100 * ($nextRate) / 100 * $overDueTime;//由于非延期间隔期间，还会按正常垫资计费，这里去重
+                            $nextFeeTotal += $nextFee;
+                            $rate         = $due['sao_rate'];//当前
+                            if($time < $beginTime){
+                                $overDueDays = 0;
+                            }else if($time > $beginTime && $time < $deadLine){
+                                $overDueDays = ceil(($time - $beginTime) / 24 / 3600);
+                            }else{
+                                $overDueDays = $due['sao_period'];
+                            }
+                            $nextRate     = $due['sao_rate'];
+                            $nextTime     = $deadLine;
+                            $overDueFee += $val['sai_price'] * $val['sai_number'] * (100 - $val['sai_downPayments']) / 100 * $rate / 100 * $overDueDays;//加上逾期总手续费
+                        }
+
+                        if($time > $nextTime){//过了所有的延期或无延期，之后的每天会按照最后一个延期的费率计算每天的手续费，并累加
+                            $nextFeeTotal += $val['sai_price'] * $val['sai_number'] * (100 - $val['sai_downPayments']) / 100 * $nextRate / 100 * ceil(($time - $nextTime) / 24 / 3600);
+                            $days = $days <= $value['sa_period'] ? $days : $value['sa_period'];
+                        }
                     }
-                    $applyData[$value['sa_id']]['sa_feeTotal'] += $fee;//正常情况下，同一定单的总手续费
-                }
-                $overdueField = 'sao_rate,sao_fee,sao_period,sao_updateTime';
-                $where        = ' WHERE sao_orderId = ' . $value['sa_id'] . ' and sao_state = 1';
-                $sql = 'SELECT ' . $overdueField . ' FROM shop_loan_apply_overdue ' . $where . ' order by sao_id desc';
-                $overDue = $mysql->getRow($sql);
-                //计算并加上每天的逾期手续费
-                if($overDue){
-                    $overDueDays = ceil((time() - $overDue['sao_updateTime']) / 24 / 3600);
-                    $applyData[$value['sa_id']]['sa_feeTotal'] += $value['sa_amount'] * $overDue['sao_rate'] / 100 * $overDueDays;//加上逾期总手续费
-                }
-                $applyData[$value['sa_id']]['sa_feeTotal']    = ceil($applyData[$value['sa_id']]['sa_feeTotal'] * 100) / 100;
-                $applyData[$value['sa_id']]['sa_totalAmount'] = $value['sa_amount'] + $applyData[$value['sa_id']]['sa_feeTotal'];
-                $applyData[$value['sa_id']]['sa_totalAmount'] = ceil($applyData[$value['sa_id']]['sa_totalAmount'] * 100) / 100;
-            }
-        }
-//        echo '<pre>';
-//        print_r($applyData);
-//        print_r($infoData);die;
-        try{
-            $mysql->beginTRAN();
-//            $result = $mysql->saveAll('shop_loan_apply', $applyData);
-            foreach($applyData as $key => &$value){
-                $id = $value['sa_id'];
-                $where = 'sa_id=' . $id;
-                unset($value['sa_id']);
-                $result = $mysql->update('shop_loan_apply', $value, $where);
-                if($result === false){
-                    throw new Exception('更新shop_loan_apply表id为' . $id . '总费用及总手续费失败');
-                }
-            }
-            unset($key, $value);
 
-//            $result = $mysql->saveAll('shop_loan_apply_info', $infoData);
-            foreach($infoData as $key => &$value){
-                $id = $value['sai_id'];
-                $where = 'sai_id=' . $id;
-                unset($value['sai_id']);
-                $result = $mysql->update('shop_loan_apply_info', $value, $where);
-                if($result === false){
-                    throw new Exception('更新垫资申请明细表id为' . $id . '总手续费失败');
+                    $loanFee = $val['sai_price'] * $val['sai_number'] * (100 - $val['sai_downPayments']) / 100 * $value['sa_rate']  * $days / 100;//单辆车正常垫资总额
+                    $fee = $loanFee + $overDueFee + $nextFeeTotal;//同定单下的车型的总手续费 = 正常垫资总额 + 逾期手续费总额 + 延期手续费总额
+                    $fee = sprintf('%.3f', $fee);
+                    $infoData[] = [
+                        'sai_id'  => $val['sai_id'],
+                        'sai_fee' => $fee
+                    ];
                 }
+                $applyData[$value['sa_id']]['sa_feeTotal'] += $fee;//正常情况下，同一定单的总手续费
+                $nextFeeTotal = 0;
             }
-            if($result === false){
-                throw new Exception('更新垫资申请明细表总手续费用失败');
+
+            $applyData[$value['sa_id']]['sa_feeTotal']    = round($applyData[$value['sa_id']]['sa_feeTotal'], 2);
+            $applyData[$value['sa_id']]['sa_totalAmount'] = $value['sa_amount'] + $applyData[$value['sa_id']]['sa_feeTotal'];
+            $applyData[$value['sa_id']]['sa_totalAmount'] = ceil($applyData[$value['sa_id']]['sa_totalAmount'] * 100) / 100;
+
+            $seconds = strtotime($voucherDate) + ($value['sa_period'] + $totalOverDueDays + $totalOverDueTime) * 24 * 3600 - $time;
+            if($value['sa_state'] == 3 && $seconds < 7 * 24 * 3600){//已放款状态，距还款日期还差7天时，更新状态为请还款状态（4）
+                $applyData[$value['sa_id']]['sa_state'] = 4;
+            }elseif($value['sa_state'] == 4 && $seconds < 0 ){//请还款状态，如果当前时间大于放款时间 + 垫资期限+ 延期时间 ，则状态改为已逾期（5）状态
+                $applyData[$value['sa_id']]['sa_state'] = 5;
             }
-            logs_write('更新完毕', 'test', 'test', []);
-            $mysql->commitTRAN();
-            apiReturn(200, '', '更新完毕');
-        }catch (Exception $e){
-            logs_write('更新失败' . $e->getMessage(), 'test', 'test', []);
-            $mysql->rollBackTRAN();
-            apiReturn(201, '', '更新失败' . $e->getMessage());
         }
     }
-
-
-
-/**
-* 运行日志
-* @param $data       数据 type : mixed
-* @param $controller 所在控制器
-* @param $action     方法
-* @param $params     参数 type : mixed
-* */
-function logs_write($data, $controller, $action, $params){
-    $fp = @fopen('debug_' . date('Y-m-d') . ".txt", "a+");
-    fwrite($fp, "运行：" . "----" . date('Y-m-d H:i:s') . "\n");
-    fwrite($fp, "Data:" . (is_array($data) ? json_encode($data) : $data) . "\n");
-    fwrite($fp, "Controller:" . $controller . " Action:" . $action . "\n");
-    fwrite($fp, "Params:" . (is_array($params) ? json_encode($params) : $params) . "\n");
-    fwrite($fp, "------------------------------------------------------------------------\n\n");
-    fclose($fp);
-}
-
-/**
-* 	返回数据到客户端
-*	@param $code type : int		状态码
-*   @param $info type : string  状态信息
-*	@param $data type : mixed	要返回的数据
-*	return json
-*/
-function apiReturn($code, $data = null, $msg = ''){
-    header('Content-Type:application/json; charset=utf-8');//返回JSON数据格式到客户端 包含状态信息
-
-    $jsonData = array(
-        'code' => $code,
-        'msg'  => $msg ?: ($code == 200 ? '操作成功' : '操作失败'),
-        'data' => $data ? $data : null
-    );
-
-    exit(json_encode($jsonData));
-}
+//    dump($applyData);
+//    dump($infoData);die;
+    try{
+        $mysql->beginTRAN();
+        foreach($applyData as $key => &$value){
+            $id = $value['sa_id'];
+            $where = 'sa_id=' . $id;
+            unset($value['sa_id']);
+            $result = $mysql->update('shop_loan_apply', $value, $where);
+            if($result === false){
+                throw new Exception('更新shop_loan_apply表id为' . $id . '总费用及总手续费失败');
+            }
+        }
+        unset($key, $value);
+        foreach($infoData as $key => &$value){
+            $id = $value['sai_id'];
+            $where = 'sai_id=' . $id;
+            unset($value['sai_id']);
+            $result = $mysql->update('shop_loan_apply_info', $value, $where);
+            if($result === false){
+                throw new Exception('更新垫资申请明细表id为' . $id . '总手续费失败');
+            }
+        }
+        if($result === false){
+            throw new Exception('更新垫资申请明细表总手续费用失败');
+        }
+        logs_write('更新完毕', 'test', 'test', []);
+        $mysql->commitTRAN();
+        apiReturn(200, '', '更新完毕');
+    }catch (Exception $e){
+        logs_write('更新失败' . $e->getMessage(), 'test', 'test', []);
+        $mysql->rollBackTRAN();
+        apiReturn(201, '', '更新失败' . $e->getMessage());
+    }

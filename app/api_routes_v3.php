@@ -24,10 +24,13 @@ Route::post('shop_v3/loan/apply','api/v3.Shop.Loan/apply');
 Route::get('shop_v3/loan/detail','api/v3.Shop.Loan/detail');
 Route::get('shop_v3/loan/cancel','api/v3.Shop.Loan/cancel');
 Route::get('shop_v3/loan/carcolor','api/v3.Shop.Loan/carcolor');
+Route::get('shop_v3/loan/payrecord','api/v3.Shop.Loan/payRecord');
 Route::get('shop_v3/user/shopInfo','api/v3.Shop.User/shopInfo');
 Route::get('shop_v3/user/loanInfo','api/v3.Shop.User/loanInfo');
 Route::get('shop_v3/index/updatefee','api/v3.Shop.Index/updatefee');
 Route::get('task_v3/updatefee','api/v3.Task/updatefee');
+Route::get('shop_v3/loan/overduerecords','api/v3.Shop.Loan/overdueRecords');
+Route::post('shop_v3/loan/sendsms','api/v3.Shop.Loan/sendSms');
 
 Route::post('shop_v3/loan/send','api/v3.Shop.Loan/send');
 
@@ -50,14 +53,18 @@ Route::post('backend_v3/shoploanverify/verify','api/v3.Backend.ShopLoanVerify/ve
 Route::get('backend_v3/shoploan/index','api/v3.Backend.ShopLoan/index');
 Route::post('backend_v3/shoploan/create','api/v3.Backend.ShopLoan/create');
 Route::post('backend_v3/shoploan/setrate','api/v3.Backend.ShopLoan/setRate');
+Route::get('backend_v3/shoploan/getrate','api/v3.Backend.ShopLoan/getRate');
 Route::get('backend_v3/shoploan/detail','api/v3.Backend.ShopLoan/detail');
 Route::post('backend_v3/shoploan/verify','api/v3.Backend.ShopLoan/verify');
+Route::post('backend_v3/shoploan/export','api/v3.Backend.ShopLoan/export');
 Route::post('backend_v3/shoploan/loanVoucher','api/v3.Backend.ShopLoan/loanVoucher');
 Route::post('backend_v3/shoploan/payVoucher','api/v3.Backend.ShopLoan/payVoucher');
 Route::get('backend_v3/shoploan/unpayList','api/v3.Backend.ShopLoan/unpayList');
-Route::get('backend_v3/shoploan/overdue','api/v3.Backend.ShopLoan/overdue');
+Route::post('backend_v3/shoploan/overdue','api/v3.Backend.ShopLoan/overdue');
 Route::get('backend_v3/shoploan/overdueDetail','api/v3.Backend.ShopLoan/overdueDetail');
 Route::get('backend_v3/shoploan/payRecord','api/v3.Backend.ShopLoan/payRecord');
+Route::get('backend_v3/shoploan/transferdeal','api/v3.Backend.ShopLoan/transferDeal');
+Route::get('backend_v3/shoploan/overduerecords','api/v3.Backend.ShopLoan/overdueRecords');
 
 //后台店铺认证管理
 Route::get('backend_v3/shop/index','api/v3.Backend.Shop/index');

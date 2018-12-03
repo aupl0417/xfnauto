@@ -27,9 +27,10 @@ class Brand extends Model
 
     public function getBrandList(){
         $cacheKey = md5('brand_list');
+//        cache($cacheKey, null);
         if(!$data = cache($cacheKey)){
             $field = 'brandId as id,brandName as name,brandCode as code,brandInitial as initial,imgUrl as image';
-            $res   = Db::name($this->table)->field($field)->order('brandInitial asc')->select();
+            $res   = Db::name($this->table)->where(['hasFamily' => 0])->field($field)->order('brandInitial asc')->select();
             if($res){
                 foreach($res as $key => $val){
                     $data[$val['initial']][] = $val;
@@ -54,6 +55,7 @@ class Brand extends Model
                 foreach($list as $key => $val){
                     $data[$val['type']][] = $val;
                 }
+                cache($cacheKey, $data, 3600);
                 unset($val, $list);
             }
         }

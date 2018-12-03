@@ -13,15 +13,10 @@ use think\Db;
 class Base extends Controller {
     protected $data = array();
     protected $userId;
-    protected $orgIds  = array();
-    protected $userIds = array();
-    protected $roleIds = array();
     protected $user;
-    protected $isRole;
     protected $orgId;
 
     public function __construct(){
-
         $domain = [
             'https://admin.xfnauto.com',
             'http://admin.mifengqiche.com',
@@ -41,7 +36,7 @@ class Base extends Controller {
         $user       = model('ShopUser')->getUserBySessionId($sessionId);
         !$user && $this->apiReturn(4002, '', '请重新登录');
         $this->userId = $user['shop_user_id'];
-        $this->orgId  = $user['org_id'];
+        $this->orgId  = $user['shopId'];
         $this->user   = $user;
         unset($params['sessionId']);
         $this->data = $params;

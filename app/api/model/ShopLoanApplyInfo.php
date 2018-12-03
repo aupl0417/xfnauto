@@ -26,19 +26,23 @@ class ShopLoanApplyInfo extends Model
     }
 
     public function getUnpaidDataBySaId($saId){
-        $field = 'sai_id as id,sai_orderId as orderId,sai_carId as carId,sai_carName as carName,sai_colorId as colorId,sai_colorName as colorName,
-                  sai_guidancePrice as guidancePrice,sai_price as price,sai_downPayments as downPayments,sai_amount as amount,sai_number as number,
-                  sai_state as state,sai_voucher as voucher,sai_createTime as createTime,sai_fee as fee,sai_carImage as carImage';
         $field = getField($this->table, '', false, '', true);
-        return Db::name($this->table)->where(['sai_saId' => $saId, 'sai_state' => 0, 'sai_isDel' =>  0])->field($field)->select();
+        $data  = Db::name($this->table)->where(['sai_saId' => $saId, 'sai_state' => 0, 'sai_isDel' =>  0])->field($field)->select();
+        if($data){
+            foreach($data as &$value){
+                $value['carImage']  = $value['carImage'] ?: 'http://opii7iyzy.bkt.clouddn.com/1530496843751';
+                if(strpos($value['carImage'], 'defult.jpg') !== false){
+                    $value['carImage'] = 'http://opii7iyzy.bkt.clouddn.com/1530496843751';
+                }
+                $value['createTime'] = date('Y-m-d H:i:s', $value['createTime']);
+            }
+        }
+        return $data;
     }
 
     public function getDataBySaId($saId){
-        $field = 'sai_id as id,sai_orderId as orderId,sai_carId as carId,sai_carName as carName,sai_colorId as colorId,sai_colorName as colorName,
-                  sai_guidancePrice as guidancePrice,sai_price as price,sai_downPayments as downPayments,sai_amount as amount,sai_number as number,
-                  sai_state as state,sai_voucher as voucher,sai_createTime as createTime,sai_fee as fee,sai_carImage as carImage';
         $field = getField($this->table, '', false, '', true);
-        return Db::name($this->table)->where(['sai_saId' => $saId, 'sai_isDel' =>  0])->field($field)->select();
+        return Db::name($this->table)->where(['sai_saId' => $saId, 'sai_isDel' =>  0])->field($field)->order('sai_carId desc')->select();
     }
 
     public function getDataByIds($ids){
@@ -50,6 +54,11 @@ class ShopLoanApplyInfo extends Model
         if($data){
             foreach($data as &$value){
                 $value['createTime'] = date('Y-m-d H:i:s', $value['createTime']);
+                $value['fee']        = round($value['fee'], 2);
+                $value['carImage']   = $value['carImage'] ?: 'http://opii7iyzy.bkt.clouddn.com/1530496843751';
+                if(strpos($value['carImage'], 'defult.jpg') !== false){
+                    $value['carImage'] = 'http://opii7iyzy.bkt.clouddn.com/1530496843751';
+                }
             }
         }
         return $data ?: [];

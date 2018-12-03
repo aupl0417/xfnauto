@@ -33,7 +33,7 @@ class User extends Base
         $field = $this->getField('shop_info', 'si_operatorId,updateTime,si_shopId', false, '', true);
         $data = Db::name('shop_info')->where(['si_userId' => $this->userId])->field($field)->order('si_id desc')->find();
         !$data && $this->apiReturn(200);
-        $data['idCard'] = explode(',', $data['idCard']);
+        $data['idCard']  = explode(',', $data['idCard']);
         $data['license'] = explode(',', $data['license']);
         $data['image']   = explode(',', $data['image']);
         $state = ['认证中', '已通过', '已拒绝'];
@@ -41,17 +41,17 @@ class User extends Base
         $data['reason']       = $data['reason'] ?: '';
         $data['idCardPicOn']  = $data['idCardPicOn'] ?: '';
         $data['idCardPicOff'] = $data['idCardPicOff'] ?: '';
-        $data['createTime'] = date('Y-m-d H:i:s', $data['createTime']);
+        $data['createTime']   = date('Y-m-d H:i:s', $data['createTime']);
         $this->apiReturn(200, $data);
     }
 
     public function loanInfo(){
         $field = $this->getField('shop_info', 'si_operatorId,updateTime,si_shopId', false, '', true);
-        $info = Db::name('shop_info')->where(['si_userId' => $this->userId])->field($field)->order('si_id desc')->find();
+        $info  = Db::name('shop_info')->where(['si_userId' => $this->userId])->field($field)->order('si_id desc')->find();
         !$info && $this->apiReturn(200);
 
         $field = $this->getField('shop_loan', 's_system_user_id,s_system_user_name,s_updateTime', false, '', true);
-        $data = Db::name('shop_loan')->where(['s_userId' => $this->userId])->field($field)->order('s_id desc')->find();
+        $data  = Db::name('shop_loan')->where(['s_userId' => $this->userId])->field($field)->order('s_id desc')->find();
         !$data && $this->apiReturn(200);
         $data['materials']  = $data['materials']  ? explode(',', $data['materials']) : [];
         $data['createTime'] = $data['createTime'] ? date('Y-m-d H:i:s', $data['createTime']) : '';

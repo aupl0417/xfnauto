@@ -35,9 +35,9 @@ class ShopInfo extends Model
     }
 
     public function getShopInfoForPage($where, $page = 1, $rows = 10){
-        $field = getField($this->table, '', false, '', true);
-        $count = Db::name($this->table)->where($where)->count();
-        $data  = Db::name($this->table)->where($where)->field($field)->page($page, $rows)->order('si_id desc,si_state asc')->select();
+        $field = getField($this->table, 'si_phone', false, '', true) . ',phone_number as phone';
+        $count = Db::name($this->table)->where($where)->join('shop_user', 'shop_user_id=si_userId', 'left')->count();
+        $data  = Db::name($this->table)->where($where)->join('shop_user', 'shop_user_id=si_userId', 'left')->field($field)->page($page, $rows)->order('si_id desc,si_state asc')->select();
         $type  = ['1' => '4S店', '2' => '资源公司', '3' => '汽贸公司'];
         $state = ['认证中', '已通过', '已拒绝'];
         foreach($data as $key => &$value){

@@ -1,2 +1,336 @@
 User-agent: *
 Disallow:
+request body = <TemplateSMS>
+                    <to>18675343869</to> 
+                    <appId>8a48b5514ee36774014ef7cee46618a7</appId>
+                    <templateId>1</templateId>
+                    <datas><data>6532</data><data>5</data></datas>
+                  </TemplateSMS>
+request url = https://sandboxapp.cloopen.com:8883/2013-12-26/Accounts/8a48b5514a27bb6c014a31f10cee0629/SMS/TemplateSMS?sig=775E70FF70319F9206DC0103A1843A8F
+response body = <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Response>
+    <statusCode>113302</statusCode>
+    <statusMsg>【短信】您正在使用云通讯测试模板且短信接收者不是注册的测试号码</statusMsg>
+</Response>
+
+request body = <TemplateSMS>
+                    <to>18675343869</to> 
+                    <appId>8a48b5514ee36774014ef7cee46618a7</appId>
+                    <templateId>1</templateId>
+                    <datas><data>6532</data><data>5</data></datas>
+                  </TemplateSMS>
+request url = https://app.cloopen.com:8883/2013-12-26/Accounts/8a48b5514a27bb6c014a31f10cee0629/SMS/TemplateSMS?sig=95389722DE2A8D0B75BD1751BFB0D5CE
+response body = <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Response>
+    <statusCode>113302</statusCode>
+    <statusMsg>【短信】您正在使用云通讯测试模板且短信接收者不是注册的测试号码</statusMsg>
+</Response>
+
+request body = <TemplateSMS>
+                    <to>18675343869</to> 
+                    <appId>8a48b5514ee36774014ef7cee46618a7</appId>
+                    <templateId>1</templateId>
+                    <datas><data>6532</data><data>5</data></datas>
+                  </TemplateSMS>
+request url = https://app.cloopen.com:8883/2013-12-26/Accounts/8a48b5514a27bb6c014a31f10cee0629/SMS/TemplateSMS?sig=B91762BA2F56D5CA27F2F5488428F3FC
+response body = <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Response>
+    <statusCode>000000</statusCode>
+    <TemplateSMS>
+        <smsMessageSid>185ba13b63fd4242afae2e1a1bc7372f</smsMessageSid>
+        <dateCreated>20180702144142</dateCreated>
+    </TemplateSMS>
+</Response>
+
+request body = <TemplateSMS>
+                    <to>18675343869</to> 
+                    <appId>8a48b5514ee36774014ef7cee46618a7</appId>
+                    <templateId>259008</templateId>
+                    <datas></datas>
+                  </TemplateSMS>
+request url = https://app.cloopen.com:8883/2013-12-26/Accounts/8a48b5514a27bb6c014a31f10cee0629/SMS/TemplateSMS?sig=B28AA43CEA1AD4253D6928E2E0BA62FD
+response body = <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Response>
+    <statusCode>000000</statusCode>
+    <TemplateSMS>
+        <smsMessageSid>7ed5ee7be13f494394656d2d9a66a367</smsMessageSid>
+        <dateCreated>20180702150032</dateCreated>
+    </TemplateSMS>
+</Response>
+
+request body = <TemplateSMS>
+                    <to>18675343869</to> 
+                    <appId>8a48b5514ee36774014ef7cee46618a7</appId>
+                    <templateId>259008</templateId>
+                    <datas></datas>
+                  </TemplateSMS>
+request url = https://app.cloopen.com:8883/2013-12-26/Accounts/8a48b5514a27bb6c014a31f10cee0629/SMS/TemplateSMS?sig=6FC3924AF599A05FDE7971DDD492B18A
+response body = <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Response>
+    <statusCode>000000</statusCode>
+    <TemplateSMS>
+        <smsMessageSid>574cc8c6d66048f58d6a98556ab03a80</smsMessageSid>
+        <dateCreated>20180702150100</dateCreated>
+    </TemplateSMS>
+</Response>
+
+request body = <TemplateSMS>
+                    <to>18675343869</to> 
+                    <appId>8a48b5514ee36774014ef7cee46618a7</appId>
+                    <templateId>259003</templateId>
+                    <datas></datas>
+                  </TemplateSMS>
+request url = https://app.cloopen.com:8883/2013-12-26/Accounts/8a48b5514a27bb6c014a31f10cee0629/SMS/TemplateSMS?sig=1060DC6EB0022399E3794629AD0B7EAF
+response body = <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Response>
+    <statusCode>160043</statusCode>
+    <statusMsg>应用与模板id不匹配</statusMsg>
+</Response>
+
+request body = <TemplateSMS>
+                    <to>18675343869</to> 
+                    <appId>8a48b5514ee36774014ef7cee46618a7</appId>
+                    <templateId>259008</templateId>
+                    <datas><data>aupl</data><data>2018</data><data>07</data><data>02</data><data>15</data><data>03</data><data>7</data><data>3</data><data>DZ20180630213412ASYU</data><data>8</data><data>5</data></datas>
+                  </TemplateSMS>
+request url = https://app.cloopen.com:8883/2013-12-26/Accounts/8a48b5514a27bb6c014a31f10cee0629/SMS/TemplateSMS?sig=DF2B6F47BDC39ADE27638862C70E9DE0
+response body = <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Response>
+    <statusCode>000000</statusCode>
+    <TemplateSMS>
+        <smsMessageSid>7986be85fa6a48dfa7ef4e8686dfc143</smsMessageSid>
+        <dateCreated>20180702150446</dateCreated>
+    </TemplateSMS>
+</Response>
+
+request body = <TemplateSMS>
+                    <to>18675343869</to> 
+                    <appId>8a48b5514ee36774014ef7cee46618a7</appId>
+                    <templateId>259523</templateId>
+                    <datas><data>2018</data><data>07</data><data>02</data><data>15</data><data>37</data><data>374750.715</data><data>224.715</data><data>DZ20180630213412ASYU</data><data>2488762.125</data><data>2350.125</data></datas>
+                  </TemplateSMS>
+request url = https://app.cloopen.com:8883/2013-12-26/Accounts/8a48b5514a27bb6c014a31f10cee0629/SMS/TemplateSMS?sig=1B5294631E733B59914CE0A15EE87389
+response body = <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Response>
+    <statusCode>160032</statusCode>
+    <statusMsg>短信模板无效</statusMsg>
+</Response>
+
+request body = <TemplateSMS>
+                    <to>18675343869</to> 
+                    <appId>8a48b5514ee36774014ef7cee46618a7</appId>
+                    <templateId>259523</templateId>
+                    <datas><data>2018</data><data>07</data><data>02</data><data>15</data><data>42</data><data>0</data><data>0</data><data>DZ20180630213412ASYU</data><data>2863512.84</data><data>2574.84</data></datas>
+                  </TemplateSMS>
+request url = https://app.cloopen.com:8883/2013-12-26/Accounts/8a48b5514a27bb6c014a31f10cee0629/SMS/TemplateSMS?sig=B40693EEBB51ACE10CDB46D2AE9916BE
+response body = <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Response>
+    <statusCode>160032</statusCode>
+    <statusMsg>短信模板无效</statusMsg>
+</Response>
+
+request body = <TemplateSMS>
+                    <to>18675343869</to> 
+                    <appId>8a48b5514ee36774014ef7cee46618a7</appId>
+                    <templateId>259523</templateId>
+                    <datas><data>2018</data><data>07</data><data>02</data><data>15</data><data>44</data><data>0</data><data>0</data><data>DZ20180630213412ASYU</data><data>2863512.84</data><data>2574.84</data></datas>
+                  </TemplateSMS>
+request url = https://app.cloopen.com:8883/2013-12-26/Accounts/8a48b5514a27bb6c014a31f10cee0629/SMS/TemplateSMS?sig=6B05D150A30CD2FA27465ED7D964EC20
+response body = <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Response>
+    <statusCode>160032</statusCode>
+    <statusMsg>短信模板无效</statusMsg>
+</Response>
+
+request body = <TemplateSMS>
+                    <to>18675343869</to> 
+                    <appId>8a48b5514ee36774014ef7cee46618a7</appId>
+                    <templateId>259008</templateId>
+                    <datas><data>2018</data><data>07</data><data>02</data><data>15</data><data>59</data><data>0</data><data>0</data><data>DZ20180630213412ASYU</data><data>2863512.84</data><data>2574.84</data></datas>
+                  </TemplateSMS>
+request url = https://app.cloopen.com:8883/2013-12-26/Accounts/8a48b5514a27bb6c014a31f10cee0629/SMS/TemplateSMS?sig=11C1954EF75088691C521C1B074CA7AF
+response body = <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Response>
+    <statusCode>000000</statusCode>
+    <TemplateSMS>
+        <smsMessageSid>18b79718ea2a412faea6662a884e7f08</smsMessageSid>
+        <dateCreated>20180702155922</dateCreated>
+    </TemplateSMS>
+</Response>
+
+request body = <TemplateSMS>
+                    <to>18675343869</to> 
+                    <appId>8a48b5514ee36774014ef7cee46618a7</appId>
+                    <templateId>259008</templateId>
+                    <datas><data>2018</data><data>07</data><data>02</data><data>16</data><data>05</data><data>0</data><data>0</data><data>DZ20180630213412ASYU</data><data>2863512.84</data><data>2574.84</data></datas>
+                  </TemplateSMS>
+request url = https://app.cloopen.com:8883/2013-12-26/Accounts/8a48b5514a27bb6c014a31f10cee0629/SMS/TemplateSMS?sig=2830D2EC0BBCA5815D663B9B0F8C1C57
+response body = <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Response>
+    <statusCode>000000</statusCode>
+    <TemplateSMS>
+        <smsMessageSid>5c392425028745eab877706c1e64b936</smsMessageSid>
+        <dateCreated>20180702160534</dateCreated>
+    </TemplateSMS>
+</Response>
+
+request body = <TemplateSMS>
+                    <to>18675343869</to> 
+                    <appId>8a48b5514ee36774014ef7cee46618a7</appId>
+                    <templateId>259008</templateId>
+                    <datas><data>2018</data><data>07</data><data>02</data><data>16</data><data>05</data><data>0</data><data>0</data><data>DZ20180630213412ASYU</data><data>2863512.84</data><data>2574.84</data></datas>
+                  </TemplateSMS>
+request url = https://app.cloopen.com:8883/2013-12-26/Accounts/8a48b5514a27bb6c014a31f10cee0629/SMS/TemplateSMS?sig=C217639975A71BC436F125811C9BC74F
+response body = <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Response>
+    <statusCode>000000</statusCode>
+    <TemplateSMS>
+        <smsMessageSid>058913a0abc44680a82fbc831fa98d0d</smsMessageSid>
+        <dateCreated>20180702160547</dateCreated>
+    </TemplateSMS>
+</Response>
+
+request body = <TemplateSMS>
+                    <to>18675343869</to> 
+                    <appId>8a48b5514ee36774014ef7cee46618a7</appId>
+                    <templateId>259008</templateId>
+                    <datas><data>2018</data><data>07</data><data>02</data><data>16</data><data>10</data><data>374750.715</data><data>224.715</data><data>DZ20180630213412ASYU</data><data>2488762.125</data><data>2350.125</data></datas>
+                  </TemplateSMS>
+request url = https://app.cloopen.com:8883/2013-12-26/Accounts/8a48b5514a27bb6c014a31f10cee0629/SMS/TemplateSMS?sig=142D4A986AE6068589B57F6CBF51AE17
+response body = <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Response>
+    <statusCode>000000</statusCode>
+    <TemplateSMS>
+        <smsMessageSid>00498c59b52d436a8c401d1bc1eb25c7</smsMessageSid>
+        <dateCreated>20180702161008</dateCreated>
+    </TemplateSMS>
+</Response>
+
+request body = <TemplateSMS>
+                    <to>18675343869</to> 
+                    <appId>8a48b5514ee36774014ef7cee46618a7</appId>
+                    <templateId>259008</templateId>
+                    <datas><data>wuyc2</data><data>2018</data><data>07</data><data>02</data><data>16</data><data>14</data><data>374750.715</data><data>224.715</data><data>DZ20180630213412ASYU</data><data>2488762.125</data><data>2350.125</data></datas>
+                  </TemplateSMS>
+request url = https://app.cloopen.com:8883/2013-12-26/Accounts/8a48b5514a27bb6c014a31f10cee0629/SMS/TemplateSMS?sig=1F7E401A5ED02425E04D28790FA0D8B7
+response body = <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Response>
+    <statusCode>000000</statusCode>
+    <TemplateSMS>
+        <smsMessageSid>599c81ccca8f42f784d1330df3317f77</smsMessageSid>
+        <dateCreated>20180702161435</dateCreated>
+    </TemplateSMS>
+</Response>
+
+request body = <TemplateSMS>
+                    <to>15976427940</to> 
+                    <appId>8a48b5514ee36774014ef7cee46618a7</appId>
+                    <templateId>259008</templateId>
+                    <datas><data>wuyc2</data><data>2018</data><data>07</data><data>02</data><data>16</data><data>23</data><data>374750.715</data><data>224.72</data><data>DZ20180630213412ASYU</data><data>2488762.125</data><data>2350</data></datas>
+                  </TemplateSMS>
+request url = https://app.cloopen.com:8883/2013-12-26/Accounts/8a48b5514a27bb6c014a31f10cee0629/SMS/TemplateSMS?sig=7ADF69A69D4614CD112953B3BE569A9B
+response body = <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Response>
+    <statusCode>000000</statusCode>
+    <TemplateSMS>
+        <smsMessageSid>857f0ec50ad244858511ae3fdcd81179</smsMessageSid>
+        <dateCreated>20180702162343</dateCreated>
+    </TemplateSMS>
+</Response>
+
+request body = <TemplateSMS>
+                    <to>15976427941</to> 
+                    <appId>8a48b5514ee36774014ef7cee46618a7</appId>
+                    <templateId>259008</templateId>
+                    <datas><data>wuyc2</data><data>2018</data><data>07</data><data>02</data><data>16</data><data>52</data><data>374750.715</data><data>224.72</data><data>DZ20180630213412ASYU</data><data>2488762.125</data><data>2350</data></datas>
+                  </TemplateSMS>
+request url = https://sandboxapp.cloopen.com:8883/2013-12-26/Accounts/8a48b5514a27bb6c014a31f10cee0629/SMS/TemplateSMS?sig=BC49A63E73CA3D6FB7C3A8C3FE7DE4C8
+response body = <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Response>
+    <statusCode>000000</statusCode>
+    <TemplateSMS>
+        <smsMessageSid>51a416e2e8b64a94a623856cf31f4ade</smsMessageSid>
+        <dateCreated>20180702165226</dateCreated>
+    </TemplateSMS>
+</Response>
+
+request body = <TemplateSMS>
+                    <to>15976427947</to> 
+                    <appId>8a48b5514ee36774014ef7cee46618a7</appId>
+                    <templateId>259559</templateId>
+                    <datas><data>2018</data><data>07</data><data>02</data><data>19</data><data>33</data><data>DZ20180702193317BQRM</data><data>77352.00</data></datas>
+                  </TemplateSMS>
+request url = https://sandboxapp.cloopen.com:8883/2013-12-26/Accounts/8a48b5514a27bb6c014a31f10cee0629/SMS/TemplateSMS?sig=216B03DFF12395D12AD290A151809B1E
+response body = <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Response>
+    <statusCode>000000</statusCode>
+    <TemplateSMS>
+        <smsMessageSid>83e099ceb4054e34b6ccc0c03a614110</smsMessageSid>
+        <dateCreated>20180703174531</dateCreated>
+    </TemplateSMS>
+</Response>
+
+request body = <TemplateSMS>
+                    <to>18675343869</to> 
+                    <appId>8a48b5514ee36774014ef7cee46618a7</appId>
+                    <templateId>259008</templateId>
+                    <datas><data>吴玉超</data><data>2018</data><data>07</data><data>10</data><data>11</data><data>00</data><data>71574.22</data><data>1626.22</data><data>DZ20180705232351SM5K</data><data>28367.27</data><data>1613.27</data></datas>
+                  </TemplateSMS>
+request url = https://sandboxapp.cloopen.com:8883/2013-12-26/Accounts/8a48b5514a27bb6c014a31f10cee0629/SMS/TemplateSMS?sig=0003FDA5BE98225DD5D4837F70DCB09A
+response body = <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Response>
+    <statusCode>000000</statusCode>
+    <TemplateSMS>
+        <smsMessageSid>000f7a7057984060af7329f5e2a8f2b5</smsMessageSid>
+        <dateCreated>20180710110100</dateCreated>
+    </TemplateSMS>
+</Response>
+
+request body = <TemplateSMS>
+                    <to>18675343869</to> 
+                    <appId>8a48b5514ee36774014ef7cee46618a7</appId>
+                    <templateId>259008</templateId>
+                    <datas><data>吴玉超</data><data>2018</data><data>07</data><data>10</data><data>11</data><data>19</data><data>71574.22</data><data>1626.22</data><data>DZ20180705232351SM5K</data><data>28367.27</data><data>1613.27</data></datas>
+                  </TemplateSMS>
+request url = https://sandboxapp.cloopen.com:8883/2013-12-26/Accounts/8a48b5514a27bb6c014a31f10cee0629/SMS/TemplateSMS?sig=9E46A62C3008110FA69754496D4FE00B
+response body = <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Response>
+    <statusCode>000000</statusCode>
+    <TemplateSMS>
+        <smsMessageSid>6711b3a036f7409da82c946a15fba0cb</smsMessageSid>
+        <dateCreated>20180710111905</dateCreated>
+    </TemplateSMS>
+</Response>
+
+request body = <TemplateSMS>
+                    <to>18675343869</to> 
+                    <appId>8a48b5514ee36774014ef7cee46618a7</appId>
+                    <templateId>259008</templateId>
+                    <datas><data>吴玉超</data><data>2018</data><data>07</data><data>10</data><data>11</data><data>19</data><data>71574.22</data><data>1626.22</data><data>DZ20180705232351SM5K</data><data>28367.27</data><data>1613.27</data></datas>
+                  </TemplateSMS>
+request url = https://sandboxapp.cloopen.com:8883/2013-12-26/Accounts/8a48b5514a27bb6c014a31f10cee0629/SMS/TemplateSMS?sig=998AC3A46EFB7DF6C6C0684B519D3952
+response body = <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Response>
+    <statusCode>000000</statusCode>
+    <TemplateSMS>
+        <smsMessageSid>9d53122b842c47a48daf96ce89543b50</smsMessageSid>
+        <dateCreated>20180710111916</dateCreated>
+    </TemplateSMS>
+</Response>
+
+request body = <TemplateSMS>
+                    <to>15976427940</to> 
+                    <appId>8a48b5514ee36774014ef7cee46618a7</appId>
+                    <templateId>259008</templateId>
+                    <datas><data>吴玉超</data><data>2018</data><data>07</data><data>10</data><data>13</data><data>17</data><data>28367.27</data><data>3239.49</data><data>DZ20180705232351SM5K</data><data>0</data><data>0</data></datas>
+                  </TemplateSMS>
+request url = https://sandboxapp.cloopen.com:8883/2013-12-26/Accounts/8a48b5514a27bb6c014a31f10cee0629/SMS/TemplateSMS?sig=142A07A48DC99AFEB0BCE54E932100DA
+response body = <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Response>
+    <statusCode>000000</statusCode>
+    <TemplateSMS>
+        <smsMessageSid>cd2a9e804f64429faf82bbb9664b899e</smsMessageSid>
+        <dateCreated>20180710131749</dateCreated>
+    </TemplateSMS>
+</Response>
+
