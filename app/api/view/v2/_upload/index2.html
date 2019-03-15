@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>批量上传</title>
+    <link rel="Stylesheet" href="css/uploadify.css" />
+    <script type="text/javascript" src="Scripts/jquery-1.4.4.min.js"></script>
+    <script type="text/javascript" src="Scripts/jquery.uploadify.min.js"></script>
+    <script type="text/javascript" src="Scripts/swfobject.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            $('#custom_file_upload').uploadify({
+                    'uploader': 'Scripts/uploadify.swf',
+                    'script': 'ashx/Upload.ashx',
+                    'cancelImg': 'images/uploadify-cancel.png',
+                    'folder': '/Upload',
+                    'multi': true,
+                'auto': false,
+                'fileExt': '*.jpg;*jpeg;*.gif;*.png;*.mp4',
+                'fileDesc': '图片文件 (.JPG, .JPEG, .GIF, .PNG)',
+                'queueID': 'custom-queue',
+                'queueSizeLimit': 10,
+                'simUploadLimit': 10,
+                'buttonText': '选择文件',
+                //'buttonImg': '/Scripts/uploadify-cancel.png',
+                'removeCompleted': true,
+                'onSelectOnce': function (event, data) {
+                $('#status-message').text(data.filesSelected + ' 个文件加入上传队列');
+            },
+            'onClearQueue': function (event, data) {
+                $('#status-message').text('请选择要上传的文件:');
+            },
+            'onComplete': function (event, queueId, fileObj, response, data) {
+                //alert(response.split('|')[1]); //这里获取上传后的URL路径，用来在前台显示
+                window.parent.document.getElementById('<%=file_id %>').value += response.split('|')[1] + space;
+            },
+            'onAllComplete': function (event, data) {
+                $('#status-message').text(data.filesUploaded + ' 个文件已上传');
+            }
+        });
+
+            $("#Up").click(function () {
+                if ($("#custom-queue").html() == "") {
+                    alert("请选择要上传的文件");
+                }
+                else {
+                    window.parent.document.getElementById('<%=file_id %>').value = "";
+                    $('#custom_file_upload').uploadifyUpload(null, false); //一个一个传
+                    //$('#custom_file_upload').uploadifyUpload(null, true);//同时传
+                }
+            });
+
+            $("#Clear").click(function () {
+                $('#custom_file_upload').uploadifyClearQueue();
+            });
+
+        });
+    </script>
+    <style type="text/css">
+        body{font-size:14px; font-family:微软雅黑;}
+        #custom-demo .uploadifyQueueItem {
+            background-color: #FFFFFF;
+            border: none;
+            border-bottom: 1px solid #E5E5E5;
+            font: 11px Verdana, Geneva, sans-serif;
+            height: 20px;
+            margin-top: 0;
+            padding: 10px;
+            width: 350px;
+        }
+        #custom-demo #custom-queue {
+            border: 1px solid #E5E5E5;
+            margin-bottom: 10px;
+            width: 370px;
+        }
+        #custom-demo object{
+            float:left;
+        }
+        .button{
+            float:right;
+            width:120px;
+            height:30px;
+            background-color:#525252;
+            color:#fff;
+            border:0;
+            font-size:14px; font-family:微软雅黑;
+            cursor:pointer;
+            margin-right:10px;
+            _margin-right:7px;
+        }
+
+    </style>
+</head>
+<body>
+<div id="custom-demo" class="demo">
+    <div class="demo-box">
+        <div id="status-message">请选择要上传的文件:</div>
+        <div id="custom-queue"></div>
+        <input id="custom_file_upload" type="file" name="Filedata" class="button" /> <input type="button" id="Up" name="Up" value="上传" class="button" /> <input type="button" id="Clear" name="Clear" value="清空" class="button" />
+    </div>
+</div>
+</body>
+</html>

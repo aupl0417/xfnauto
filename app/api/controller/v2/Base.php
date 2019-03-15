@@ -25,6 +25,8 @@ class Base extends Controller {
     );
 
     public function __construct(){
+        $url = '*';
+        header("Access-Control-Allow-Origin: {$url}" );
         $params = input('', '', 'htmlspecialchars,trim');
         if(in_array(strtolower(request()->action()), ['contract', 'createimage'])){
             (!isset($params['sessionId']) || empty($params['sessionId'])) && $this->apiReturn(201, 'SESSIONID不能为空');

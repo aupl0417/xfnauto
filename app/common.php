@@ -734,4 +734,139 @@ function sendSms($phone, $templateId, $data){
     return true;
 }
 
+function grabImage($url, $dir, $filename=''){
+    if(empty($url)){
+        return false;
+    }
+    $image = getimagesize($url);
+    $ext   = trim(strrchr($image['mime'], '/'), '/');
+    if(!in_array($ext, ['gif', 'jpg', 'bmp', 'jpeg', 'png', 'tiff'], true)){
+        return false;
+    }
+    if($ext == 'tiff'){
+        $ext = 'jpg';
+    }
+//    $dir = realpath($dir);
+    //目录+文件
+    $filename = (empty($filename) ? '/' . time() : '/'.$filename);
+    $filename = $filename . '.' . $ext;
+    //开始捕捉
+    ob_start();
+    readfile($url);
+    $img = ob_get_contents();
+    ob_end_clean();
+    $size = strlen($img);
+    $fp2 = fopen($dir . $filename , "a");
+    fwrite($fp2, $img);
+    fclose($fp2);
+    return trim($filename, '/');
+}
+
+//获取文件列表
+function list_dir($dir){
+    $result = array();
+    if (is_dir($dir)){
+        $file_dir = scandir($dir);
+        foreach($file_dir as $file){
+            if ($file == '.' || $file == '..'){
+                continue;
+            }
+            elseif (is_dir($dir.$file)){
+                $result = array_merge($result, list_dir($dir.$file.'/'));
+            }
+            else{
+                array_push($result, $dir.$file);
+            }
+        }
+    }
+    return $result;
+}
+
+function addFileToZip($path, &$zip) {
+    $handler = opendir($path); //打开当前文件夹由$path指定。
+    $path = trim($path, '/');
+    while (($filename = readdir($handler)) !== false) {
+        if ($filename != '.' && $filename != '..') {//文件夹文件名字为'.'和‘..’，不要对他们进行操作
+            if (is_dir($path . '/' . $filename)) {// 如果读取的某个对象是文件夹，则递归
+                addFileToZip($path . '/' . $filename, $zip);
+            } else { //将文件加入zip对象
+                $zip->addFile($path .  '/' . $filename);
+            }
+        }
+    }
+    @closedir($path);
+}
+
+//获取文件列表
+function delDir($dir){
+    if (is_dir($dir)){
+        $file_dir = scandir($dir);
+        foreach($file_dir as $file){
+            if ($file == '.' || $file == '..'){
+                continue;
+            }elseif (is_dir($dir . $file)){
+                delDir($dir.$file.'/');
+            }else{
+                unlink($dir . $file);
+            }
+        }
+        closedir($file_dir);
+        rmdir( $dir );
+    }
+    return true;
+}
+
+//循环删除目录和文件函数
+function delDirAndFile($dirName){
+    if(!is_dir($dirName)){
+        return false;
+    }
+    if ($handle = opendir($dirName)){
+        while(false !== ($item = readdir($handle))) {
+            if ($item != '.' && $item != '..'){
+                if(is_dir( $dirName . '/' . $item)){
+                    delDirAndFile($dirName . '/' . $item);
+                }else {
+                    unlink( $dirName . '/' . $item);
+                }
+            }
+        }
+        closedir( $handle );
+        if(rmdir( $dirName ) ){
+            return true;
+        }else{
+            return false;
+        }
+    }
+}
+
+/**
+ * 运行日志
+ * @param $isRead  boolean  true读  false：写
+ * @param $data    mixed    数据
+ * @param $defaultDir  string  默认log地址
+ * @return boolean
+ * */
+function statistics($isRead = false, $data = '', $defaultDir = 'public/statistics/'){
+    $dir = ROOT_PATH . $defaultDir . date('Ym');
+    if(!is_dir(ROOT_PATH . $defaultDir)){
+        @mkdir(ROOT_PATH . $defaultDir, 0777);
+    }
+    if(!is_dir($dir)){
+        @mkdir($dir, 0777);
+    }
+    $path     = $dir . '/index.txt';
+    $fp       = @fopen($path, 'r');
+    $content  = @fread($fp, filesize(trim($path))) + 0;
+    if($isRead){
+        fclose($fp);
+        return $content;
+    }else{
+        $content  = $content + $data;
+        $fp       = @fopen($path, 'w');
+        fwrite($fp, $content);
+        fclose($fp);
+    }
+}
+
 

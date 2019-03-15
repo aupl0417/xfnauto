@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<!--[if IE 8]> <html lang="zh" class="ie8 no-js"> <![endif]-->
+<!--[if IE 9]> <html lang="zh" class="ie9 no-js"> <![endif]-->
+<!--[if !IE]><!-->
+<html lang="zh">
+<!--<![endif]-->
+<!-- BEGIN HEAD -->
+<head>
+    <meta charset="utf-8"/>
+    <title>文件管理系统</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <meta content="" name="description"/>
+
+    <!-- <link href="https://fonts.useso.com/css?family=Open+Sans:400,300,600,700&subset=all" rel="stylesheet" type="text/css"/> -->
+    <link href="__CSS__/plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css"/>
+    <link href="__CSS__/plugins/simple-line-icons/simple-line-icons.min.css" rel="stylesheet" type="text/css"/>
+    <link href="__CSS__/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+    <link href="__CSS__/plugins/uniform/css/uniform.default.css" rel="stylesheet" type="text/css"/>
+    <link href="__CSS__/plugins/bootstrap-switch/css/bootstrap-switch.min.css" rel="stylesheet" type="text/css"/>
+    <link href="__CSS__/css/components.css" rel="stylesheet" type="text/css"/>
+    <link href="__CSS__/css/plugins.css" rel="stylesheet" type="text/css"/>
+
+
+    <link href="__CSS__/themes/default/css/tasks.css" rel="stylesheet" type="text/css"/>
+    <link href="__CSS__/plugins/fullcalendar/fullcalendar.min.css" rel="stylesheet" type="text/css"/>
+
+    <!-- modal对话框样式 -->
+    <link href="__CSS__/plugins/bootstrap-modal/css/bootstrap-modal.css" rel="stylesheet" type="text/css"/>
+    <!-- modal对话框样式 end -->
+
+    <!-- 滑出式消息框样式 -->
+    <link rel="stylesheet" type="text/css" href="__CSS__/plugins/bootstrap-toastr/toastr.min.css"/>
+    <!-- 滑出式消息框样式 end -->
+
+    <!-- 树状菜单样式 end -->
+
+    <link href="__CSS__/themes/default/css/layout.css" rel="stylesheet" type="text/css"/>
+    <link href="__CSS__/themes/default/css/default.css" rel="stylesheet" type="text/css"/>
+
+
+    <!-- datatables样式 -->
+    <link rel="stylesheet" type="text/css" href="__CSS__/plugins/datatables/plugins/bootstrap/dataTables.bootstrap.min.css"/>
+    <!-- datatables样式 固定列 -->
+    <!-- select2下拉框样式 -->
+    <link rel="stylesheet" type="text/css" href="__CSS__/plugins/select2/select2.css"/>
+    <!-- datatables样式 固定表头 -->
+    <link rel="stylesheet" type="text/css" href="__CSS__/plugins/datatables/extensions/FixedHeader/css/dataTables.fixedHeader.min.css"/>
+
+    <!-- 图片裁剪样式 -->
+    <link href="__CSS__/plugins/jcrop/css/jquery.Jcrop.min.css" rel="stylesheet"/>
+    <!-- 图片裁剪样式 end -->
+
+    <!-- datepicker样式 -->
+    <link rel="stylesheet" type="text/css" href="__CSS__/plugins/bootstrap-datepicker/css/bootstrap-datepicker3.min.css"/>
+    <link rel="stylesheet" type="text/css" href="__CSS__/plugins/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css"/>
+    <!-- datepicker样式 end -->
+    <link rel="shortcut icon" href="favicon.ico"/>
+    <!-- js都放在</body>之前,根据实际需求可将部分js(例如:jquery.min.js)放到到<head></head>中 -->
+    <script src="__CSS__/plugins/jquery.min.js" type="text/javascript"></script>
+
+    <!-- 核心js,不要修改 -->
+    <!--[if lte IE 9]>
+    <div style="color: #8a6d3b; background-color: #fcf8e3;border-color: #faebcc;padding:20px;text-align:center;">
+        不支持低版本的IE浏览器！ 请 <a target="_blank" href="http://windows.microsoft.com/zh-cn/internet-explorer/download-ie" style="color:#ff6600;text-decoration:underline;">升级到最新版本的IE浏览器</a> 或使用其它非IE内核浏览器 <a target="_blank" href="http://chrome.360.cn/" style="color:#ff6600;text-decoration:underline;">360极速浏览器</a>。
+    </div>
+    <script>
+        document.write('<script type="text/undefined">');
+    </script>
+    <![endif]> -->
+
+    <script src="__CSS__/plugins/jquery-migrate.min.js" type="text/javascript"></script>
+    <script src="__CSS__/plugins/jquery-ui/jquery-ui.min.js" type="text/javascript"></script>
+    <script src="__CSS__/plugins/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+    <script src="__CSS__/plugins/bootstrap-hover-dropdown/bootstrap-hover-dropdown.min.js" type="text/javascript"></script>
+    <script src="__CSS__/plugins/jquery-slimscroll/jquery.slimscroll.min.js" type="text/javascript"></script>
+    <script src="__CSS__/plugins/jquery.blockui.min.js" type="text/javascript"></script>
+    <script src="__CSS__/plugins/jquery.cokie.min.js" type="text/javascript"></script>
+    <script src="__CSS__/plugins/uniform/jquery.uniform.min.js" type="text/javascript"></script>
+    <script src="__CSS__/plugins/bootstrap-switch/js/bootstrap-switch.min.js" type="text/javascript"></script>
+    <script src="__CSS__/plugins/arttemplate/template.js"></script>
+    <!-- 核心js end -->
+
+    <script type="text/javascript" src="__CSS__/plugins/select2/select2.min.js"></script><!-- select2下拉框 -->
+    <script type="text/javascript" src="__CSS__/plugins/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script><!-- 日期控件 -->
+    <script type="text/javascript" src="__CSS__/plugins/moment/moment.js"></script>
+    <script type="text/javascript" src="__CSS__/plugins/moment/locale/zh-cn.js"></script>
+    <script type="text/javascript" src="__CSS__/plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script><!-- 日期控件 -->
+    <script type="text/javascript" src="__CSS__/plugins/bootstrap-modal/js/bootstrap-modalmanager.js"></script><!-- 模态框 -->
+    <script type="text/javascript" src="__CSS__/plugins/bootstrap-modal/js/bootstrap-modal.js"></script><!-- 模态框 -->
+    <script type="text/javascript" src="__CSS__/plugins/jquery-validation/js/jquery.validate.min.js"></script><!-- 表单验证 -->
+    <script type="text/javascript" src="__CSS__/plugins/jquery-validation/js/additional-methods.min.js"></script><!-- 表单验证 -->
+    <script type="text/javascript" src="__CSS__/plugins/jquery.form.js"></script><!-- 表单提交 -->
+    <script src="__CSS__/scripts/submit.js" type="text/javascript"></script> <!-- 表单提交新方法 -->
+
+    <script type="text/javascript" src="__CSS__/plugins/datatables/media/js/jquery.dataTables.js"></script><!-- dataTables -->
+    <script type="text/javascript" src="__CSS__/plugins/datatables/plugins/bootstrap/dataTables.bootstrap.js"></script><!-- dataTables -->
+    <script type="text/javascript" src="__CSS__/plugins/datatables/extensions/FixedHeader/js/dataTables.fixedHeader.js"></script><!-- dataTables 固定表头 -->
+
+    <script src="__CSS__/scripts/datatable.js" type="text/javascript"></script>
+
+    <script type="text/javascript" src="__CSS__/plugins/bootstrap-toastr/toastr.min.js"></script><!-- 滑出式消息框 -->
+    <script src="__CSS__/plugins/jquery.pulsate.min.js" type="text/javascript"></script> <!-- 震动提示 -->
+    <script type="text/javascript" src="__CSS__/plugins/bootbox/bootbox.min.js"></script><!-- 模态框对话框 -->
+    <script src="__CSS__/plugins/jquery-bootpag/jquery.bootpag.min.js" type="text/javascript"></script><!-- 模态框对话框 -->
+    <script src="__CSS__/plugins/bootstrap-confirmation/bootstrap-confirmation.min.js" type="text/javascript"></script><!-- 模态框对话框 -->
+
+    <script src="__CSS__/plugins/autosize/autosize.min.js" type="text/javascript"></script>
+
+    <!-- 上传插件 start -->
+    <script type="text/javascript" src="__CSS__/plugins/plupload/js/plupload.full.js" charset="UTF-8"></script><!-- 上传核心 -->
+    <script type="text/javascript" src="__CSS__/plugins/jcrop/js/jquery.Jcrop.min.js"></script><!-- 图片裁剪 -->
+    <script src="__CSS__/scripts/upload.js" type="text/javascript"></script> <!-- 上传&裁剪打包 -->
+    <!-- 上传插件 end -->
+
+    <!-- 模板加载 -->
+    <script src="__CSS__/scripts/template.load.js"></script>
+
+    <!-- global js -->
+    <script src="__CSS__/scripts/global.js" type="text/javascript"></script>
+    <!-- global js end -->
+
+    <!-- 多级select联动 -->
+    <script src="__CSS__/scripts/mcselect.js"></script>
+
+    <script src="__CSS__/scripts/calc.js" type="text/javascript"></script>
+    <script src="__CSS__/themes/default/scripts/layout.js" type="text/javascript"></script>
+
+    <!-- end js -->
+
+</head>
+
+<body class="page-header-fixed page-footer-fixed page-container-bg-solid page-sidebar-fixed page-sidebar-closed-hide-logo">
+<!-- begin head -->
+<!-- head end -->
+
+<div class="clearfix"> </div>
+
+<!-- 模块内容区域 -->
+<div class="page-content-wrapper">
+    <div class="page-content">
+        <div class="page-content-body"><!-- scroller" style="height:500px;-->
+            <script type="text/javascript" src="__CSS__/plugins/uploadify/jquery.uploadify.min.js"></script>
+            <link href="__CSS__/plugins/uploadify/uploadify.css" rel="stylesheet" type="text/css" />
+            <link href="__CSS__/plugins/uploadify/common.css" rel="stylesheet" type="text/css" />
+
+            <!--内容-->
+            <div class="portlet light">
+                <div class="portlet-title">
+                    <div class="caption"><input type='file' name='file' class='btn blue' id='fileField'></div>
+                </div>
+                <div class="portlet-body">
+                    <div class="form-body clearfix">
+                            {eq name="type" value="image"}
+                            <div class="form-group form-md-line-input">
+                                <label class="col-md-2 control-label">接收邮箱</label>
+                                <div class="col-md-10 imgList">
+                                    <input type="text" name="email" id="email" value=""/>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <div class="row">
+                                    <div class="col-md-offset-2 col-md-9">
+                                        <replace value="classId">
+                                            <input type="hidden" name="classId" id="formhtml" value="{classId}"/>
+                                        </replace>
+                                        <button type="button" class="btn blue" id="subBtn">提交</button>
+                                        <button type="button" class="btn default" data-dismiss="modal">取消</button>
+                                    </div>
+                                </div>
+                            </div>
+                            {/eq}
+                        <!--基本信息-->
+                    </div>
+                </div>
+            </div>
+            <!--内容-->
+            <script>
+                //上传文件
+                /* 初始化上传插件 */
+                var random = Math.random();
+                var title  = "{$title}";
+                var type   = "{$type}";
+                var domain = "{$domain}";
+                var PHPSESSID = '<replace value="PHPSESSID">{$sessionId}</replace>';
+                $("#fileField").uploadify({
+                    "swf"             : "__CSS__/plugins/uploadify/uploadify.swf?ver=" + random,
+                    "fileObjName"     : "file",
+                    'cancelImg'		  : '__CSS__/plugins/uploadify/cancel.png',
+                    "buttonText"      : title,
+                    "uploader"        : domain + "/upload_v2/uploadExcel?type=" + type + "&ver=" + random,
+                    "width"           : 120,
+                    "height"          : 34,
+                    'removeTimeout'   : 1,
+                    'formData'        : {'PHPSESSID': PHPSESSID},
+                    'onInit'		  : init,
+                    'multi'			  : true,
+                    "onUploadSuccess" : uploadSuccess,
+                    'onFallback' : function() {
+                        alert('未检测到兼容版本的Flash.');
+                    },
+                    'onUploadError'   : function(file, errorCode, errorMsg, errorString) {
+                        alert('The file ' + file.name + ' could not be uploaded: ' + errorString);
+                    }
+                });
+                function init(){
+                    $('#upload-file, #upload-file-queue').css('display','inline-block');
+                }
+
+                /* 文件上传成功回调函数 */
+                function uploadSuccess(file, data){
+                    var data = $.parseJSON(data);
+                    if(data.resultCode == 200){
+                        if(data.data.url != ''){
+                            window.location.href = data.data.url;
+                        }
+                    }else if(data.resultCode == 202){
+                        window.location.href = data.data.url;
+                    }else{
+                        alert(data.message);
+                    }
+                }
+                $('#subBtn').click(function () {
+                    $(this).text('生成中');
+                    $(this).attr('disabled', true);
+                    var email = $('#email').val();
+                    $.ajax({
+                        'type': 'GET',
+                        'url' :  domain + '/upload_v2/makeZip',
+                        'data' : {email : email},
+                        'dataType' : 'json',
+                        success:function(data){
+                            if(data.resultCode == 200){
+                                alert('生成成功');
+                                $('#subBtn').text('提交');
+                                $('#subBtn').attr('disabled', false);
+                                window.location.href = domain + '/upload_v2/index'
+                            }else{
+                                $('#subBtn').text('提交');
+                                $('#subBtn').attr('disabled', false);
+                                alert(data.message);
+                            }
+                        },
+                        error:function(jqXHR){
+                            console.log("Error: "+jqXHR.status);
+                        }
+                    });
+                });
+            </script>
+            <script src="__CSS__/themes/default/scripts/addClassPicture.js" type="text/javascript"></script>
+            <!-- end 内容-->
+        </div>
+    </div>
+</div>
+<!-- end 模块内容区域 -->
+
+</div>
+<!-- end 内容区域 -->
+<div></div>
+<!-- begin footer -->
+<div class="page-footer">
+    <div class="page-footer-inner">
+        <div class="copyright"></div>
+    </div>
+    <div class="scroll-to-top"> <i class="icon-arrow-up"></i> </div>
+</div>
+<!-- end footer -->
+
+<!-- 模态框预加载-->
+<div class="modal fade modal-scroll" id="global-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-replace="true">
+    <div class="modal-dialog">
+        <div class="modal-content" id="global-modal-content"></div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->
+<!-- end 模态框预加载 -->
+<!--模态框用于多个模态框调用-->
+<div class="modal fade modal-scroll bs-modal-lg" id="another-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-replace="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer display-hide">
+                <button type="button" data-dismiss="modal" class="btn default"><i class="fa fa-rotate-left"></i> 关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+</html>
+
